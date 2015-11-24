@@ -14,3 +14,10 @@ gulp.task('compile', function() {
 		.pipe(gulp.dest('.'))
 	)
 });
+
+gulp.task('watch', function() {
+	gulp.watch([
+		'src/**/*.ts',
+		'tests/**/*.ts'
+	], ['compile']);
+});
