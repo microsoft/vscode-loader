@@ -497,8 +497,8 @@ module CSSLoaderPlugin {
 
 	(function() {
 		var cssLoader:ICSSLoader = null;
-		var isAtomShell = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined');
-		if (typeof process !== 'undefined' && process.versions && !!process.versions.node && !isAtomShell) {
+		var isElectron = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined');
+		if (typeof process !== 'undefined' && process.versions && !!process.versions.node && !isElectron) {
 			cssLoader = new NodeCSSLoader();
 		} else if (typeof navigator !== 'undefined' && navigator.userAgent.indexOf('MSIE 9') >= 0) {
 			cssLoader = new IE9CSSLoader();

@@ -1727,8 +1727,8 @@ var AMDLoader;
                     }
                     recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
                     var vmScriptSrc = _this._path.normalize(scriptSrc);
-                    // Make the script src friendly towards atom
-                    if (isAtomRenderer) {
+                    // Make the script src friendly towards electron
+                    if (isElectronRenderer) {
                         var driveLetterMatch = vmScriptSrc.match(/^([a-z])\:(.*)/);
                         if (driveLetterMatch) {
                             vmScriptSrc = driveLetterMatch[1].toUpperCase() + ':' + driveLetterMatch[2];
@@ -1836,11 +1836,11 @@ var AMDLoader;
         };
         return RequireFunc;
     })();
-    var global = _amdLoaderGlobal, hasPerformanceNow = (global.performance && typeof global.performance.now === 'function'), isWebWorker, isAtomRenderer, isAtomMain, isNode, scriptLoader, moduleManager, loaderAvailableTimestamp;
+    var global = _amdLoaderGlobal, hasPerformanceNow = (global.performance && typeof global.performance.now === 'function'), isWebWorker, isElectronRenderer, isElectronMain, isNode, scriptLoader, moduleManager, loaderAvailableTimestamp;
     function initVars() {
         isWebWorker = (typeof global.importScripts === 'function');
-        isAtomRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined' && process.type === 'renderer');
-        isAtomMain = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined' && process.type === 'browser');
+        isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined' && process.type === 'renderer');
+        isElectronMain = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined' && process.type === 'browser');
         isNode = (typeof module !== 'undefined' && !!module.exports);
         if (isWebWorker) {
             scriptLoader = new OnlyOnceScriptLoader(new WorkerScriptLoader());
@@ -1904,7 +1904,7 @@ var AMDLoader;
             global.nodeRequire = nodeRequire;
             RequireFunc.nodeRequire = nodeRequire;
         }
-        if (isNode && !isAtomRenderer) {
+        if (isNode && !isElectronRenderer) {
             module.exports = RequireFunc;
             // These two defs are fore the local closure defined in node in the case that the loader is concatenated
             define = function () {
@@ -1917,7 +1917,7 @@ var AMDLoader;
             if (typeof global.require !== 'undefined' && typeof global.require !== 'function') {
                 RequireFunc.config(global.require);
             }
-            if (!isAtomRenderer) {
+            if (!isElectronRenderer) {
                 global.define = DefineFunc;
             }
             else {

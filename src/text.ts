@@ -199,8 +199,8 @@ module TextLoaderPlugin {
 
 	(function() {
 		var textLoader:ITextLoader = null;
-		var isAtomShell = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined');
-		if (typeof process !== 'undefined' && process.versions && !!process.versions.node && !isAtomShell) {
+		var isElectron = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined');
+		if (typeof process !== 'undefined' && process.versions && !!process.versions.node && !isElectron) {
 			textLoader = new NodeTextLoader();
 		} else {
 			textLoader = new BrowserTextLoader();

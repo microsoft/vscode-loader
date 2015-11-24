@@ -2241,8 +2241,8 @@ module AMDLoader {
 					recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
 
 					var vmScriptSrc = this._path.normalize(scriptSrc);
-					// Make the script src friendly towards atom
-					if (isAtomRenderer) {
+					// Make the script src friendly towards electron
+					if (isElectronRenderer) {
 						var driveLetterMatch = vmScriptSrc.match(/^([a-z])\:(.*)/);
 						if (driveLetterMatch) {
 							vmScriptSrc = driveLetterMatch[1].toUpperCase() + ':' + driveLetterMatch[2];
@@ -2367,8 +2367,8 @@ module AMDLoader {
 	var global:any = _amdLoaderGlobal,
 		hasPerformanceNow = (global.performance && typeof global.performance.now === 'function'),
 		isWebWorker: boolean,
-		isAtomRenderer: boolean,
-		isAtomMain: boolean,
+		isElectronRenderer: boolean,
+		isElectronMain: boolean,
 		isNode: boolean,
 		scriptLoader:IScriptLoader,
 		moduleManager: ModuleManager,
@@ -2376,8 +2376,8 @@ module AMDLoader {
 
 	function initVars(): void {
 		isWebWorker = (typeof global.importScripts === 'function');
-		isAtomRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined' && process.type === 'renderer');
-		isAtomMain = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined' && process.type === 'browser');
+		isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined' && process.type === 'renderer');
+		isElectronMain = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined' && process.type === 'browser');
 		isNode = (typeof module !== 'undefined' && !!module.exports);
 		if (isWebWorker) {
 			scriptLoader = new OnlyOnceScriptLoader(new WorkerScriptLoader());
@@ -2451,7 +2451,7 @@ module AMDLoader {
 			(<any>RequireFunc).nodeRequire = nodeRequire;
 		}
 
-		if (isNode && !isAtomRenderer) {
+		if (isNode && !isElectronRenderer) {
 			module.exports = RequireFunc;
 			// These two defs are fore the local closure defined in node in the case that the loader is concatenated
 			define = function() {
@@ -2463,7 +2463,7 @@ module AMDLoader {
 			if (typeof global.require !== 'undefined' && typeof global.require !== 'function') {
 				RequireFunc.config(global.require);
 			}
-			if (!isAtomRenderer) {
+			if (!isElectronRenderer) {
 				global.define = DefineFunc;
 			} else {
 				define = function () {
