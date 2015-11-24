@@ -201,10 +201,10 @@ QUnit.test('Overwriting known configuration options', () => {
 	});
 
 	// Change defined shims
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(<any>{
 		shim: { 'c': { 'a': 'a' } }
 	}, createSimpleKnownConfigurationOptions());
-	assertConfigurationIs(result, {
+	assertConfigurationIs(result, <any>{
 		baseUrl: 'myBaseUrl/',
 		catchError: true,
 		ignoreDuplicateModules: [ 'a' ],
@@ -264,10 +264,10 @@ QUnit.test('Overwriting unknown configuration options', () => {
 	});
 
 	// Adding unknown key
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(<any>{
 		unknownKey1: 'value1'
 	}, result);
-	assertConfigurationIs(result, {
+	assertConfigurationIs(result, <any>{
 		baseUrl: '',
 		catchError: false,
 		ignoreDuplicateModules: [],
@@ -281,10 +281,10 @@ QUnit.test('Overwriting unknown configuration options', () => {
 	});
 
 	// Adding another unknown key
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(<any>{
 		unknownKey2: 'value2'
 	}, result);
-	assertConfigurationIs(result, {
+	assertConfigurationIs(result, <any>{
 		baseUrl: '',
 		catchError: false,
 		ignoreDuplicateModules: [],
@@ -299,10 +299,10 @@ QUnit.test('Overwriting unknown configuration options', () => {
 	});
 
 	// Overwriting unknown key
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(<any>{
 		unknownKey2: 'new-value2'
 	}, result);
-	assertConfigurationIs(result, {
+	assertConfigurationIs(result, <any>{
 		baseUrl: '',
 		catchError: false,
 		ignoreDuplicateModules: [],
