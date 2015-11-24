@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>AMD Loader Tests</title>
+		<link rel="stylesheet" href="qunit/qunit.css">
+	</head>
+	<body>
+		<!--<a href="http://127.0.0.1:9777/api/files/AMDLoader/tests/run-tests.htm">Normal</a>
+		<a href="http://127.0.0.1:9777/api/test/instrument/AMDLoader/tests/run-tests.htm">Coverage</a> -->
+<br/>For amdjs-tests, remember to run:
+<pre>
+git submodule init
+git submodule update
+</pre>
+To add integration tests, edit tests/run-tests.htm (amdjsTests array)
+		<div id="qunit"></div>
+		<div id="qunit-fixture"></div>
+		<script src="qunit/qunit.js"></script>
+		<script>
+QUnit.config.autostart = false;
+
+var enableCC = window.location.href.indexOf('/test/instrument/') !== -1;
+var verificationTokenName = '__RequestVerificationToken';
+
+function getCookie(key) {
+	if (!key) {
+		return null;
+	}
+	var cookies = document.cookie.split(';');
+	var cookie = '';
+	for (cookie in cookies) {
+		var values = cookies[cookie].split('=');
+		if (values[0].trim() === key) {
+			return values[1];
+		}
+	}
+	return null;
+}
+
+function whenFinishedWithAMDJSTESTS() {
+
+	if (enableCC) {
+		var req = new XMLHttpRequest();
+		var match = window.location.pathname.match('/api/test/instrument/([^/]+?)/');
+		var workspace = 'monaco';
+		if(match && match.length === 2) {
+			workspace = match[1];
+		}
+
+		req.open("POST", "/api/test/coverage/" + workspace);
+		req.setRequestHeader('Content-Type', 'application/json');
+		req.setRequestHeader(verificationTokenName, getCookie(verificationTokenName));
+		req.send(JSON.stringify(window.__$$cov));
+	}
+}
+
+QUnit.done = function() {
+	QUnit.done = function() { };
+	startAMDJSTESTS();
+}
+
+QUnit.start();
+
+		</script>
+		<script src="../src/loader.js"></script>
+		<script src="../src/css.js"></script>
+		<script src="../src/text.js"></script>
+
+		<script src="loader.test.js"></script>
+		<script src="css.test.js"></script>
+		<script src="text.test.js"></script>
+
+<script>
+// amdjs-tests
+function startAMDJSTESTS() {
+	var amdjsTests = [
+		{ path: 'ms-specific/tests/', name:'tfs_scenario' },
+		{ path: 'ms-specific/tests/', name: 'bundles_config' },
+		{ path: 'ms-specific/tests/', name: 'fallback_original_works' },
+		{ path: 'ms-specific/tests/', name: 'fallback_single_fallback' },
+		{ path: 'ms-specific/tests/', name: 'fallback_double_fallback' },
+
+		{ path: 'amdjs-tests/tests/', name:'anon_circular' },
+		{ path: 'amdjs-tests/tests/', name:'anon_relative' },
+		{ path: 'amdjs-tests/tests/', name:'anon_simple' },
+		{ path: 'amdjs-tests/tests/', name:'basic_circular' },
+		{ path: 'amdjs-tests/tests/', name:'basic_define' },
+		{ path: 'amdjs-tests/tests/', name:'basic_empty_deps' },
+		{ path: 'amdjs-tests/tests/', name:'basic_no_deps' },
+		{ path: 'amdjs-tests/tests/', name:'basic_require' },
+		{ path: 'amdjs-tests/tests/', name:'basic_simple' },
+//		{ path: 'amdjs-tests/tests/', name:'cjs_define' }, // this uses commonJS
+//		{ path: 'amdjs-tests/tests/', name:'cjs_named' }, // this uses commonJS
+//		{ path: 'amdjs-tests/tests/', name:'config_map' }, // this uses map
+//		{ path: 'amdjs-tests/tests/', name:'config_map_star' }, // this uses map
+//		{ path: 'amdjs-tests/tests/', name:'config_map_star_adapter' }, // this uses map
+//		{ path: 'amdjs-tests/tests/', name:'config_module' },
+//		{ path: 'amdjs-tests/tests/', name:'config_packages' },
+		{ path: 'amdjs-tests/tests/', name:'config_paths' },
+		{ path: 'amdjs-tests/tests/', name:'config_paths_relative' },
+		{ path: 'amdjs-tests/tests/', name:'config_shim' },
+		{ path: 'amdjs-tests/tests/', name:'plugin_double' },
+		{ path: 'amdjs-tests/tests/', name:'plugin_dynamic' },
+//		{ path: 'amdjs-tests/tests/', name:'plugin_dynamic_string' }, // this uses commonJS
+//		{ path: 'amdjs-tests/tests/', name:'plugin_fromtext' }, // this would imply adding an eval() in the loader
+//		{ path: 'amdjs-tests/tests/', name:'plugin_normalize' } // this uses commonJS
+	];
+	var currentTestIndex = -1, currentTest = null, currentTestTimeout = null;
+
+	// Bridge for amdjs tests to QUnit & our loader
+	window.go = function () {
+		var newArgs = [].splice.call(arguments, 0);
+		var fn = newArgs[newArgs.length - 1];
+
+		// pause qunit test execution until the dependencies are resolved
+		QUnit.stop();
+		newArgs[newArgs.length - 1] = function () {
+			fn.apply(undefined, arguments);
+			QUnit.start();
+		};
+
+		define.apply(window, newArgs);
+	};
+
+	window.amdJSPrint = function (message, type) {
+		if (type === 'info') {
+			return;
+		}
+		if (type === 'done') {
+			console.log('>>>>>>>>>>>>');
+			setTimeout(runOneMoreTest, 5);
+			return;
+		}
+		QUnit.test(message, function() {
+			QUnit.ok(type === 'pass', message);
+		});
+	};
+
+	window.config = require;
+
+	// HACK(1) to the loader to get the tests to run as if they were running independently out of their folder
+	var originalValidateConfigurationOptions = AMDLoader.ConfigurationOptionsUtil.validateConfigurationOptions;
+	AMDLoader.ConfigurationOptionsUtil.validateConfigurationOptions = function(options) {
+		var r = originalValidateConfigurationOptions(options);
+		if (currentTest && r.baseUrl.indexOf(currentTest.path) === -1) {
+			r.baseUrl = currentTest.path + currentTest.name + '/' + r.baseUrl;
+		}
+		return r;
+	};
+
+	function runOneMoreTest() {
+		clearTimeout(currentTestTimeout);
+
+		currentTestIndex++;
+		if (currentTestIndex >= amdjsTests.length) {
+			currentTest = null;
+			whenFinishedWithAMDJSTESTS();
+			return;
+		}
+		currentTest = amdjsTests[currentTestIndex];
+
+		// HACK(2) to the loader to get the tests to run as if they were running independently out of their folder
+		require.reset();
+
+		require.config({});
+
+		console.log('<<<<<<<<<<STARTING ' + currentTest.name);
+
+		// Install a 3s timeout in case test never finishes
+		currentTestTimeout = setTimeout(function() {
+			QUnit.start();
+			QUnit.test(currentTest.name, function() {
+				QUnit.ok(false, "Test is taking over 3 seconds");
+			});
+			console.log('>>>>>>>>>>>>');
+			setTimeout(runOneMoreTest, 5);
+		}, 3000);
+
+		require(['_test'], function() {
+//			console.log('TEST ' + currentTest + ' should almost be finished (if it has no timeouts).');
+		});
+	}
+
+	QUnit.module('amdjs-tests or ms-specific');
+	runOneMoreTest();
+}
+
+</script>
+
+	</body>
+</html>

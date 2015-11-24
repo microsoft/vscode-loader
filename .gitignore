@@ -1,0 +1,7 @@
+.settings/user.json
+bin/
+obj/
+*.suo
+*.csproj.user
+*.js.map
+node_modules/

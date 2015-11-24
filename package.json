@@ -1,0 +1,26 @@
+{
+  "name": "vscode-loader",
+  "version": "1.0.0",
+  "description": "An universal AMD Loader",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Microsoft/vscode-loader.git"
+  },
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Microsoft/vscode-loader/issues"
+  },
+  "homepage": "https://github.com/Microsoft/vscode-loader#readme",
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-typescript": "^2.9.2"
+  }
+}
