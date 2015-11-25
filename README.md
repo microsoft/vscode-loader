@@ -1,11 +1,12 @@
 # VSCode Loader
 
-An universal [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD) Loader.
+An universal [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD) Loader developed primarily to load VSCode's sources.
 
 ## Supported environments
 * IE (9, 10, 11), Edge, Firefox, Chrome, Safari, Opera
 * nodejs
-* electron
+* electron (renderer & browser processes)
+In nodejs and electron, when loading a module, if it cannot be found with the AMD rules, it delegates loading them to the native `require`.
 
 ## Features
 
@@ -38,6 +39,20 @@ loader(['an/amd/module'], function(value) {
 	// code is loaded here
 });
 ```
+* Supported config options:
+ * `baseUrl` - The prefix that will be aplied to all modules when they are resolved to a location
+ * `paths` - Redirect rules for modules. The redirect rules will affect the module ids themselves
+ * `bundles` - Bundle mappings for modules.
+ * `shim` - Definitions for non-AMD scripts.
+ * `config` - Per-module configuration
+ * `catchError` - Catch errors when invoking the module factories
+ * `recordStats` - Record statistics
+ * `urlArgs` - The suffix that will be aplied to all modules when they are resolved to a location
+ * `onError` - Callback that will be called when errors are encountered
+ * `ignoreDuplicateModules` - The loader will issue warnings when duplicate modules are encountered. This list will inhibit those warnings if duplicate modules are expected.
+ * `isBuild` - Flag to indicate if current execution is as part of a build.
+ * `nodeRequire` - The main entry point node's require
+ * `nodeInstrumenter` - An optional transformation applied to the source before it is loaded in node's vm
 
 ## Custom features
 
