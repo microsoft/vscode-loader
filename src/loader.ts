@@ -1463,7 +1463,9 @@ module AMDLoader {
 				this.defineModule(id, defineCall.dependencies, defineCall.callback, null, defineCall.stack);
 			} else {
 				if (this._queuedDefineCalls.length === 0) {
-					console.warn('No define call received from module ' + id + '. This might be a problem.');
+					// Loaded a file and it didn't call `define`
+					this._loadingScriptsCount++;
+					this._onLoadError(id, new Error('No define call received from module ' + id + '.'));
 				} else {
 					// Consume queue until first anonymous define call
 					// or until current id is found in the queue
