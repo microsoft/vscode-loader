@@ -20,15 +20,15 @@
 
 'use strict';
 
-var _nlsPluginGlobal = this;
+let _nlsPluginGlobal = this;
 
 module NLSLoaderPlugin {
 
-	var global = _nlsPluginGlobal;
-	var Resources = global.Plugin && global.Plugin.Resources ? global.Plugin.Resources : undefined;
-	var DEFAULT_TAG = 'i-default';
-	var IS_PSEUDO = (global && global.document && global.document.location && global.document.location.hash.indexOf('pseudo=true') >= 0);
-	var slice = Array.prototype.slice;
+	let global = _nlsPluginGlobal;
+	let Resources = global.Plugin && global.Plugin.Resources ? global.Plugin.Resources : undefined;
+	let DEFAULT_TAG = 'i-default';
+	let IS_PSEUDO = (global && global.document && global.document.location && global.document.location.hash.indexOf('pseudo=true') >= 0);
+	let slice = Array.prototype.slice;
 
 	export interface IBundledStrings {
 		[moduleId:string]: string[];
@@ -49,13 +49,13 @@ module NLSLoaderPlugin {
 	}
 
 	function _format(message:string, args:string[]): string {
-		var result:string;
+		let result:string;
 
 		if (args.length === 0) {
 			result = message;
 		} else {
 			result = message.replace(/\{(\d+)\}/g, (match, rest) => {
-				var index = rest[0];
+				let index = rest[0];
 				return typeof args[index] !== 'undefined' ? args[index] : match;
 			});
 		}
@@ -69,7 +69,7 @@ module NLSLoaderPlugin {
 	}
 
 	function findLanguageForModule(config, name) {
-		var result = config[name];
+		let result = config[name];
 		if (result)
 			return result;
 		result = config['*'];
@@ -79,8 +79,8 @@ module NLSLoaderPlugin {
 	}
 
 	function localize(data, message) {
-		var args = [];
-		for (var _i = 0; _i < (arguments.length - 2); _i++) {
+		let args = [];
+		for (let _i = 0; _i < (arguments.length - 2); _i++) {
 			args[_i] = arguments[_i+2];
 		}
 		return _format(message, args);
@@ -88,7 +88,7 @@ module NLSLoaderPlugin {
 
 	function createScopedLocalize(scope:string[]): ILocalizeFunc {
 		return function(idx, defaultValue) {
-			var restArgs = slice.call(arguments, 2);
+			let restArgs = slice.call(arguments, 2);
 			return _format(scope[idx], restArgs);
 		}
 	}
@@ -101,6 +101,10 @@ module NLSLoaderPlugin {
 
 		constructor() {
 			this.localize = localize;
+		}
+
+		public setPseudoTranslation(value: boolean) {
+			IS_PSEUDO = value;
 		}
 
 		public create(key:string, data:IBundledStrings): IConsumerAPI {
@@ -116,21 +120,21 @@ module NLSLoaderPlugin {
 					localize: localize
 				});
 			} else {
-				var suffix;
-				if (Resources) {
+				let suffix;
+				if (Resources && Resources.getString) {
 					suffix = '.nls.keys';
 					req([name + suffix], function(keyMap) {
 						load({
 							localize: function(moduleKey, index) {
 								if (!keyMap[moduleKey])
 									return 'NLS error: unknown key ' + moduleKey;
-								var mk = keyMap[moduleKey].keys;
+								let mk = keyMap[moduleKey].keys;
 								if (index >= mk.length)
 									return 'NLS error unknow index ' + index;
-								var subKey = mk[index];
-								var args = [];
+								let subKey = mk[index];
+								let args = [];
 								args[0] = moduleKey + '_' + subKey;
-								for (var _i = 0; _i < (arguments.length - 2); _i++) {
+								for (let _i = 0; _i < (arguments.length - 2); _i++) {
 									args[_i + 1] = arguments[_i + 2];
 								}
 								return Resources.getString.apply(Resources, args);
@@ -145,8 +149,8 @@ module NLSLoaderPlugin {
 							load(messages);
 						});
 					} else {
-						var pluginConfig = config['vs/nls'] || {};
-						var language = pluginConfig.availableLanguages ? findLanguageForModule(pluginConfig.availableLanguages, name) : null;
+						let pluginConfig = config['vs/nls'] || {};
+						let language = pluginConfig.availableLanguages ? findLanguageForModule(pluginConfig.availableLanguages, name) : null;
 						suffix = '.nls';
 						if (language !== null && language !== DEFAULT_TAG) {
 							suffix = suffix + '.' + language;
@@ -172,11 +176,11 @@ module NLSLoaderPlugin {
 
 		public write(pluginName:string, moduleName:string, write:AMDLoader.IPluginWriteCallback): void {
 			// getEntryPoint is a Monaco extension to r.js
-			var entryPoint = write.getEntryPoint();
+			let entryPoint = write.getEntryPoint();
 
 			// r.js destroys the context of this plugin between calling 'write' and 'writeFile'
 			// so the only option at this point is to leak the data to a global
-			var entryPointsMap = this._getEntryPointsMap();
+			let entryPointsMap = this._getEntryPointsMap();
 			entryPointsMap[entryPoint] = entryPointsMap[entryPoint] || [];
 			entryPointsMap[entryPoint].push(moduleName);
 
@@ -186,18 +190,18 @@ module NLSLoaderPlugin {
 		}
 
 		public writeFile(pluginName:string, moduleName:string, req:AMDLoader.IRelativeRequire, write:AMDLoader.IPluginWriteFileCallback, config:AMDLoader.IConfigurationOptions): void {
-			var entryPointsMap = this._getEntryPointsMap();
+			let entryPointsMap = this._getEntryPointsMap();
 			if (entryPointsMap.hasOwnProperty(moduleName)) {
-				var fileName = req.toUrl(moduleName + '.nls.js');
-				var contents = [
+				let fileName = req.toUrl(moduleName + '.nls.js');
+				let contents = [
 						'/*---------------------------------------------------------',
 						' * Copyright (C) Microsoft Corporation. All rights reserved.',
 						' *--------------------------------------------------------*/'
 					],
 					entries = entryPointsMap[moduleName];
 
-				var data:{[moduleName:string]:string[];} = {};
-				for (var i = 0; i < entries.length; i++) {
+				let data:{[moduleName:string]:string[];} = {};
+				for (let i = 0; i < entries.length; i++) {
 					data[entries[i]] = NLSPlugin.BUILD_MAP[entries[i]];
 				}
 
@@ -218,5 +222,4 @@ module NLSLoaderPlugin {
 	(function() {
 		define('vs/nls', new NLSPlugin());
 	})();
-
 }
