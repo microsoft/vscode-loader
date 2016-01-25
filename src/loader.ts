@@ -119,8 +119,9 @@ module AMDLoader {
 			return haystack.length >= needle.length && haystack.substr(haystack.length - needle.length) === needle;
 		}
 
+		// only check for "?" before "#" to ensure that there is a real Query-String
 		public static containsQueryString(url:string): boolean {
-			return url.indexOf('?') >= 0;
+			return /[^\#]\?/gi.test(url);
 		}
 
 		/**
@@ -579,9 +580,9 @@ module AMDLoader {
 			return [moduleId];
 		}
 
+		// implement the "Utilities.containsQueryString" for better maintainability
 		private _addUrlArgsToUrl(url:string): string {
-			var hasUrlArgs = url.indexOf('?') >= 0;
-			if (hasUrlArgs) {
+			if (Utilities.containsQueryString(url)) {
 				return url + '&' + this.options.urlArgs;
 			} else {
 				return url + '?' + this.options.urlArgs;
