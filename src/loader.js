@@ -402,7 +402,6 @@ var AMDLoader;
             }
             return [moduleId];
         };
-        // implement the "Utilities.containsQueryString" for better maintainability
         Configuration.prototype._addUrlArgsToUrl = function (url) {
             if (Utilities.containsQueryString(url)) {
                 return url + '&' + this.options.urlArgs;

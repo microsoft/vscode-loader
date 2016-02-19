@@ -580,7 +580,6 @@ module AMDLoader {
 			return [moduleId];
 		}
 
-		// implement the "Utilities.containsQueryString" for better maintainability
 		private _addUrlArgsToUrl(url:string): string {
 			if (Utilities.containsQueryString(url)) {
 				return url + '&' + this.options.urlArgs;
