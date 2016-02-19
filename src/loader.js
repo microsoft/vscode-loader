@@ -64,8 +64,9 @@ var AMDLoader;
         Utilities.endsWith = function (haystack, needle) {
             return haystack.length >= needle.length && haystack.substr(haystack.length - needle.length) === needle;
         };
+        // only check for "?" before "#" to ensure that there is a real Query-String
         Utilities.containsQueryString = function (url) {
-            return url.indexOf('?') >= 0;
+            return /^[^\#]*\?/gi.test(url);
         };
         /**
          * Does `url` start with http:// or https:// or / ?
@@ -401,9 +402,9 @@ var AMDLoader;
             }
             return [moduleId];
         };
+        // implement the "Utilities.containsQueryString" for better maintainability
         Configuration.prototype._addUrlArgsToUrl = function (url) {
-            var hasUrlArgs = url.indexOf('?') >= 0;
-            if (hasUrlArgs) {
+            if (Utilities.containsQueryString(url)) {
                 return url + '&' + this.options.urlArgs;
             }
             else {

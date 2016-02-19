@@ -121,7 +121,7 @@ module AMDLoader {
 
 		// only check for "?" before "#" to ensure that there is a real Query-String
 		public static containsQueryString(url:string): boolean {
-			return /[^\#]\?/gi.test(url);
+			return /^[^\#]*\?/gi.test(url);
 		}
 
 		/**
