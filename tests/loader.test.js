@@ -973,3 +973,12 @@ QUnit.test('Utilities.fileUriToFilePath', function () {
     test('file://monacotools/isi.txt', '//monacotools/isi.txt');
     test('file://monacotools1/certificates/SSL/', '//monacotools1/certificates/SSL/');
 });
+QUnit.test('Utilities.containsQueryString', function () {
+    var test = function (input, expected) {
+        QUnit.equal(loader.Utilities.containsQueryString(input), expected, 'Result for ' + input);
+    };
+    test('http://www.microsoft.com/something?q=123&r=345#bangbang', true);
+    test('http://www.microsoft.com/something#bangbang', false);
+    test('http://www.microsoft.com/something#bangbang?asd=3', false);
+    test('http://www.microsoft.com/something#?asd=3', false);
+});
