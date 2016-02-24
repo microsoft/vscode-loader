@@ -343,7 +343,7 @@ module CSSLoaderPlugin {
 				var fileName = req.toUrl(moduleName + '.css');
 				var contents = [
 						'/*---------------------------------------------------------',
-						' * Copyright (C) Microsoft Corporation. All rights reserved.',
+						' * Copyright (c) Microsoft Corporation. All rights reserved.',
 						' *--------------------------------------------------------*/'
 					],
 					entries = global.cssPluginEntryPoints[moduleName];
