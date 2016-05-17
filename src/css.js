@@ -100,7 +100,7 @@ var CSSLoaderPlugin;
             this._insertLinkNode(linkNode);
         };
         return BrowserCSSLoader;
-    })();
+    }());
     /**
      * Prior to IE10, IE could not go above 31 stylesheets in a page
      * http://blogs.msdn.com/b/ieinternals/archive/2011/05/14/internet-explorer-stylesheet-rule-selector-import-sheet-limit-maximum.aspx
@@ -201,7 +201,7 @@ var CSSLoaderPlugin;
             }
         };
         return IE9CSSLoader;
-    })(BrowserCSSLoader);
+    }(BrowserCSSLoader));
     var IE8CSSLoader = (function (_super) {
         __extends(IE8CSSLoader, _super);
         function IE8CSSLoader() {
@@ -214,7 +214,7 @@ var CSSLoaderPlugin;
             };
         };
         return IE8CSSLoader;
-    })(IE9CSSLoader);
+    }(IE9CSSLoader));
     var NodeCSSLoader = (function () {
         function NodeCSSLoader() {
             this.fs = require.nodeRequire('fs');
@@ -229,7 +229,7 @@ var CSSLoaderPlugin;
         };
         NodeCSSLoader.BOM_CHAR_CODE = 65279;
         return NodeCSSLoader;
-    })();
+    }());
     // ------------------------------ Finally, the plugin
     var CSSPlugin = (function () {
         function CSSPlugin(cssLoader) {
@@ -279,7 +279,7 @@ var CSSLoaderPlugin;
         };
         CSSPlugin.BUILD_MAP = {};
         return CSSPlugin;
-    })();
+    }());
     CSSLoaderPlugin.CSSPlugin = CSSPlugin;
     var Utilities = (function () {
         function Utilities() {
@@ -411,7 +411,7 @@ var CSSLoaderPlugin;
             });
         };
         return Utilities;
-    })();
+    }());
     CSSLoaderPlugin.Utilities = Utilities;
     (function () {
         var cssLoader = null;

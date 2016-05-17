@@ -269,6 +269,7 @@ module AMDLoader {
 		 */
 		nodeInstrumenter?:(source:string, vmScriptSrc:string)=>string;
 		nodeMain?:string;
+		nodeModules?:string[];
 	}
 
 	export class ConfigurationOptionsUtil {
@@ -336,6 +337,9 @@ module AMDLoader {
 				if (!Utilities.endsWith(options.baseUrl, '/')) {
 					options.baseUrl += '/';
 				}
+			}
+			if (!Array.isArray(options.nodeModules)) {
+				options.nodeModules = [];
 			}
 
 			return options;
@@ -608,6 +612,12 @@ module AMDLoader {
 		 * Transform a module id to a location. Appends .js to module ids
 		 */
 		public moduleIdToPaths(moduleId:string): string[] {
+
+			if (this.isBuild() && this.options.nodeModules.indexOf(moduleId) >= 0) {
+				// This is a node module and we are at build time, drop it
+				return [];
+			}
+
 			var result = moduleId;
 
 			if (this.overwriteModuleIdToPath.hasOwnProperty(result)) {

@@ -35,7 +35,8 @@ QUnit.test('Default configuration', () => {
 		bundles: [],
 		shim: {},
 		config: {},
-		urlArgs: ''
+		urlArgs: '',
+		nodeModules: []
 	});
 });
 
@@ -49,7 +50,8 @@ function createSimpleKnownConfigurationOptions(): loader.IConfigurationOptions {
 		shim: { 'c': {} },
 		config: { 'd': {} },
 		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 }
 
@@ -64,7 +66,8 @@ QUnit.test('Simple known configuration options', () => {
 		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
 		shim: { 'c': {} },
 		config: { 'd': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 });
 
@@ -82,7 +85,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
 		shim: { 'c': {} },
 		config: { 'd': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 
 	// Overwrite baseUrl 2
@@ -98,7 +102,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
 		shim: { 'c': {} },
 		config: { 'd': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 
 	// Overwrite catchError
@@ -114,7 +119,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
 		shim: { 'c': {} },
 		config: { 'd': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 
 	// Contribute additional ignoreDuplicateModules
@@ -130,7 +136,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
 		shim: { 'c': {} },
 		config: { 'd': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 
 	// Contribute additional bundles
@@ -149,7 +156,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		],
 		shim: { 'c': {} },
 		config: { 'd': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 
 	// Contribute additional bundles through AMD API
@@ -168,7 +176,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		],
 		shim: { 'c': {} },
 		config: { 'd': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 
 
@@ -186,7 +195,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
 		shim: { 'c': {} },
 		config: { 'd': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 
 	// Contribute additional shims
@@ -202,7 +212,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
 		shim: { 'c': {}, 'e': {} },
 		config: { 'd': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 
 	// Change defined shims
@@ -218,7 +229,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
 		shim: { 'c': { 'a': 'a' } },
 		config: { 'd': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 
 	// Contribute additional module configs
@@ -234,7 +246,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
 		shim: { 'c': {} },
 		config: { 'd': {}, 'e': {} },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 
 	// Change defined module configs
@@ -250,7 +263,8 @@ QUnit.test('Overwriting known configuration options', () => {
 		bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
 		shim: { 'c': {} },
 		config: { 'd': { 'a': 'a' } },
-		urlArgs: 'myUrlArgs'
+		urlArgs: 'myUrlArgs',
+		nodeModules: []
 	});
 });
 
@@ -265,7 +279,8 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		bundles: [],
 		shim: {},
 		config: {},
-		urlArgs: ''
+		urlArgs: '',
+		nodeModules: []
 	});
 
 	// Adding unknown key
@@ -282,7 +297,8 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		shim: {},
 		config: {},
 		urlArgs: '',
-		unknownKey1: 'value1'
+		unknownKey1: 'value1',
+		nodeModules: []
 	});
 
 	// Adding another unknown key
@@ -300,7 +316,8 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		config: {},
 		urlArgs: '',
 		unknownKey1: 'value1',
-		unknownKey2: 'value2'
+		unknownKey2: 'value2',
+		nodeModules: []
 	});
 
 	// Overwriting unknown key
@@ -318,7 +335,8 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		config: {},
 		urlArgs: '',
 		unknownKey1: 'value1',
-		unknownKey2: 'new-value2'
+		unknownKey2: 'new-value2',
+		nodeModules: []
 	});
 });
 

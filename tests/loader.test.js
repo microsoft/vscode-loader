@@ -29,7 +29,8 @@ QUnit.test('Default configuration', function () {
         bundles: [],
         shim: {},
         config: {},
-        urlArgs: ''
+        urlArgs: '',
+        nodeModules: []
     });
 });
 function createSimpleKnownConfigurationOptions() {
@@ -42,7 +43,8 @@ function createSimpleKnownConfigurationOptions() {
         shim: { 'c': {} },
         config: { 'd': {} },
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
 }
 QUnit.test('Simple known configuration options', function () {
@@ -56,7 +58,8 @@ QUnit.test('Simple known configuration options', function () {
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
         shim: { 'c': {} },
         config: { 'd': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
 });
 QUnit.test('Overwriting known configuration options', function () {
@@ -73,7 +76,8 @@ QUnit.test('Overwriting known configuration options', function () {
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
         shim: { 'c': {} },
         config: { 'd': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
     // Overwrite baseUrl 2
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -88,7 +92,8 @@ QUnit.test('Overwriting known configuration options', function () {
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
         shim: { 'c': {} },
         config: { 'd': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
     // Overwrite catchError
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -103,7 +108,8 @@ QUnit.test('Overwriting known configuration options', function () {
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
         shim: { 'c': {} },
         config: { 'd': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
     // Contribute additional ignoreDuplicateModules
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -118,7 +124,8 @@ QUnit.test('Overwriting known configuration options', function () {
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
         shim: { 'c': {} },
         config: { 'd': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
     // Contribute additional bundles
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -136,7 +143,8 @@ QUnit.test('Overwriting known configuration options', function () {
         ],
         shim: { 'c': {} },
         config: { 'd': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
     // Contribute additional bundles through AMD API
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -154,7 +162,8 @@ QUnit.test('Overwriting known configuration options', function () {
         ],
         shim: { 'c': {} },
         config: { 'd': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
     // Change defined paths
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -169,7 +178,8 @@ QUnit.test('Overwriting known configuration options', function () {
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
         shim: { 'c': {} },
         config: { 'd': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
     // Contribute additional shims
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -184,7 +194,8 @@ QUnit.test('Overwriting known configuration options', function () {
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
         shim: { 'c': {}, 'e': {} },
         config: { 'd': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
     // Change defined shims
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -199,7 +210,8 @@ QUnit.test('Overwriting known configuration options', function () {
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
         shim: { 'c': { 'a': 'a' } },
         config: { 'd': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
     // Contribute additional module configs
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -214,7 +226,8 @@ QUnit.test('Overwriting known configuration options', function () {
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
         shim: { 'c': {} },
         config: { 'd': {}, 'e': {} },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
     // Change defined module configs
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -229,7 +242,8 @@ QUnit.test('Overwriting known configuration options', function () {
         bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
         shim: { 'c': {} },
         config: { 'd': { 'a': 'a' } },
-        urlArgs: 'myUrlArgs'
+        urlArgs: 'myUrlArgs',
+        nodeModules: []
     });
 });
 QUnit.test('Overwriting unknown configuration options', function () {
@@ -243,7 +257,8 @@ QUnit.test('Overwriting unknown configuration options', function () {
         bundles: [],
         shim: {},
         config: {},
-        urlArgs: ''
+        urlArgs: '',
+        nodeModules: []
     });
     // Adding unknown key
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -259,7 +274,8 @@ QUnit.test('Overwriting unknown configuration options', function () {
         shim: {},
         config: {},
         urlArgs: '',
-        unknownKey1: 'value1'
+        unknownKey1: 'value1',
+        nodeModules: []
     });
     // Adding another unknown key
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -276,7 +292,8 @@ QUnit.test('Overwriting unknown configuration options', function () {
         config: {},
         urlArgs: '',
         unknownKey1: 'value1',
-        unknownKey2: 'value2'
+        unknownKey2: 'value2',
+        nodeModules: []
     });
     // Overwriting unknown key
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -293,7 +310,8 @@ QUnit.test('Overwriting unknown configuration options', function () {
         config: {},
         urlArgs: '',
         unknownKey1: 'value1',
-        unknownKey2: 'new-value2'
+        unknownKey2: 'new-value2',
+        nodeModules: []
     });
 });
 QUnit.module('Configuration');
