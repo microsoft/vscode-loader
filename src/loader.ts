@@ -615,7 +615,7 @@ module AMDLoader {
 
 			if (this.isBuild() && this.options.nodeModules.indexOf(moduleId) >= 0) {
 				// This is a node module and we are at build time, drop it
-				return [];
+				return ['empty:'];
 			}
 
 			var result = moduleId;
