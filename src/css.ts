@@ -296,7 +296,8 @@ module CSSLoaderPlugin {
 
 	export class CSSPlugin implements AMDLoader.ILoaderPlugin {
 
-		static BUILD_MAP:{[moduleName:string]:string;} = <any>{};
+		static BUILD_MAP:{[moduleName:string]:string;} = {};
+		static BUILD_PATH_MAP:{[moduleName:string]:string;} = {};
 
 		private cssLoader:ICSSLoader;
 
@@ -306,11 +307,16 @@ module CSSLoaderPlugin {
 
 		public load(name:string, req:AMDLoader.IRelativeRequire, load:AMDLoader.IPluginLoadCallback, config:AMDLoader.IConfigurationOptions): void {
 			config = config || {};
+			let myConfig = config['vs/css'] || {};
+			if (myConfig.inlineResources) {
+				global.inlineResources = true;
+			}
 			var cssUrl = req.toUrl(name + '.css');
 			this.cssLoader.load(name, cssUrl, (contents?:string) => {
 				// Contents has the CSS file contents if we are in a build
 				if (config.isBuild) {
 					CSSPlugin.BUILD_MAP[name] = contents;
+					CSSPlugin.BUILD_PATH_MAP[name] = cssUrl;
 				}
 				load({});
 			}, (err:any) => {
@@ -330,7 +336,8 @@ module CSSLoaderPlugin {
 			global.cssPluginEntryPoints[entryPoint] = global.cssPluginEntryPoints[entryPoint] || [];
 			global.cssPluginEntryPoints[entryPoint].push({
 				moduleName: moduleName,
-				contents: CSSPlugin.BUILD_MAP[moduleName]
+				contents: CSSPlugin.BUILD_MAP[moduleName],
+				fsPath: CSSPlugin.BUILD_PATH_MAP[moduleName],
 			});
 
 			write.asModule(pluginName + '!' + moduleName,
@@ -348,10 +355,18 @@ module CSSLoaderPlugin {
 					],
 					entries = global.cssPluginEntryPoints[moduleName];
 				for (var i = 0; i < entries.length; i++) {
-					contents.push(Utilities.rewriteUrls(entries[i].moduleName, moduleName, entries[i].contents));
+					if (global.inlineResources) {
+						contents.push(Utilities.rewriteOrInlineUrls(entries[i].fsPath, entries[i].moduleName, moduleName, entries[i].contents));
+					} else {
+						contents.push(Utilities.rewriteUrls(entries[i].moduleName, moduleName, entries[i].contents));
+					}
 				}
 				write(fileName, contents.join('\r\n'));
 			}
+		}
+
+		public getInlinedResources(): string[] {
+			return global.cssInlinedResources || [];
 		}
 	}
 
@@ -469,7 +484,7 @@ module CSSLoaderPlugin {
 			return result + toPath;
 		}
 
-		public static rewriteUrls(originalFile:string, newFile:string, contents:string): string {
+		private static _replaceURL(contents:string, replacer:(url:string)=>string): string {
 			// Use ")" as the terminator as quotes are oftentimes not used at all
 			return contents.replace(/url\(\s*([^\)]+)\s*\)?/g, (_:string, ...matches:string[]) => {
 				var url = matches[0];
@@ -487,10 +502,60 @@ module CSSLoaderPlugin {
 				}
 
 				if (!Utilities.startsWith(url, 'data:') && !Utilities.startsWith(url, 'http://') && !Utilities.startsWith(url, 'https://')) {
-					var absoluteUrl = Utilities.joinPaths(Utilities.pathOf(originalFile), url);
-					url = Utilities.relativePath(newFile, absoluteUrl);
+					url = replacer(url);
 				}
+
 				return 'url(' + url + ')';
+			});
+		}
+
+		public static rewriteUrls(originalFile:string, newFile:string, contents:string): string {
+			return this._replaceURL(contents, (url) => {
+				var absoluteUrl = Utilities.joinPaths(Utilities.pathOf(originalFile), url);
+				return Utilities.relativePath(newFile, absoluteUrl);
+			});
+		}
+
+		public static rewriteOrInlineUrls(originalFileFSPath:string, originalFile:string, newFile:string, contents:string): string {
+			let fs = require.nodeRequire('fs');
+			let path = require.nodeRequire('path');
+
+			return this._replaceURL(contents, (url) => {
+				if (/\.(svg|png)$/.test(url)) {
+					let fsPath = path.join(path.dirname(originalFileFSPath), url);
+					let fileContents = fs.readFileSync(fsPath);
+
+					if (fileContents.length < 3000) {
+						global.cssInlinedResources = global.cssInlinedResources || [];
+						let normalizedFSPath = fsPath.replace(/\\/g, '/');
+						if (global.cssInlinedResources.indexOf(normalizedFSPath) >= 0) {
+							console.warn('CSS INLINING IMAGE AT ' + fsPath + ' MORE THAN ONCE. CONSIDER CONSOLIDATING CSS RULES');
+						}
+						global.cssInlinedResources.push(normalizedFSPath);
+
+						let MIME = /\.svg$/.test(url) ? 'image/svg+xml' : 'image/png';
+						let DATA = ';base64,' + fileContents.toString('base64');
+
+						if (/\.svg$/.test(url)) {
+							// .svg => url encode as explained at https://codepen.io/tigt/post/optimizing-svgs-in-data-uris
+							let newText = fileContents.toString()
+											.replace(/"/g,'\'')
+											.replace(/</g,'%3C')
+											.replace(/>/g,'%3E')
+											.replace(/&/g,'%26')
+											.replace(/#/g,'%23')
+											.replace(/\s+/g,' ');
+							let encodedData = ',' + newText;
+							if (encodedData.length < DATA.length) {
+								DATA = encodedData;
+							}
+						}
+						return '"data:' + MIME + DATA + '"';
+					}
+				}
+
+				var absoluteUrl = Utilities.joinPaths(Utilities.pathOf(originalFile), url);
+				return Utilities.relativePath(newFile, absoluteUrl);
 			});
 		}
 	}
