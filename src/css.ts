@@ -308,9 +308,7 @@ module CSSLoaderPlugin {
 		public load(name:string, req:AMDLoader.IRelativeRequire, load:AMDLoader.IPluginLoadCallback, config:AMDLoader.IConfigurationOptions): void {
 			config = config || {};
 			let myConfig = config['vs/css'] || {};
-			if (myConfig.inlineResources) {
-				global.inlineResources = true;
-			}
+			global.inlineResources = myConfig.inlineResources;
 			var cssUrl = req.toUrl(name + '.css');
 			this.cssLoader.load(name, cssUrl, (contents?:string) => {
 				// Contents has the CSS file contents if we are in a build
@@ -356,7 +354,7 @@ module CSSLoaderPlugin {
 					entries = global.cssPluginEntryPoints[moduleName];
 				for (var i = 0; i < entries.length; i++) {
 					if (global.inlineResources) {
-						contents.push(Utilities.rewriteOrInlineUrls(entries[i].fsPath, entries[i].moduleName, moduleName, entries[i].contents));
+						contents.push(Utilities.rewriteOrInlineUrls(entries[i].fsPath, entries[i].moduleName, moduleName, entries[i].contents, global.inlineResources === 'base64'));
 					} else {
 						contents.push(Utilities.rewriteUrls(entries[i].moduleName, moduleName, entries[i].contents));
 					}
@@ -516,7 +514,7 @@ module CSSLoaderPlugin {
 			});
 		}
 
-		public static rewriteOrInlineUrls(originalFileFSPath:string, originalFile:string, newFile:string, contents:string): string {
+		public static rewriteOrInlineUrls(originalFileFSPath:string, originalFile:string, newFile:string, contents:string, forceBase64:boolean): string {
 			let fs = require.nodeRequire('fs');
 			let path = require.nodeRequire('path');
 
@@ -536,7 +534,7 @@ module CSSLoaderPlugin {
 						let MIME = /\.svg$/.test(url) ? 'image/svg+xml' : 'image/png';
 						let DATA = ';base64,' + fileContents.toString('base64');
 
-						if (/\.svg$/.test(url)) {
+						if (!forceBase64 && /\.svg$/.test(url)) {
 							// .svg => url encode as explained at https://codepen.io/tigt/post/optimizing-svgs-in-data-uris
 							let newText = fileContents.toString()
 											.replace(/"/g,'\'')
