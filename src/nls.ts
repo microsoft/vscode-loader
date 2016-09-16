@@ -24,7 +24,7 @@ let _nlsPluginGlobal = this;
 
 module NLSLoaderPlugin {
 
-	let global = _nlsPluginGlobal;
+	let global = _nlsPluginGlobal || {};
 	let Resources = global.Plugin && global.Plugin.Resources ? global.Plugin.Resources : undefined;
 	let DEFAULT_TAG = 'i-default';
 	let IS_PSEUDO = (global && global.document && global.document.location && global.document.location.hash.indexOf('pseudo=true') >= 0);

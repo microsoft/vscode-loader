@@ -24,7 +24,7 @@ var _cssPluginGlobal = this;
 
 module CSSLoaderPlugin {
 
-	var global = _cssPluginGlobal;
+	var global = _cssPluginGlobal || {};
 
 	export interface ICSSLoader {
 		load(name:string, cssUrl:string, externalCallback:(contents?:string)=>void, externalErrorback:(err:any)=>void): void;
