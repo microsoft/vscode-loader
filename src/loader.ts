@@ -2476,7 +2476,7 @@ module AMDLoader {
 				RequireFunc.config(global.require);
 			}
 			if (!isElectronRenderer) {
-				global.define = DefineFunc;
+				global.define = define = DefineFunc;
 			} else {
 				define = function () {
 					DefineFunc.apply(null, arguments);
