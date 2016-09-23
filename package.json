@@ -7,7 +7,8 @@
     "test": "tests"
   },
   "scripts": {
-    "watch": "./node_modules/.bin/gulp watch",
+    "watch": "tsc -w",
+    "compile": "tsc",
     "test": "node ./tests/run-tests.js"
   },
   "repository": {
@@ -21,8 +22,7 @@
   },
   "homepage": "https://github.com/Microsoft/vscode-loader#readme",
   "devDependencies": {
-    "gulp": "^3.9.0",
-    "gulp-typescript": "^2.9.2",
-    "http-server": "^0.8.5"
+    "http-server": "^0.8.5",
+    "typescript": "^2.0.3"
   }
 }

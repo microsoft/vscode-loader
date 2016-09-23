@@ -15,8 +15,6 @@
  *---------------------------------------------------------------------------------------------
  *--------------------------------------------------------------------------------------------*/
 
-/// <reference path="declares.ts" />
-
 'use strict';
 
 // Limitation: To load jquery through the loader, always require 'jquery' and add a path for it in the loader configuration

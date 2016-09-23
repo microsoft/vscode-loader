@@ -15,9 +15,6 @@
  *---------------------------------------------------------------------------------------------
  *--------------------------------------------------------------------------------------------*/
 
-/// <reference path="declares.ts" />
-/// <reference path="loader.ts" />
-
 'use strict';
 
 let _nlsPluginGlobal = this;
@@ -158,7 +155,7 @@ module NLSLoaderPlugin {
 
 						req([name + suffix], function(messages) {
 							if (Array.isArray(messages)) {
-								messages.localize = createScopedLocalize(messages);
+								(<any>messages).localize = createScopedLocalize(messages);
 							} else {
 								messages.localize = createScopedLocalize(messages[name]);
 							}

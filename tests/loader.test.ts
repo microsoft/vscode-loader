@@ -3,9 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-/// <reference path="qunit/qunit.d.ts" />
-/// <reference path="../src/loader.ts" />
-
 import loader = AMDLoader;
 
 QUnit.module('ConfigurationOptionsUtil');
