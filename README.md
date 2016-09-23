@@ -78,10 +78,10 @@ console.log(loader.getBuildInfo());
 ## Testing
 
 To run the tests:
-* [code loading in node]: `npm run test`
-* [amd spec tests, unit tests & code loading in browser]:
- * Run `scripts/simpleserver`
- * Open `http://localhost:8888/tests/run-tests.htm`
+* code loading in node: `npm run test`
+* amd spec tests, unit tests & code loading in browser:
+  * `npm run simpleserver`
+  * open `http://localhost:8888/tests/run-tests.htm`
 
 The project uses as a submodule the [AMD compliance tests](https://github.com/amdjs/amdjs-tests). The goal is to support as many tests without adding `eval()` or an equivalent. It is also not a goal to support loading CommonJS code:
 
