@@ -55,6 +55,7 @@ module AMDLoader {
 		(dependency:string): any;
 		toUrl(id:string): string;
 		getStats(): LoaderEvent[];
+		getChecksums(): {[scriptSrc:string]:string};
 	}
 
 	export interface IPluginLoadCallback {
@@ -270,6 +271,7 @@ module AMDLoader {
 		nodeInstrumenter?:(source:string, vmScriptSrc:string)=>string;
 		nodeMain?:string;
 		nodeModules?:string[];
+		checksum?:boolean;
 	}
 
 	export class ConfigurationOptionsUtil {
@@ -1241,6 +1243,11 @@ module AMDLoader {
 		 */
 		private _resolvedScriptPaths: { [moduleId:string]: string; };
 
+		/**
+		 * Hash map of scriptSrc => checksum.
+		 */
+		private _checksums: { [scriptSrc:string]: string; };
+
 		constructor(scriptLoader:IScriptLoader) {
 			this._config = new Configuration();
 			this._scriptLoader = scriptLoader;
@@ -1252,6 +1259,7 @@ module AMDLoader {
 			this._queuedDefineCalls = [];
 			this._loadingScriptsCount = 0;
 			this._resolvedScriptPaths = {};
+			this._checksums = {};
 		}
 
 		private static _findRelevantLocationInStack(needle: string, stack: string): IPosition {
@@ -1326,6 +1334,15 @@ module AMDLoader {
 		public getLoaderEvents(): LoaderEvent[] {
 			return this.getRecorder().getEvents();
 		}
+
+		public recordChecksum(scriptSrc:string, checksum:string): void {
+			this._checksums[scriptSrc] = checksum;
+		}
+
+		public getChecksums(): {[scriptSrc:string]:string} {
+			return this._checksums;
+		}
+
 		/**
 		 * Defines a module.
 		 * @param id @see defineModule
@@ -1702,6 +1719,9 @@ module AMDLoader {
 			};
 			result.getStats = () => {
 				return this.getLoaderEvents();
+			};
+			result.getChecksums = () => {
+				return this.getChecksums();
 			};
 			(<any>result).__$__nodeRequire = global.nodeRequire;
 			return result;
@@ -2188,6 +2208,14 @@ module AMDLoader {
 		normalize(filename:string): string;
 	}
 
+	interface INodeCryptoHash {
+		update(str:string, encoding:string): INodeCryptoHash;
+		digest(type:string): string;
+	}
+	interface INodeCrypto {
+		createHash(type:string): INodeCryptoHash;
+	}
+
 	class NodeScriptLoader implements IScriptLoader {
 
 		private static _BOM = 0xFEFF;
@@ -2196,6 +2224,7 @@ module AMDLoader {
 		private _fs: INodeFS;
 		private _vm: INodeVM;
 		private _path: INodePath;
+		private _crypto: INodeCrypto;
 		private _moduleManager:ModuleManager;
 
 		constructor() {
@@ -2214,12 +2243,14 @@ module AMDLoader {
 			this._fs = nodeRequire('fs');
 			this._vm = nodeRequire('vm');
 			this._path = nodeRequire('path');
+			this._crypto = nodeRequire('crypto');
 		}
 
 		public load(scriptSrc:string, callback:()=>void, errorback:(err:any)=>void, recorder:ILoaderEventRecorder): void {
-			var opts = this._moduleManager.getConfigurationOptions();
-			var nodeRequire = (opts.nodeRequire || global.nodeRequire);
-			var nodeInstrumenter = (opts.nodeInstrumenter || function (c) { return c; });
+			const opts = this._moduleManager.getConfigurationOptions();
+			const checksum = opts.checksum || false;
+			const nodeRequire = (opts.nodeRequire || global.nodeRequire);
+			const nodeInstrumenter = (opts.nodeInstrumenter || function (c) { return c; });
 			this._init(nodeRequire);
 
 			if (/^node\|/.test(scriptSrc)) {
@@ -2250,19 +2281,29 @@ module AMDLoader {
 						return;
 					}
 
+					if (checksum) {
+						let hash = this._crypto
+							.createHash('md5')
+							.update(data, 'utf8')
+							.digest('base64')
+							.replace(/=+$/, '');
+
+						this._moduleManager.recordChecksum(scriptSrc, hash);
+					}
+
 					recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
 
-					var vmScriptSrc = this._path.normalize(scriptSrc);
+					let vmScriptSrc = this._path.normalize(scriptSrc);
 					// Make the script src friendly towards electron
 					if (isElectronRenderer) {
-						var driveLetterMatch = vmScriptSrc.match(/^([a-z])\:(.*)/);
+						let driveLetterMatch = vmScriptSrc.match(/^([a-z])\:(.*)/i);
 						if (driveLetterMatch) {
 							vmScriptSrc = driveLetterMatch[1].toUpperCase() + ':' + driveLetterMatch[2];
 						}
 						vmScriptSrc = 'file:///' + vmScriptSrc.replace(/\\/g, '/');
 					}
 
-					var contents: string,
+					let contents: string,
 						prefix = '(function (require, define, __filename, __dirname) { ',
 						suffix = '\n});';
 
@@ -2274,7 +2315,7 @@ module AMDLoader {
 
 					contents = nodeInstrumenter(contents, vmScriptSrc);
 
-					var r;
+					let r;
 					if (/^v0\.12/.test(process.version)) {
 						r = this._vm.runInThisContext(contents, { filename:vmScriptSrc });
 					} else {
@@ -2373,6 +2414,13 @@ module AMDLoader {
 		 */
 		public static getStats(): LoaderEvent[] {
 			return moduleManager.getLoaderEvents();
+		}
+
+		/**
+		 * Non standard extension to fetch checksums
+		 */
+		public static getChecksums(): {[scriptSrc:string]:string} {
+			return moduleManager.getChecksums();
 		}
 	}
 
