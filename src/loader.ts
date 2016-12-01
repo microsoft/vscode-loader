@@ -2251,6 +2251,7 @@ module AMDLoader {
 	interface INodePath {
 		dirname(filename:string): string;
 		normalize(filename: string):string;
+		basename(filename: string): string;
 		join(...parts: string[]): string;
 	}
 
@@ -2373,7 +2374,7 @@ module AMDLoader {
 
 					} else {
 
-						const cachedDataPath = this._path.join(opts.nodeCachedDataDir, scriptSrc.replace(/\\|\//g, '') + '.code');
+						const cachedDataPath = this._getCachedDataPath(opts.nodeCachedDataDir, scriptSrc);
 
 						this._fs.readFile(cachedDataPath, (err, data) => {
 
@@ -2429,6 +2430,12 @@ module AMDLoader {
 					}
 				});
 			}
+		}
+
+		private _getCachedDataPath(baseDir: string, filename: string): string {
+			const hash = this._crypto.createHash('md5').update(filename, 'utf8').digest('hex');
+			const basename = this._path.basename(filename).replace(/\.js$/, '');
+			return this._path.join(baseDir, `${hash}-${basename}.code`);
 		}
 
 		private static _runSoon(callback: Function, minTimeout: number): void {
