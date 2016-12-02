@@ -270,6 +270,18 @@ module AMDLoader {
 		nodeMain?:string;
 		nodeModules?:string[];
 		checksum?:boolean;
+		/**
+		 * Optional data directory for reading/writing v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
+		 */
+		nodeCachedDataDir?: string;
+		/**
+		 * Optional delay for filesystem write/delete operations
+		 */
+		nodeCachedDataWriteDelay?: number;
+		/**
+		 * Optional callback that will be invoked when errors with cached code occur
+		 */
+		onNodeCachedDataError?: (err: any) => void;
 	}
 
 	export class ConfigurationOptionsUtil {
@@ -340,6 +352,20 @@ module AMDLoader {
 			}
 			if (!Array.isArray(options.nodeModules)) {
 				options.nodeModules = [];
+			}
+			if (typeof options.nodeCachedDataWriteDelay !== 'number' || options.nodeCachedDataWriteDelay < 0) {
+				options.nodeCachedDataWriteDelay = 1000 * 7;
+			}
+			if (typeof options.onNodeCachedDataError !== 'function') {
+				options.onNodeCachedDataError = (err) => {
+					if (err.errorCode === 'cachedDataRejected') {
+						console.warn('Rejected cached data from file: ' + err.path);
+
+					} else if (err.errorCode === 'unlink' || err.errorCode === 'writeFile') {
+						console.error('Problems writing cached data file: ' + err.path);
+						console.error(err.detail);
+					}
+				};
 			}
 
 			return options;
@@ -2192,18 +2218,41 @@ module AMDLoader {
 		}
 	}
 
+	declare class Buffer {
+
+	}
+
 	interface INodeFS {
-		readFile(filename:string, options:{encoding?:string; flag?:string}, callback:(err:any, data:any)=>void): void;
+		readFile(filename: string, options: { encoding?: string; flag?: string }, callback: (err: any, data: any) => void): void;
+		readFile(filename: string, callback: (err: any, data: Buffer) => void): void;
+		writeFile(filename: string, data: Buffer, callback: (err: any) => void): void;
+		unlink(path: string, callback: (err: any) => void): void;
+	}
+
+	interface INodeVMScriptOptions {
+		filename: string;
+		produceCachedData?: boolean;
+		cachedData?: Buffer;
+	}
+
+	interface INodeVMScript {
+		cachedData: Buffer;
+		cachedDataProduced: boolean;
+		cachedDataRejected: boolean;
+		runInThisContext(options: INodeVMScriptOptions);
 	}
 
 	interface INodeVM {
+		Script: { new (contents: string, options: INodeVMScriptOptions): INodeVMScript }
 		runInThisContext(contents:string, { filename:string });
 		runInThisContext(contents:string, filename:string);
 	}
 
 	interface INodePath {
 		dirname(filename:string): string;
-		normalize(filename:string): string;
+		normalize(filename: string):string;
+		basename(filename: string): string;
+		join(...parts: string[]): string;
 	}
 
 	interface INodeCryptoHash {
@@ -2289,8 +2338,6 @@ module AMDLoader {
 						this._moduleManager.recordChecksum(scriptSrc, hash);
 					}
 
-					recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
-
 					let vmScriptSrc = this._path.normalize(scriptSrc);
 					// Make the script src friendly towards electron
 					if (isElectronRenderer) {
@@ -2313,20 +2360,89 @@ module AMDLoader {
 
 					contents = nodeInstrumenter(contents, vmScriptSrc);
 
-					let r;
-					if (/^v0\.12/.test(process.version)) {
-						r = this._vm.runInThisContext(contents, { filename:vmScriptSrc });
+					if (!opts.nodeCachedDataDir) {
+
+						this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, { filename: vmScriptSrc }, recorder);
+						callback();
+
 					} else {
-						r = this._vm.runInThisContext(contents, vmScriptSrc);
+
+						const cachedDataPath = this._getCachedDataPath(opts.nodeCachedDataDir, scriptSrc);
+
+						this._fs.readFile(cachedDataPath, (err, data) => {
+
+							// create script options
+							const scriptOptions: INodeVMScriptOptions = {
+								filename: vmScriptSrc,
+								produceCachedData: typeof data === 'undefined',
+								cachedData: data
+							};
+
+							const script = this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, scriptOptions, recorder);
+							callback();
+
+							// cached code after math
+							if (script.cachedDataRejected) {
+								// data rejected => delete cache file
+
+								opts.onNodeCachedDataError({
+									errorCode: 'cachedDataRejected',
+									path: cachedDataPath
+								});
+
+								NodeScriptLoader._runSoon(() => this._fs.unlink(cachedDataPath, err => {
+									if (err) {
+										opts.onNodeCachedDataError({
+											errorCode: 'unlink',
+											path: cachedDataPath,
+											detail: err
+										});
+									}
+								}), opts.nodeCachedDataWriteDelay);
+
+							} else if (script.cachedDataProduced) {
+								// data produced => write cache file
+
+								NodeScriptLoader._runSoon(() => this._fs.writeFile(cachedDataPath, script.cachedData, err => {
+									if (err) {
+										opts.onNodeCachedDataError({
+											errorCode: 'writeFile',
+											path: cachedDataPath,
+											detail: err
+										});
+									}
+								}), opts.nodeCachedDataWriteDelay);
+							}
+						});
 					}
-
-					r.call(global, RequireFunc, DefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
-
-					recorder.record(LoaderEventType.NodeEndEvaluatingScript, scriptSrc);
-
-					callback();
 				});
 			}
+		}
+
+		private _loadAndEvalScript(scriptSrc: string, vmScriptSrc: string, contents: string, options: INodeVMScriptOptions, recorder: ILoaderEventRecorder): INodeVMScript {
+
+			// create script, run script
+			recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
+
+			const script = new this._vm.Script(contents, options);
+			const r = script.runInThisContext(options);
+			r.call(global, RequireFunc, DefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
+
+			// signal done
+			recorder.record(LoaderEventType.NodeEndEvaluatingScript, scriptSrc);
+
+			return script;
+		}
+
+		private _getCachedDataPath(baseDir: string, filename: string): string {
+			const hash = this._crypto.createHash('md5').update(filename, 'utf8').digest('hex');
+			const basename = this._path.basename(filename).replace(/\.js$/, '');
+			return this._path.join(baseDir, `${hash}-${basename}.code`);
+		}
+
+		private static _runSoon(callback: Function, minTimeout: number): void {
+			const timeout = minTimeout + Math.ceil(Math.random() * minTimeout);
+			setTimeout(callback, timeout);
 		}
 	}
 
