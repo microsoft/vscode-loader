@@ -20,12 +20,12 @@
 module TextLoaderPlugin {
 
 	export interface ITextLoader {
-		load(name:string, fileUrl:string, externalCallback:(contents:string)=>void, externalErrorback:(err:any)=>void): void;
+		load(name: string, fileUrl: string, externalCallback: (contents: string) => void, externalErrorback: (err: any) => void): void;
 	}
 
 	class BrowserTextLoader implements ITextLoader {
 
-		public load(name:string, fileUrl:string, externalCallback:(contents:string)=>void, externalErrorback:(err:any)=>void): void {
+		public load(name: string, fileUrl: string, externalCallback: (contents: string) => void, externalErrorback: (err: any) => void): void {
 			var req = new XMLHttpRequest();
 			req.onreadystatechange = () => {
 				if (req.readyState === 4) {
@@ -48,10 +48,10 @@ module TextLoaderPlugin {
 	}
 
 	interface INodeFS {
-		readFileSync(filename:string, encoding:string): string;
+		readFileSync(filename: string, encoding: string): string;
 	}
 
-	function readFileAndRemoveBOM(fs:INodeFS, path:string): string {
+	function readFileAndRemoveBOM(fs: INodeFS, path: string): string {
 		var BOM_CHAR_CODE = 65279;
 		var contents = fs.readFileSync(path, 'utf8');
 		// Remove BOM
@@ -63,13 +63,13 @@ module TextLoaderPlugin {
 
 	class NodeTextLoader {
 
-		private fs:INodeFS;
+		private fs: INodeFS;
 
 		constructor() {
 			this.fs = require.nodeRequire('fs');
 		}
 
-		public load(name:string, fileUrl:string, callback:(contents:string)=>void, errorback:(err:any)=>void): void {
+		public load(name: string, fileUrl: string, callback: (contents: string) => void, errorback: (err: any) => void): void {
 			callback(readFileAndRemoveBOM(this.fs, fileUrl));
 		}
 	}
@@ -78,15 +78,15 @@ module TextLoaderPlugin {
 
 	export class TextPlugin implements AMDLoader.ILoaderPlugin {
 
-		static BUILD_MAP: {[name:string]:string;} = <any>{};
+		static BUILD_MAP: { [name: string]: string; } = <any>{};
 
-		private textLoader:ITextLoader;
+		private textLoader: ITextLoader;
 
-		constructor(textLoader:ITextLoader) {
+		constructor(textLoader: ITextLoader) {
 			this.textLoader = textLoader;
 		}
 
-		public load(name:string, req:AMDLoader.IRelativeRequire, load:AMDLoader.IPluginLoadCallback, config:AMDLoader.IConfigurationOptions): void {
+		public load(name: string, req: AMDLoader.IRelativeRequire, load: AMDLoader.IPluginLoadCallback, config: AMDLoader.IConfigurationOptions): void {
 			config = config || {};
 			var myConfig = config['vs/text'] || {};
 			var myPaths = myConfig.paths || {};
@@ -111,7 +111,7 @@ module TextLoaderPlugin {
 			});
 		}
 
-		public write(pluginName:string, moduleName:string, write:AMDLoader.IPluginWriteCallback): void {
+		public write(pluginName: string, moduleName: string, write: AMDLoader.IPluginWriteCallback): void {
 			if (TextPlugin.BUILD_MAP.hasOwnProperty(moduleName)) {
 				var escapedText = Utilities.escapeText(TextPlugin.BUILD_MAP[moduleName]);
 				write('define("' + pluginName + '!' + moduleName + '", function () { return "' + escapedText + '"; });');
@@ -124,7 +124,7 @@ module TextLoaderPlugin {
 		/**
 		 * Escape text such that it can be used in a javascript string enclosed by double quotes (")
 		 */
-		public static escapeText(text:string): string {
+		public static escapeText(text: string): string {
 			// http://www.javascriptkit.com/jsref/escapesequence.shtml
 			// \b	Backspace.
 			// \f	Form feed.
@@ -150,10 +150,10 @@ module TextLoaderPlugin {
 			var _backslash = '\\'.charCodeAt(0);
 			var _doubleQuote = '"'.charCodeAt(0);
 
-			var startPos = 0, chrCode:number, replaceWith:string = null, resultPieces:string[] = [];
+			var startPos = 0, chrCode: number, replaceWith: string = null, resultPieces: string[] = [];
 			for (var i = 0, len = text.length; i < len; i++) {
 				chrCode = text.charCodeAt(i);
-				switch(chrCode) {
+				switch (chrCode) {
 					case _backspace:
 						replaceWith = '\\b';
 						break;
@@ -195,8 +195,8 @@ module TextLoaderPlugin {
 		}
 	}
 
-	(function() {
-		var textLoader:ITextLoader = null;
+	(function () {
+		var textLoader: ITextLoader = null;
 		var isElectron = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined');
 		if (typeof process !== 'undefined' && process.versions && !!process.versions.node && !isElectron) {
 			textLoader = new NodeTextLoader();

@@ -28,49 +28,49 @@ declare var require;
 module AMDLoader {
 
 	export interface IScriptLoader {
-		load(scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void, recorder:ILoaderEventRecorder): void;
-		setModuleManager(moduleManager:ModuleManager): void;
+		load(scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void, recorder: ILoaderEventRecorder): void;
+		setModuleManager(moduleManager: ModuleManager): void;
 	}
 
 	export interface ILoaderPlugin {
-		dynamic?:boolean;
-		normalize?:(pluginParam:string, normalize:(moduleId:string)=>string)=>string;
-		load?:(pluginParam:string, parentRequire:IRelativeRequire, loadCallback:IPluginLoadCallback, options:IConfigurationOptions)=>void;
-		write?:(pluginName:string, moduleName:string, write:IPluginWriteCallback)=>void;
-		writeFile?:(pluginName:string, moduleName:string, req:IRelativeRequire, write:IPluginWriteFileCallback, config:IConfigurationOptions)=>void;
-		finishBuild?:(write:(filename:string, contents:string)=>void)=>void;
+		dynamic?: boolean;
+		normalize?: (pluginParam: string, normalize: (moduleId: string) => string) => string;
+		load?: (pluginParam: string, parentRequire: IRelativeRequire, loadCallback: IPluginLoadCallback, options: IConfigurationOptions) => void;
+		write?: (pluginName: string, moduleName: string, write: IPluginWriteCallback) => void;
+		writeFile?: (pluginName: string, moduleName: string, req: IRelativeRequire, write: IPluginWriteFileCallback, config: IConfigurationOptions) => void;
+		finishBuild?: (write: (filename: string, contents: string) => void) => void;
 	}
 
 	export interface IDefineCall {
-		id?:string;
-		stack:string;
-		dependencies:string[];
-		callback:any;
+		id?: string;
+		stack: string;
+		dependencies: string[];
+		callback: any;
 	}
 
 	export interface IRelativeRequire {
-		(dependencies:string[], callback:Function): void;
-		(dependency:string): any;
-		toUrl(id:string): string;
+		(dependencies: string[], callback: Function): void;
+		(dependency: string): any;
+		toUrl(id: string): string;
 		getStats(): LoaderEvent[];
-		getChecksums(): {[scriptSrc:string]:string};
+		getChecksums(): { [scriptSrc: string]: string };
 	}
 
 	export interface IPluginLoadCallback {
-		(value:any): void;
-		error(err:any): void;
+		(value: any): void;
+		error(err: any): void;
 	}
 
 	export interface IPluginWriteCallback {
-		(contents:string): void;
+		(contents: string): void;
 		getEntryPoint(): string;
-		asModule(moduleId:string, contents:string): void;
+		asModule(moduleId: string, contents: string): void;
 	}
 
 	export interface IPluginWriteFileCallback {
-		(filename:string, contents:string): void;
+		(filename: string, contents: string): void;
 		getEntryPoint(): string;
-		asModule(moduleId:string, contents:string): void;
+		asModule(moduleId: string, contents: string): void;
 	}
 
 	// ------------------------------------------------------------------------
@@ -91,7 +91,7 @@ module AMDLoader {
 		/**
 		 * This method does not take care of / vs \
 		 */
-		public static fileUriToFilePath(uri:string): string {
+		public static fileUriToFilePath(uri: string): string {
 			uri = decodeURI(uri);
 			if (isWindows) {
 				if (/^file:\/\/\//.test(uri)) {
@@ -110,23 +110,23 @@ module AMDLoader {
 			return uri;
 		}
 
-		public static startsWith(haystack:string, needle:string): boolean {
+		public static startsWith(haystack: string, needle: string): boolean {
 			return haystack.length >= needle.length && haystack.substr(0, needle.length) === needle;
 		}
 
-		public static endsWith(haystack:string, needle:string): boolean {
+		public static endsWith(haystack: string, needle: string): boolean {
 			return haystack.length >= needle.length && haystack.substr(haystack.length - needle.length) === needle;
 		}
 
 		// only check for "?" before "#" to ensure that there is a real Query-String
-		public static containsQueryString(url:string): boolean {
+		public static containsQueryString(url: string): boolean {
 			return /^[^\#]*\?/gi.test(url);
 		}
 
 		/**
 		 * Does `url` start with http:// or https:// or / ?
 		 */
-		public static isAbsolutePath(url:string): boolean {
+		public static isAbsolutePath(url: string): boolean {
 			return (
 				Utilities.startsWith(url, 'http://')
 				|| Utilities.startsWith(url, 'https://')
@@ -135,9 +135,9 @@ module AMDLoader {
 			);
 		}
 
-		public static forEachProperty(obj:any, callback:(key:string, value:any)=>void): void {
+		public static forEachProperty(obj: any, callback: (key: string, value: any) => void): void {
 			if (obj) {
-				var key:string;
+				var key: string;
 				for (key in obj) {
 					if (obj.hasOwnProperty(key)) {
 						callback(key, obj[key]);
@@ -146,7 +146,7 @@ module AMDLoader {
 			}
 		}
 
-		public static isEmpty(obj:any): boolean {
+		public static isEmpty(obj: any): boolean {
 			var isEmpty = true;
 			Utilities.forEachProperty(obj, () => {
 				isEmpty = false;
@@ -154,19 +154,19 @@ module AMDLoader {
 			return isEmpty;
 		}
 
-		public static isArray(obj:any): boolean {
+		public static isArray(obj: any): boolean {
 			if (Array.isArray) {
 				return Array.isArray(obj);
 			}
 			return Object.prototype.toString.call(obj) === '[object Array]';
 		}
 
-		public static recursiveClone(obj:any): any {
+		public static recursiveClone(obj: any): any {
 			if (!obj || typeof obj !== 'object') {
 				return obj;
 			}
 			var result = Utilities.isArray(obj) ? [] : {};
-			Utilities.forEachProperty(obj, (key:string, value:any) => {
+			Utilities.forEachProperty(obj, (key: string, value: any) => {
 				if (value && typeof value === 'object') {
 					result[key] = Utilities.recursiveClone(value);
 				} else {
@@ -183,7 +183,7 @@ module AMDLoader {
 			return '===anonymous' + (Utilities.NEXT_ANONYMOUS_ID++) + '===';
 		}
 
-		public static isAnonymousModule(id:string): boolean {
+		public static isAnonymousModule(id: string): boolean {
 			return id.indexOf('===anonymous') === 0;
 		}
 	}
@@ -192,9 +192,9 @@ module AMDLoader {
 	// Configuration
 
 	export interface IShimConfiguration {
-		deps?:string[];
-		exports?:any;
-		init?:(...depsValues:any[])=>any;
+		deps?: string[];
+		exports?: any;
+		init?: (...depsValues: any[]) => any;
 	}
 
 	export interface IBundleConfiguration {
@@ -203,11 +203,11 @@ module AMDLoader {
 	}
 
 	export interface IModuleConfiguration {
-		[key:string]:any;
+		[key: string]: any;
 	}
 
 	export interface INodeRequire {
-		(nodeModule:string): any;
+		(nodeModule: string): any;
 		main: {
 			filename: string;
 		};
@@ -217,11 +217,11 @@ module AMDLoader {
 		/**
 		 * The prefix that will be aplied to all modules when they are resolved to a location
 		 */
-		baseUrl?:string;
+		baseUrl?: string;
 		/**
 		 * Redirect rules for modules. The redirect rules will affect the module ids themselves
 		 */
-		paths?:{ [path:string]:any; };
+		paths?: { [path: string]: any; };
 		/**
 		 * Bundle mappings for modules. (@TODO)
 		 */
@@ -229,47 +229,47 @@ module AMDLoader {
 		/**
 		 * Definitions for non-AMD scripts.
 		 */
-		shim?:{ [path:string]:IShimConfiguration; };
+		shim?: { [path: string]: IShimConfiguration; };
 		/**
 		 * Per-module configuration
 		 */
-		config?:{ [moduleId:string]:IModuleConfiguration };
+		config?: { [moduleId: string]: IModuleConfiguration };
 		/**
 		 * Catch errors when invoking the module factories
 		 */
-		catchError?:boolean;
+		catchError?: boolean;
 		/**
 		 * Record statistics
 		 */
-		recordStats?:boolean;
+		recordStats?: boolean;
 		/**
 		 * The suffix that will be aplied to all modules when they are resolved to a location
 		 */
-		urlArgs?:string;
+		urlArgs?: string;
 		/**
 		 * Callback that will be called when errors are encountered
 		 */
-		onError?:(err:any)=>void;
+		onError?: (err: any) => void;
 		/**
 		 * The loader will issue warnings when duplicate modules are encountered.
 		 * This list will inhibit those warnings if duplicate modules are expected.
 		 */
-		ignoreDuplicateModules?:string[];
+		ignoreDuplicateModules?: string[];
 		/**
 		 * Flag to indicate if current execution is as part of a build. Used by plugins
 		 */
-		isBuild?:boolean;
+		isBuild?: boolean;
 		/**
 		 * The main entry point node's require
 		 */
-		nodeRequire?:INodeRequire;
+		nodeRequire?: INodeRequire;
 		/**
 		 * An optional transformation applied to the source before it is loaded in node's vm
 		 */
-		nodeInstrumenter?:(source:string, vmScriptSrc:string)=>string;
-		nodeMain?:string;
-		nodeModules?:string[];
-		checksum?:boolean;
+		nodeInstrumenter?: (source: string, vmScriptSrc: string) => string;
+		nodeMain?: string;
+		nodeModules?: string[];
+		checksum?: boolean;
 		/**
 		 * Optional data directory for reading/writing v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
 		 */
@@ -289,7 +289,7 @@ module AMDLoader {
 		/**
 		 * Ensure configuration options make sense
 		 */
-		private static validateConfigurationOptions(options:IConfigurationOptions): IConfigurationOptions {
+		private static validateConfigurationOptions(options: IConfigurationOptions): IConfigurationOptions {
 
 			function defaultOnError(err): void {
 				if (err.errorCode === 'load') {
@@ -371,19 +371,19 @@ module AMDLoader {
 			return options;
 		}
 
-		public static mergeConfigurationOptions(overwrite:IConfigurationOptions = null, base:IConfigurationOptions = null): IConfigurationOptions {
-			var result:IConfigurationOptions = Utilities.recursiveClone(base || {});
+		public static mergeConfigurationOptions(overwrite: IConfigurationOptions = null, base: IConfigurationOptions = null): IConfigurationOptions {
+			var result: IConfigurationOptions = Utilities.recursiveClone(base || {});
 
 			// Merge known properties and overwrite the unknown ones
-			Utilities.forEachProperty(overwrite, (key:string, value:any) => {
+			Utilities.forEachProperty(overwrite, (key: string, value: any) => {
 				if (key === 'bundles' && typeof result.bundles !== 'undefined') {
 					if (Utilities.isArray(value)) {
 						// Compatibility style
 						result.bundles = result.bundles.concat(value);
 					} else {
 						// AMD API style
-						Utilities.forEachProperty(value, (key:string, value:any) => {
-							var bundleConfiguration:IBundleConfiguration = {
+						Utilities.forEachProperty(value, (key: string, value: any) => {
+							var bundleConfiguration: IBundleConfiguration = {
 								location: key,
 								modules: value
 							};
@@ -393,9 +393,9 @@ module AMDLoader {
 				} else if (key === 'ignoreDuplicateModules' && typeof result.ignoreDuplicateModules !== 'undefined') {
 					result.ignoreDuplicateModules = result.ignoreDuplicateModules.concat(value);
 				} else if (key === 'paths' && typeof result.paths !== 'undefined') {
-					Utilities.forEachProperty(value, (key2:string, value2:any) => result.paths[key2] = value2);
+					Utilities.forEachProperty(value, (key2: string, value2: any) => result.paths[key2] = value2);
 				} else if (key === 'shim' && typeof result.shim !== 'undefined') {
-					Utilities.forEachProperty(value, (key2:string, value2:any) => result.shim[key2] = value2);
+					Utilities.forEachProperty(value, (key2: string, value2: any) => result.shim[key2] = value2);
 				} else if (key === 'config' && typeof result.config !== 'undefined') {
 					Utilities.forEachProperty(value, (key2: string, value2: any) => result.config[key2] = value2);
 				} else {
@@ -409,30 +409,30 @@ module AMDLoader {
 
 	export class Configuration {
 
-		private options:IConfigurationOptions;
+		private options: IConfigurationOptions;
 
 		/**
 		 * Generated from the `ignoreDuplicateModules` configuration option.
 		 */
-		private ignoreDuplicateModulesMap:{ [moduleId:string]:boolean; };
+		private ignoreDuplicateModulesMap: { [moduleId: string]: boolean; };
 
 		/**
 		 * Generated from the `paths` configuration option. These are sorted with the longest `from` first.
 		 */
-		private sortedPathsRules:{ from:string; to:string[]; }[];
+		private sortedPathsRules: { from: string; to: string[]; }[];
 
 		/**
 		 * Generated from the `shim` configuration option.
 		 */
-		private shimModules: { [path:string]:IDefineCall; };
-		private shimModulesStr: { [path:string]:string; };
+		private shimModules: { [path: string]: IDefineCall; };
+		private shimModulesStr: { [path: string]: string; };
 
 		/**
 		 * Generated from the `bundles` configuration option.
 		 */
-		private overwriteModuleIdToPath: { [moduleId:string]:string; };
+		private overwriteModuleIdToPath: { [moduleId: string]: string; };
 
-		constructor(options?:IConfigurationOptions) {
+		constructor(options?: IConfigurationOptions) {
 			this.options = ConfigurationOptionsUtil.mergeConfigurationOptions(options);
 
 			this._createIgnoreDuplicateModulesMap();
@@ -480,7 +480,7 @@ module AMDLoader {
 			// Create an array our of the paths rules, sorted descending by length to
 			// result in a more specific -> less specific order
 			this.sortedPathsRules = [];
-			Utilities.forEachProperty(this.options.paths, (from:string, to:any) => {
+			Utilities.forEachProperty(this.options.paths, (from: string, to: any) => {
 				if (!Utilities.isArray(to)) {
 					this.sortedPathsRules.push({
 						from: from,
@@ -498,7 +498,7 @@ module AMDLoader {
 			});
 		}
 
-		private _ensureShimModule1(path:string, shimMD:string[]): void {
+		private _ensureShimModule1(path: string, shimMD: string[]): void {
 			// Ensure dependencies are also shimmed
 			for (var i = 0; i < shimMD.length; i++) {
 				var dependencyId = shimMD[i];
@@ -519,11 +519,11 @@ module AMDLoader {
 			}
 		}
 
-		private _ensureShimModule2(path:string, shimMD:IShimConfiguration): void {
+		private _ensureShimModule2(path: string, shimMD: IShimConfiguration): void {
 			this.shimModules[path] = {
 				stack: null,
 				dependencies: shimMD.deps || [],
-				callback: (...depsValues:any[]) => {
+				callback: (...depsValues: any[]) => {
 					if (typeof shimMD.init === 'function') {
 						var initReturnValue = shimMD.init.apply(global, depsValues);
 						if (typeof initReturnValue !== 'undefined') {
@@ -565,7 +565,7 @@ module AMDLoader {
 		private _createShimModules(): void {
 			this.shimModules = {};
 			this.shimModulesStr = {};
-			Utilities.forEachProperty(this.options.shim, (path:string, shimMD:any) => {
+			Utilities.forEachProperty(this.options.shim, (path: string, shimMD: any) => {
 				if (!shimMD) {
 					return;
 				}
@@ -584,7 +584,7 @@ module AMDLoader {
 		 * @param options The selective options to overwrite with.
 		 * @result A new configuration
 		 */
-		public cloneAndMerge(options?:IConfigurationOptions): Configuration {
+		public cloneAndMerge(options?: IConfigurationOptions): Configuration {
 			return new Configuration(ConfigurationOptionsUtil.mergeConfigurationOptions(options, this.options));
 		}
 
@@ -595,8 +595,8 @@ module AMDLoader {
 			return this.options;
 		}
 
-		private _applyPaths(moduleId:string): string[] {
-			var pathRule: { from:string; to:string[]; };
+		private _applyPaths(moduleId: string): string[] {
+			var pathRule: { from: string; to: string[]; };
 			for (var i = 0, len = this.sortedPathsRules.length; i < len; i++) {
 				pathRule = this.sortedPathsRules[i];
 				if (Utilities.startsWith(moduleId, pathRule.from)) {
@@ -610,7 +610,7 @@ module AMDLoader {
 			return [moduleId];
 		}
 
-		private _addUrlArgsToUrl(url:string): string {
+		private _addUrlArgsToUrl(url: string): string {
 			if (Utilities.containsQueryString(url)) {
 				return url + '&' + this.options.urlArgs;
 			} else {
@@ -618,14 +618,14 @@ module AMDLoader {
 			}
 		}
 
-		private _addUrlArgsIfNecessaryToUrl(url:string): string {
+		private _addUrlArgsIfNecessaryToUrl(url: string): string {
 			if (this.options.urlArgs) {
 				return this._addUrlArgsToUrl(url);
 			}
 			return url;
 		}
 
-		private _addUrlArgsIfNecessaryToUrls(urls:string[]): string[] {
+		private _addUrlArgsIfNecessaryToUrls(urls: string[]): string[] {
 			if (this.options.urlArgs) {
 				for (var i = 0, len = urls.length; i < len; i++) {
 					urls[i] = this._addUrlArgsToUrl(urls[i]);
@@ -637,7 +637,7 @@ module AMDLoader {
 		/**
 		 * Transform a module id to a location. Appends .js to module ids
 		 */
-		public moduleIdToPaths(moduleId:string): string[] {
+		public moduleIdToPaths(moduleId: string): string[] {
 
 			if (this.isBuild() && this.options.nodeModules.indexOf(moduleId) >= 0) {
 				// This is a node module and we are at build time, drop it
@@ -680,7 +680,7 @@ module AMDLoader {
 		/**
 		 * Transform a module id or url to a location.
 		 */
-		public requireToUrl(url:string): string {
+		public requireToUrl(url: string): string {
 			var result = url;
 
 			if (!Utilities.isAbsolutePath(result)) {
@@ -697,7 +697,7 @@ module AMDLoader {
 		/**
 		 * Test if `moduleId` is shimmed.
 		 */
-		public isShimmed(moduleId:string): boolean {
+		public isShimmed(moduleId: string): boolean {
 			return this.shimModules.hasOwnProperty(moduleId);
 		}
 
@@ -711,18 +711,18 @@ module AMDLoader {
 		/**
 		 * Get a normalized shim definition for `moduleId`.
 		 */
-		public getShimmedModuleDefine(moduleId:string): IDefineCall {
+		public getShimmedModuleDefine(moduleId: string): IDefineCall {
 			return this.shimModules[moduleId];
 		}
 
-		public getShimmedModulesStr(moduleId:string): string {
+		public getShimmedModulesStr(moduleId: string): string {
 			return this.shimModulesStr[moduleId];
 		}
 
 		/**
 		 * Test if module `moduleId` is expected to be defined multiple times
 		 */
-		public isDuplicateMessageIgnoredFor(moduleId:string): boolean {
+		public isDuplicateMessageIgnoredFor(moduleId: string): boolean {
 			return this.ignoreDuplicateModulesMap.hasOwnProperty(moduleId);
 		}
 
@@ -752,7 +752,7 @@ module AMDLoader {
 		/**
 		 * Forward an error to the error handler.
 		 */
-		public onError(err:any): void {
+		public onError(err: any): void {
 			this.options.onError(err);
 		}
 	}
@@ -762,10 +762,10 @@ module AMDLoader {
 
 	export class ModuleIdResolver {
 
-		private _config:Configuration;
-		private fromModulePath:string;
+		private _config: Configuration;
+		private fromModulePath: string;
 
-		constructor(config:Configuration, fromModuleId:string) {
+		constructor(config: Configuration, fromModuleId: string) {
 			this._config = config;
 
 			var lastSlash = fromModuleId.lastIndexOf('/');
@@ -783,7 +783,7 @@ module AMDLoader {
 		/**
 		 * Normalize 'a/../name' to 'name', etc.
 		 */
-		static _normalizeModuleId(moduleId:string): string {
+		static _normalizeModuleId(moduleId: string): string {
 			var r = moduleId,
 				pattern: RegExp;
 
@@ -811,7 +811,7 @@ module AMDLoader {
 		/**
 		 * Resolve relative module ids
 		 */
-		public resolveModule(moduleId:string): string {
+		public resolveModule(moduleId: string): string {
 			var result = moduleId;
 
 			if (!Utilities.isAbsolutePath(result)) {
@@ -826,7 +826,7 @@ module AMDLoader {
 		/**
 		 * Transform a module id to a location. Appends .js to module ids
 		 */
-		public moduleIdToPaths(moduleId:string): string[] {
+		public moduleIdToPaths(moduleId: string): string[] {
 			var r = this._config.moduleIdToPaths(moduleId);
 
 			if (isNode && moduleId.indexOf('/') === -1) {
@@ -839,7 +839,7 @@ module AMDLoader {
 		/**
 		 * Transform a module id or url to a location.
 		 */
-		public requireToUrl(url:string): string {
+		public requireToUrl(url: string): string {
 			return this._config.requireToUrl(url);
 		}
 
@@ -853,7 +853,7 @@ module AMDLoader {
 		/**
 		 * Forward an error to the error handler.
 		 */
-		public onError(err:any): void {
+		public onError(err: any): void {
 			this._config.onError(err);
 		}
 	}
@@ -863,25 +863,25 @@ module AMDLoader {
 
 	export class Module {
 
-		private _id:string;
-		private _dependencies:string[];
-		private _dependenciesValues:any[];
-		private _callback:any;
-		private _errorback:Function;
+		private _id: string;
+		private _dependencies: string[];
+		private _dependenciesValues: any[];
+		private _callback: any;
+		private _errorback: Function;
 		private _recorder: ILoaderEventRecorder;
-		private _moduleIdResolver:ModuleIdResolver;
-		private _exports:any;
-		private _exportsPassedIn:boolean;
-		private _unresolvedDependenciesCount:number;
+		private _moduleIdResolver: ModuleIdResolver;
+		private _exports: any;
+		private _exportsPassedIn: boolean;
+		private _unresolvedDependenciesCount: number;
 
 		private _config: IModuleConfiguration;
-		private _normalizedDependencies:string[];
-		private _defineCallStack:string;
-		private _managerDependencies:string[];
-		private _managerDependenciesMap:{ [id:string]:any; };
+		private _normalizedDependencies: string[];
+		private _defineCallStack: string;
+		private _managerDependencies: string[];
+		private _managerDependenciesMap: { [id: string]: any; };
 
 		constructor(id: string, dependencies: string[], callback: any, errorback: Function, recorder: ILoaderEventRecorder,
-			moduleIdResolver: ModuleIdResolver, config?: IModuleConfiguration, defineCallStack:string = null) {
+			moduleIdResolver: ModuleIdResolver, config?: IModuleConfiguration, defineCallStack: string = null) {
 			this._id = id;
 			this._dependencies = dependencies;
 			this._dependenciesValues = [];
@@ -911,8 +911,8 @@ module AMDLoader {
 			this._managerDependencies = [];
 			this._managerDependenciesMap = {};
 
-			var i:number, len:number, d:string;
-			for (i = 0, len = this._dependencies.length; i < len; i ++) {
+			var i: number, len: number, d: string;
+			for (i = 0, len = this._dependencies.length; i < len; i++) {
 				d = this._dependencies[i];
 
 				if (!d) {
@@ -960,7 +960,7 @@ module AMDLoader {
 			}
 		}
 
-		private addManagerDependency(dependency:string, index:number): void {
+		private addManagerDependency(dependency: string, index: number): void {
 			if (this._managerDependenciesMap.hasOwnProperty(dependency)) {
 				throw new Error('Module ' + this._id + ' contains multiple times a dependency to ' + dependency);
 			}
@@ -974,7 +974,7 @@ module AMDLoader {
 		 * be normalized statically, the part after '!' can only be normalized
 		 * once the plugin has loaded and its normalize logic is plugged in.
 		 */
-		public renameDependency(oldDependencyId:string, newDependencyId:string): void {
+		public renameDependency(oldDependencyId: string, newDependencyId: string): void {
 			if (!this._managerDependenciesMap.hasOwnProperty(oldDependencyId)) {
 				throw new Error('Loader: Cannot rename an unknown dependency!');
 			}
@@ -1023,15 +1023,15 @@ module AMDLoader {
 			return this._defineCallStack;
 		}
 
-		private _invokeFactory(): { returnedValue:any; producedError:any; } {
+		private _invokeFactory(): { returnedValue: any; producedError: any; } {
 			if (this._moduleIdResolver.isBuild() && !Utilities.isAnonymousModule(this._id)) {
 				return {
 					returnedValue: null,
 					producedError: null
 				};
 			}
-			var producedError:any = null,
-				returnedValue:any = null;
+			var producedError: any = null,
+				returnedValue: any = null;
 
 			if (this._moduleIdResolver.shouldCatchError()) {
 				try {
@@ -1052,7 +1052,7 @@ module AMDLoader {
 		}
 
 		private _complete(): void {
-			var producedError:any = null;
+			var producedError: any = null;
 			if (this._callback) {
 				if (typeof this._callback === 'function') {
 
@@ -1097,7 +1097,7 @@ module AMDLoader {
 		/**
 		 * One of the direct dependencies or a transitive dependency has failed to load.
 		 */
-		public onDependencyError(err:any): boolean {
+		public onDependencyError(err: any): boolean {
 			if (this._errorback) {
 				this._errorback(err);
 				return true;
@@ -1108,7 +1108,7 @@ module AMDLoader {
 		/**
 		 * Resolve a dependency with a value.
 		 */
-		public resolveDependency(id:string, value:any): void {
+		public resolveDependency(id: string, value: any): void {
 			if (!this._managerDependenciesMap.hasOwnProperty(id)) {
 				throw new Error('Cannot resolve a dependency I do not have!');
 			}
@@ -1157,11 +1157,11 @@ module AMDLoader {
 	}
 
 	export class LoaderEvent {
-		public type:LoaderEventType;
+		public type: LoaderEventType;
 		public timestamp: number;
-		public detail:string;
+		public detail: string;
 
-		constructor(type:LoaderEventType, detail:string, timestamp:number) {
+		constructor(type: LoaderEventType, detail: string, timestamp: number) {
 			this.type = type;
 			this.detail = detail;
 			this.timestamp = timestamp;
@@ -1169,18 +1169,18 @@ module AMDLoader {
 	}
 
 	export interface ILoaderEventRecorder {
-		record(type:LoaderEventType, detail:string): void;
+		record(type: LoaderEventType, detail: string): void;
 		getEvents(): LoaderEvent[];
 	}
 
 	export class LoaderEventRecorder implements ILoaderEventRecorder {
 		private _events: LoaderEvent[];
 
-		constructor(loaderAvailableTimestamp:number) {
+		constructor(loaderAvailableTimestamp: number) {
 			this._events = [new LoaderEvent(LoaderEventType.LoaderAvailable, '', loaderAvailableTimestamp)];
 		}
 
-		public record(type:LoaderEventType, detail:string): void {
+		public record(type: LoaderEventType, detail: string): void {
 			this._events.push(new LoaderEvent(type, detail, getHighPerformanceTimestamp()));
 		}
 
@@ -1192,7 +1192,7 @@ module AMDLoader {
 	export class NullLoaderEventRecorder implements ILoaderEventRecorder {
 		public static INSTANCE = new NullLoaderEventRecorder();
 
-		public record(type:LoaderEventType, detail:string): void {
+		public record(type: LoaderEventType, detail: string): void {
 			// Nothing to do
 		}
 
@@ -1219,15 +1219,15 @@ module AMDLoader {
 
 	export class ModuleManager {
 
-		private _config:Configuration;
-		private _scriptLoader:IScriptLoader;
+		private _config: Configuration;
+		private _scriptLoader: IScriptLoader;
 
 		/**
 		 * Hash map of module id => module.
 		 * If a module is found in _modules, its code has been loaded, but
 		 * not necessary all its dependencies have been resolved
 		 */
-		private _modules: { [moduleId:string]:Module; };
+		private _modules: { [moduleId: string]: Module; };
 
 		/**
 		 * Set of module ids => true
@@ -1235,22 +1235,22 @@ module AMDLoader {
 		 * to the scriptLoader to load its code or a call will be made
 		 * This is mainly used as a flag to not try loading the same module twice
 		 */
-		private _knownModules: { [moduleId:string]:boolean; };
+		private _knownModules: { [moduleId: string]: boolean; };
 
 		/**
 		 * Hash map of module id => array [module id]
 		 */
-		private _inverseDependencies: { [moduleId:string]:string[]; };
+		private _inverseDependencies: { [moduleId: string]: string[]; };
 
 		/**
 		 * Hash map of module id => array [module id]
 		 */
-		private _dependencies: { [moduleId:string]:string[]; };
+		private _dependencies: { [moduleId: string]: string[]; };
 
 		/**
 		 * Hash map of module id => array [ { moduleId, pluginParam } ]
 		 */
-		private _inversePluginDependencies: { [moduleId:string]:{moduleId:string;dependencyId:string;}[]; };
+		private _inversePluginDependencies: { [moduleId: string]: { moduleId: string; dependencyId: string; }[]; };
 
 		/**
 		 * define calls received, but not yet processed
@@ -1265,14 +1265,14 @@ module AMDLoader {
 		/**
 		 * Hash map of module id => path where module was loaded from. Used only when `isBuild` is set.
 		 */
-		private _resolvedScriptPaths: { [moduleId:string]: string; };
+		private _resolvedScriptPaths: { [moduleId: string]: string; };
 
 		/**
 		 * Hash map of scriptSrc => checksum.
 		 */
-		private _checksums: { [scriptSrc:string]: string; };
+		private _checksums: { [scriptSrc: string]: string; };
 
-		constructor(scriptLoader:IScriptLoader) {
+		constructor(scriptLoader: IScriptLoader) {
 			this._config = new Configuration();
 			this._scriptLoader = scriptLoader;
 			this._modules = {};
@@ -1359,11 +1359,11 @@ module AMDLoader {
 			return this.getRecorder().getEvents();
 		}
 
-		public recordChecksum(scriptSrc:string, checksum:string): void {
+		public recordChecksum(scriptSrc: string, checksum: string): void {
 			this._checksums[scriptSrc] = checksum;
 		}
 
-		public getChecksums(): {[scriptSrc:string]:string} {
+		public getChecksums(): { [scriptSrc: string]: string } {
 			return this._checksums;
 		}
 
@@ -1373,7 +1373,7 @@ module AMDLoader {
 		 * @param dependencies @see defineModule
 		 * @param callback @see defineModule
 		 */
-		public enqueueDefineModule(id:string, dependencies:string[], callback:any): void {
+		public enqueueDefineModule(id: string, dependencies: string[], callback: any): void {
 			if (this._loadingScriptsCount === 0) {
 				// There are no scripts currently loading, so no load event will be fired, so the queue will not be consumed
 				this.defineModule(id, dependencies, callback, null, null);
@@ -1392,7 +1392,7 @@ module AMDLoader {
 		 * @param dependecies @see defineModule
 		 * @param callback @see defineModule
 		 */
-		public enqueueDefineAnonymousModule(dependencies:string[], callback:any): void {
+		public enqueueDefineAnonymousModule(dependencies: string[], callback: any): void {
 			var stack: string = null;
 			if (this._config.isBuild()) {
 				stack = (<any>new Error('StackLocation')).stack;
@@ -1411,7 +1411,7 @@ module AMDLoader {
 		 * @param dependencies An array with the dependencies of the module. Special keys are: "require", "exports" and "module"
 		 * @param callback if callback is a function, it will be called with the resolved dependencies. if callback is an object, it will be considered as the exports of the module.
 		 */
-		public defineModule(id:string, dependencies:string[], callback:any, errorback:Function, stack:string, moduleIdResolver:ModuleIdResolver = new ModuleIdResolver(this._config, id)): void {
+		public defineModule(id: string, dependencies: string[], callback: any, errorback: Function, stack: string, moduleIdResolver: ModuleIdResolver = new ModuleIdResolver(this._config, id)): void {
 			if (this._modules.hasOwnProperty(id)) {
 				if (!this._config.isDuplicateMessageIgnoredFor(id)) {
 					console.warn('Duplicate definition of module \'' + id + '\'');
@@ -1428,7 +1428,7 @@ module AMDLoader {
 			this._resolve(m);
 		}
 
-		private _relativeRequire(moduleIdResolver:ModuleIdResolver, dependencies:any, callback?:Function, errorback?:Function): any {
+		private _relativeRequire(moduleIdResolver: ModuleIdResolver, dependencies: any, callback?: Function, errorback?: Function): any {
 			if (typeof dependencies === 'string') {
 				return this.synchronousRequire(<string>dependencies, moduleIdResolver);
 			}
@@ -1441,7 +1441,7 @@ module AMDLoader {
 		 * @param id The unique and absolute id of the required module
 		 * @return The exports of module 'id'
 		 */
-		public synchronousRequire(id:string, moduleIdResolver:ModuleIdResolver = new ModuleIdResolver(this._config, id)): any {
+		public synchronousRequire(id: string, moduleIdResolver: ModuleIdResolver = new ModuleIdResolver(this._config, id)): any {
 			var moduleId = moduleIdResolver.resolveModule(id);
 
 			var bangIndex = moduleId.indexOf('!');
@@ -1457,7 +1457,7 @@ module AMDLoader {
 				}
 
 				// Helper to normalize the part which comes after '!'
-				var normalize = (_arg:string) => {
+				var normalize = (_arg: string) => {
 					return moduleIdResolver.resolveModule(_arg);
 				};
 				if (typeof plugin.normalize === 'function') {
@@ -1482,7 +1482,7 @@ module AMDLoader {
 			return m.getExports();
 		}
 
-		public configure(params:IConfigurationOptions, shouldOverwrite:boolean): void {
+		public configure(params: IConfigurationOptions, shouldOverwrite: boolean): void {
 			var oldShouldRecordStats = this._config.shouldRecordStats();
 			if (shouldOverwrite) {
 				this._config = new Configuration(params);
@@ -1502,10 +1502,10 @@ module AMDLoader {
 		 * Callback from the scriptLoader when a module has been loaded.
 		 * This means its code is available and has been executed.
 		 */
-		private _onLoad(id:string): void {
-			var defineCall:IDefineCall;
+		private _onLoad(id: string): void {
+			var defineCall: IDefineCall;
 
-			this._loadingScriptsCount --;
+			this._loadingScriptsCount--;
 
 			if (this._config.isShimmed(id)) {
 				// Do not consume queue, might end up consuming a module that is later expected
@@ -1554,18 +1554,18 @@ module AMDLoader {
 		 * Callback from the scriptLoader when a module hasn't been loaded.
 		 * This means that the script was not found (e.g. 404) or there was an error in the script.
 		 */
-		private _onLoadError(id:string, err:any): void {
-			this._loadingScriptsCount --;
+		private _onLoadError(id: string, err: any): void {
+			this._loadingScriptsCount--;
 
 			var error = {
 				errorCode: 'load',
 				moduleId: id,
-				neededBy: (this._inverseDependencies[id] ? this._inverseDependencies[id].slice(0): []),
+				neededBy: (this._inverseDependencies[id] ? this._inverseDependencies[id].slice(0) : []),
 				detail: err
 			};
 
 			// Find any 'local' error handlers, walk the entire chain of inverse dependencies if necessary.
-			var seenModuleId: { [moduleId:string]:boolean; } = {},
+			var seenModuleId: { [moduleId: string]: boolean; } = {},
 				queueElement: string,
 				someoneNotified = false,
 				queue: string[] = [];
@@ -1599,11 +1599,11 @@ module AMDLoader {
 		 * @param id module's id
 		 * @param exports module's exports
 		 */
-		private _onModuleComplete(id:string, exports:any): void {
-			var i:number,
-				len:number,
-				inverseDependencyId:string,
-				inverseDependency:Module;
+		private _onModuleComplete(id: string, exports: any): void {
+			var i: number,
+				len: number,
+				inverseDependencyId: string,
+				inverseDependency: Module;
 
 			// Clean up module's dependencies since module is now complete
 			delete this._dependencies[id];
@@ -1662,14 +1662,14 @@ module AMDLoader {
 		 * @param from Module id to start at
 		 * @param to Module id to look for
 		 */
-		private _hasDependencyPath(from:string, to:string): boolean {
-			var i:number,
-				len:number,
-				inQueue:{ [moduleId:string]:boolean; } = {},
-				queue:string[] = [],
-				element:string,
-				dependencies:string[],
-				dependency:string;
+		private _hasDependencyPath(from: string, to: string): boolean {
+			var i: number,
+				len: number,
+				inQueue: { [moduleId: string]: boolean; } = {},
+				queue: string[] = [],
+				element: string,
+				dependencies: string[],
+				dependency: string;
 
 			// Insert 'from' in queue
 			queue.push(from);
@@ -1710,14 +1710,14 @@ module AMDLoader {
 		 * @param from Module id to start at
 		 * @param to Module id to look for
 		 */
-		private _findCyclePath(from:string, to:string, depth:number): string[] {
+		private _findCyclePath(from: string, to: string, depth: number): string[] {
 			if (from === to || depth === 50) {
 				return [from];
 			}
 			if (!this._dependencies.hasOwnProperty(from)) {
 				return null;
 			}
-			var path:string[],
+			var path: string[],
 				dependencies = this._dependencies[from];
 
 			// Walk the element's dependencies
@@ -1734,11 +1734,11 @@ module AMDLoader {
 		/**
 		 * Create the local 'require' that is passed into modules
 		 */
-		private _createRequire(moduleIdResolver:ModuleIdResolver): IRelativeRequire {
-			var result:IRelativeRequire = <any>((dependencies:any, callback?:Function, errorback?:Function) => {
+		private _createRequire(moduleIdResolver: ModuleIdResolver): IRelativeRequire {
+			var result: IRelativeRequire = <any>((dependencies: any, callback?: Function, errorback?: Function) => {
 				return this._relativeRequire(moduleIdResolver, dependencies, callback, errorback);
 			});
-			result.toUrl = (id:string) => {
+			result.toUrl = (id: string) => {
 				return moduleIdResolver.requireToUrl(moduleIdResolver.resolveModule(id));
 			};
 			result.getStats = () => {
@@ -1757,7 +1757,7 @@ module AMDLoader {
 		 * @param dependencyId The semi-normalized dependency that appears in the module. e.g. 'vs/css!./mycssfile'. Only the plugin part (before !) is normalized
 		 * @param plugin The plugin (what the plugin exports)
 		 */
-		private _resolvePluginDependencySync(moduleId:string, dependencyId:string, plugin:ILoaderPlugin): void {
+		private _resolvePluginDependencySync(moduleId: string, dependencyId: string, plugin: ILoaderPlugin): void {
 			var m = this._modules[moduleId],
 				moduleIdResolver = m.getModuleIdResolver(),
 				bangIndex = dependencyId.indexOf('!'),
@@ -1765,7 +1765,7 @@ module AMDLoader {
 				pluginParam = dependencyId.substring(bangIndex + 1, dependencyId.length);
 
 			// Helper to normalize the part which comes after '!'
-			var normalize = (_arg:string) => {
+			var normalize = (_arg: string) => {
 				return moduleIdResolver.resolveModule(_arg);
 			};
 			if (typeof plugin.normalize === 'function') {
@@ -1782,12 +1782,12 @@ module AMDLoader {
 				// Let the module know that the dependency has been normalized so it can update its internal state
 				m.renameDependency(oldDependencyId, dependencyId);
 
-				this._resolveDependency(moduleId, dependencyId, (moduleId:string) => {
+				this._resolveDependency(moduleId, dependencyId, (moduleId: string) => {
 					// Delegate the loading of the resource to the plugin
-					var load:IPluginLoadCallback = <any>((value:any) => {
+					var load: IPluginLoadCallback = <any>((value: any) => {
 						this.defineModule(dependencyId, [], value, null, null);
 					});
-					load.error = (err:any) => {
+					load.error = (err: any) => {
 						this._config.onError({
 							errorCode: 'load',
 							moduleId: dependencyId,
@@ -1802,13 +1802,13 @@ module AMDLoader {
 				// This plugin is dynamic and does not want the loader to cache anything on its behalf
 
 				// Delegate the loading of the resource to the plugin
-				var load:IPluginLoadCallback = <any>((value:any) => {
+				var load: IPluginLoadCallback = <any>((value: any) => {
 					m.resolveDependency(dependencyId, value);
 					if (m.isComplete()) {
 						this._onModuleComplete(moduleId, m.getExports());
 					}
 				});
-				load.error = (err:any) => {
+				load.error = (err: any) => {
 					this._config.onError({
 						errorCode: 'load',
 						moduleId: dependencyId,
@@ -1826,7 +1826,7 @@ module AMDLoader {
 		 * @param moduleId The module that has this dependency
 		 * @param dependencyId The semi-normalized dependency that appears in the module. e.g. 'vs/css!./mycssfile'. Only the plugin part (before !) is normalized
 		 */
-		private _resolvePluginDependencyAsync(moduleId:string, dependencyId:string): void {
+		private _resolvePluginDependencyAsync(moduleId: string, dependencyId: string): void {
 			var m = this._modules[moduleId],
 				bangIndex = dependencyId.indexOf('!'),
 				pluginId = dependencyId.substring(0, bangIndex);
@@ -1850,7 +1850,7 @@ module AMDLoader {
 		 * @param moduleId The module that has this dependency
 		 * @param dependencyId The semi-normalized dependency that appears in the module. e.g. 'vs/css!./mycssfile'. Only the plugin part (before !) is normalized
 		 */
-		private _resolvePluginDependency(moduleId:string, dependencyId:string): void {
+		private _resolvePluginDependency(moduleId: string, dependencyId: string): void {
 			var bangIndex = dependencyId.indexOf('!'),
 				pluginId = dependencyId.substring(0, bangIndex);
 
@@ -1869,7 +1869,7 @@ module AMDLoader {
 		 * @param dependencyId The normalized dependency that appears in the module -- this module is shimmed
 		 * @param loadCallback Callback that will be called to trigger the loading of 'dependencyId' if needed
 		 */
-		private _resolveShimmedDependency(moduleId:string, dependencyId:string, loadCallback:(moduleId:string)=>void): void {
+		private _resolveShimmedDependency(moduleId: string, dependencyId: string, loadCallback: (moduleId: string) => void): void {
 			// If a shimmed module has dependencies, we must first load those dependencies
 			// and only when those are loaded we can load the shimmed module.
 			// To achieve this, we inject a module definition with those dependencies
@@ -1894,7 +1894,7 @@ module AMDLoader {
 		 * @param dependencyId The normalized dependency that appears in the module
 		 * @param loadCallback Callback that will be called to trigger the loading of 'dependencyId' if needed
 		 */
-		private _resolveDependency(moduleId:string, dependencyId:string, loadCallback:(moduleId:string)=>void): void {
+		private _resolveDependency(moduleId: string, dependencyId: string, loadCallback: (moduleId: string) => void): void {
 			var m = this._modules[moduleId];
 
 			if (this._modules.hasOwnProperty(dependencyId) && this._modules[dependencyId].isComplete()) {
@@ -1942,12 +1942,12 @@ module AMDLoader {
 			}
 		}
 
-		private _loadModule(anyModuleIdResolver:ModuleIdResolver, moduleId: string): void {
+		private _loadModule(anyModuleIdResolver: ModuleIdResolver, moduleId: string): void {
 			this._loadingScriptsCount++;
 
 			var paths = anyModuleIdResolver.moduleIdToPaths(moduleId);
 			var lastPathIndex = -1;
-			var loadNextPath = (err:any) => {
+			var loadNextPath = (err: any) => {
 				lastPathIndex++;
 
 				if (lastPathIndex >= paths.length) {
@@ -1957,7 +1957,7 @@ module AMDLoader {
 					var currentPath = paths[lastPathIndex];
 					var recorder = this.getRecorder();
 
-					if(this._config.isBuild() && currentPath === 'empty:') {
+					if (this._config.isBuild() && currentPath === 'empty:') {
 						this._resolvedScriptPaths[moduleId] = currentPath;
 						this.enqueueDefineModule(moduleId, [], null);
 						this._onLoad(moduleId);
@@ -1984,13 +1984,13 @@ module AMDLoader {
 		/**
 		 * Examine the dependencies of module 'module' and resolve them as needed.
 		 */
-		private _resolve(m:Module): void {
-			var i:number,
-				len:number,
-				id:string,
-				dependencies:string[],
-				dependencyId:string,
-				moduleIdResolver:ModuleIdResolver;
+		private _resolve(m: Module): void {
+			var i: number,
+				len: number,
+				id: string,
+				dependencies: string[],
+				dependencyId: string,
+				moduleIdResolver: ModuleIdResolver;
 
 			id = m.getId();
 			dependencies = m.getDependencies();
@@ -1998,7 +1998,7 @@ module AMDLoader {
 
 			this._dependencies[id] = [];
 
-			var loadCallback = (moduleId:string) => this._loadModule(moduleIdResolver, moduleId);
+			var loadCallback = (moduleId: string) => this._loadModule(moduleIdResolver, moduleId);
 
 			for (i = 0, len = dependencies.length; i < len; i++) {
 				dependencyId = dependencies[i];
@@ -2026,8 +2026,8 @@ module AMDLoader {
 	// IScriptLoader(s)
 
 	interface IScriptCallbacks {
-		callback:()=>void;
-		errorback:(err:any)=>void;
+		callback: () => void;
+		errorback: (err: any) => void;
 	}
 
 	/**
@@ -2035,20 +2035,20 @@ module AMDLoader {
 	 */
 	class OnlyOnceScriptLoader implements IScriptLoader {
 
-		private actualScriptLoader:IScriptLoader;
-		private callbackMap:{ [scriptSrc:string]:IScriptCallbacks[]; };
+		private actualScriptLoader: IScriptLoader;
+		private callbackMap: { [scriptSrc: string]: IScriptCallbacks[]; };
 
-		constructor(actualScriptLoader:IScriptLoader) {
+		constructor(actualScriptLoader: IScriptLoader) {
 			this.actualScriptLoader = actualScriptLoader;
 			this.callbackMap = {};
 		}
 
-		public setModuleManager(moduleManager:ModuleManager): void {
+		public setModuleManager(moduleManager: ModuleManager): void {
 			this.actualScriptLoader.setModuleManager(moduleManager);
 		}
 
-		public load(scriptSrc:string, callback:()=>void, errorback:(err:any)=>void, recorder:ILoaderEventRecorder): void {
-			var scriptCallbacks:IScriptCallbacks = {
+		public load(scriptSrc: string, callback: () => void, errorback: (err: any) => void, recorder: ILoaderEventRecorder): void {
+			var scriptCallbacks: IScriptCallbacks = {
 				callback: callback,
 				errorback: errorback
 			};
@@ -2057,10 +2057,10 @@ module AMDLoader {
 				return;
 			}
 			this.callbackMap[scriptSrc] = [scriptCallbacks];
-			this.actualScriptLoader.load(scriptSrc, () => this.triggerCallback(scriptSrc), (err:any) => this.triggerErrorback(scriptSrc, err), recorder);
+			this.actualScriptLoader.load(scriptSrc, () => this.triggerCallback(scriptSrc), (err: any) => this.triggerErrorback(scriptSrc, err), recorder);
 		}
 
-		private triggerCallback(scriptSrc:string): void {
+		private triggerCallback(scriptSrc: string): void {
 			var scriptCallbacks = this.callbackMap[scriptSrc];
 			delete this.callbackMap[scriptSrc];
 
@@ -2069,7 +2069,7 @@ module AMDLoader {
 			}
 		}
 
-		private triggerErrorback(scriptSrc:string, err:any): void {
+		private triggerErrorback(scriptSrc: string, err: any): void {
 			var scriptCallbacks = this.callbackMap[scriptSrc];
 			delete this.callbackMap[scriptSrc];
 
@@ -2085,7 +2085,7 @@ module AMDLoader {
 		 * Attach load / error listeners to a script element and remove them when either one has fired.
 		 * Implemented for browssers supporting 'onreadystatechange' events, such as IE8 or IE9
 		 */
-		private attachListenersV1(script:HTMLScriptElement, callback:()=>void, errorback:(err:any)=>void): void {
+		private attachListenersV1(script: HTMLScriptElement, callback: () => void, errorback: (err: any) => void): void {
 			var unbind = () => {
 				script.detachEvent('onreadystatechange', loadEventListener);
 				if (script.addEventListener) {
@@ -2093,14 +2093,14 @@ module AMDLoader {
 				}
 			};
 
-			var loadEventListener = (e:any) => {
+			var loadEventListener = (e: any) => {
 				if (script.readyState === 'loaded' || script.readyState === 'complete') {
 					unbind();
 					callback();
 				}
 			};
 
-			var errorEventListener = (e:any) => {
+			var errorEventListener = (e: any) => {
 				unbind();
 				errorback(e);
 			};
@@ -2115,18 +2115,18 @@ module AMDLoader {
 		 * Attach load / error listeners to a script element and remove them when either one has fired.
 		 * Implemented for browssers supporting HTML5 standard 'load' and 'error' events.
 		 */
-		private attachListenersV2(script:HTMLScriptElement, callback:()=>void, errorback:(err:any)=>void): void {
+		private attachListenersV2(script: HTMLScriptElement, callback: () => void, errorback: (err: any) => void): void {
 			var unbind = () => {
 				script.removeEventListener('load', loadEventListener);
 				script.removeEventListener('error', errorEventListener);
 			};
 
-			var loadEventListener = (e:any) => {
+			var loadEventListener = (e: any) => {
 				unbind();
 				callback();
 			};
 
-			var errorEventListener = (e:any) => {
+			var errorEventListener = (e: any) => {
 				unbind();
 				errorback(e);
 			};
@@ -2135,11 +2135,11 @@ module AMDLoader {
 			script.addEventListener('error', errorEventListener);
 		}
 
-		public setModuleManager(moduleManager:ModuleManager): void {
+		public setModuleManager(moduleManager: ModuleManager): void {
 			/* Intentional empty */
 		}
 
-		public load(scriptSrc:string, callback:()=>void, errorback:(err:any)=>void): void {
+		public load(scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 			var script = document.createElement('script');
 			script.setAttribute('async', 'async');
 			script.setAttribute('type', 'text/javascript');
@@ -2158,19 +2158,19 @@ module AMDLoader {
 
 	class WorkerScriptLoader implements IScriptLoader {
 
-		private loadCalls:{scriptSrc:string;callback:()=>void;errorback:(err:any)=>void;}[];
-		private loadTimeout:number;
+		private loadCalls: { scriptSrc: string; callback: () => void; errorback: (err: any) => void; }[];
+		private loadTimeout: number;
 
 		constructor() {
 			this.loadCalls = [];
 			this.loadTimeout = -1;
 		}
 
-		public setModuleManager(moduleManager:ModuleManager): void {
+		public setModuleManager(moduleManager: ModuleManager): void {
 			/* Intentional empty */
 		}
 
-		public load(scriptSrc:string, callback:()=>void, errorback:(err:any)=>void): void {
+		public load(scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 			this.loadCalls.push({
 				scriptSrc: scriptSrc,
 				callback: callback,
@@ -2194,7 +2194,7 @@ module AMDLoader {
 			var loadCalls = this.loadCalls;
 			this.loadCalls = [];
 
-			var i:number, len = loadCalls.length, scripts:string[] = [];
+			var i: number, len = loadCalls.length, scripts: string[] = [];
 
 			for (i = 0; i < len; i++) {
 				scripts.push(loadCalls[i].scriptSrc);
@@ -2244,23 +2244,23 @@ module AMDLoader {
 
 	interface INodeVM {
 		Script: { new (contents: string, options: INodeVMScriptOptions): INodeVMScript }
-		runInThisContext(contents:string, { filename:string });
-		runInThisContext(contents:string, filename:string);
+		runInThisContext(contents: string, { filename: string });
+		runInThisContext(contents: string, filename: string);
 	}
 
 	interface INodePath {
-		dirname(filename:string): string;
-		normalize(filename: string):string;
+		dirname(filename: string): string;
+		normalize(filename: string): string;
 		basename(filename: string): string;
 		join(...parts: string[]): string;
 	}
 
 	interface INodeCryptoHash {
-		update(str:string, encoding:string): INodeCryptoHash;
-		digest(type:string): string;
+		update(str: string, encoding: string): INodeCryptoHash;
+		digest(type: string): string;
 	}
 	interface INodeCrypto {
-		createHash(type:string): INodeCryptoHash;
+		createHash(type: string): INodeCryptoHash;
 	}
 
 	class NodeScriptLoader implements IScriptLoader {
@@ -2272,17 +2272,17 @@ module AMDLoader {
 		private _vm: INodeVM;
 		private _path: INodePath;
 		private _crypto: INodeCrypto;
-		private _moduleManager:ModuleManager;
+		private _moduleManager: ModuleManager;
 
 		constructor() {
 			this._initialized = false;
 		}
 
-		public setModuleManager(moduleManager:ModuleManager): void {
+		public setModuleManager(moduleManager: ModuleManager): void {
 			this._moduleManager = moduleManager;
 		}
 
-		private _init(nodeRequire:INodeRequire): void {
+		private _init(nodeRequire: INodeRequire): void {
 			if (this._initialized) {
 				return;
 			}
@@ -2293,7 +2293,7 @@ module AMDLoader {
 			this._crypto = nodeRequire('crypto');
 		}
 
-		public load(scriptSrc:string, callback:()=>void, errorback:(err:any)=>void, recorder:ILoaderEventRecorder): void {
+		public load(scriptSrc: string, callback: () => void, errorback: (err: any) => void, recorder: ILoaderEventRecorder): void {
 			const opts = this._moduleManager.getConfigurationOptions();
 			const checksum = opts.checksum || false;
 			const nodeRequire = (opts.nodeRequire || global.nodeRequire);
@@ -2322,7 +2322,7 @@ module AMDLoader {
 
 				scriptSrc = Utilities.fileUriToFilePath(scriptSrc);
 
-				this._fs.readFile(scriptSrc, { encoding:'utf8' }, (err, data:string) => {
+				this._fs.readFile(scriptSrc, { encoding: 'utf8' }, (err, data: string) => {
 					if (err) {
 						errorback(err);
 						return;
@@ -2453,7 +2453,7 @@ module AMDLoader {
 
 	class DefineFunc {
 
-		constructor(id:any, dependencies:any, callback:any) {
+		constructor(id: any, dependencies: any, callback: any) {
 			if (typeof id !== 'string') {
 				callback = dependencies;
 				dependencies = id;
@@ -2500,7 +2500,7 @@ module AMDLoader {
 			throw new Error('Unrecognized require call');
 		}
 
-		public static config(params:IConfigurationOptions, shouldOverwrite:boolean = false): void {
+		public static config(params: IConfigurationOptions, shouldOverwrite: boolean = false): void {
 			moduleManager.configure(params, shouldOverwrite);
 		}
 
@@ -2533,20 +2533,20 @@ module AMDLoader {
 		/**
 		 * Non standard extension to fetch checksums
 		 */
-		public static getChecksums(): {[scriptSrc:string]:string} {
+		public static getChecksums(): { [scriptSrc: string]: string } {
 			return moduleManager.getChecksums();
 		}
 	}
 
-	var global:any = _amdLoaderGlobal,
+	var global: any = _amdLoaderGlobal,
 		hasPerformanceNow = (global.performance && typeof global.performance.now === 'function'),
 		isWebWorker: boolean,
 		isElectronRenderer: boolean,
 		isElectronMain: boolean,
 		isNode: boolean,
-		scriptLoader:IScriptLoader,
+		scriptLoader: IScriptLoader,
 		moduleManager: ModuleManager,
-		loaderAvailableTimestamp:number;
+		loaderAvailableTimestamp: number;
 
 	function initVars(): void {
 		isWebWorker = (typeof global.importScripts === 'function');
@@ -2586,9 +2586,9 @@ module AMDLoader {
 		if (!isWebWorker && !isNode) {
 			window.onload = function () {
 
-				var i:number,
-					len:number,
-					main:string,
+				var i: number,
+					len: number,
+					main: string,
 					scripts = document.getElementsByTagName('script');
 
 				// Look through all the scripts for the data-main attribute
@@ -2614,7 +2614,7 @@ module AMDLoader {
 
 		if (isNode) {
 			var _nodeRequire = (global.require || require);
-			var nodeRequire = function(what) {
+			var nodeRequire = function (what) {
 				moduleManager.getRecorder().record(LoaderEventType.NodeBeginNativeRequire, what);
 				var r = _nodeRequire(what);
 				moduleManager.getRecorder().record(LoaderEventType.NodeEndNativeRequire, what);
@@ -2628,7 +2628,7 @@ module AMDLoader {
 		if (isNode && !isElectronRenderer) {
 			module.exports = RequireFunc;
 			// These two defs are fore the local closure defined in node in the case that the loader is concatenated
-			define = function() {
+			define = function () {
 				DefineFunc.apply(null, arguments);
 			};
 			require = RequireFunc;

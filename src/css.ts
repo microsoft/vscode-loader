@@ -24,7 +24,7 @@ module CSSLoaderPlugin {
 	var global = _cssPluginGlobal || {};
 
 	export interface ICSSLoader {
-		load(name:string, cssUrl:string, externalCallback:(contents?:string)=>void, externalErrorback:(err:any)=>void): void;
+		load(name: string, cssUrl: string, externalCallback: (contents?: string) => void, externalErrorback: (err: any) => void): void;
 	}
 
 	/**
@@ -33,24 +33,24 @@ module CSSLoaderPlugin {
 	 */
 	class BrowserCSSLoader implements ICSSLoader {
 
-		private _pendingLoads:number;
+		private _pendingLoads: number;
 
 		constructor() {
 			this._pendingLoads = 0;
 		}
 
-		public attachListeners(name:string, linkNode:HTMLLinkElement, callback:()=>void, errorback:(err:any)=>void): void {
+		public attachListeners(name: string, linkNode: HTMLLinkElement, callback: () => void, errorback: (err: any) => void): void {
 			var unbind = () => {
 				linkNode.removeEventListener('load', loadEventListener);
 				linkNode.removeEventListener('error', errorEventListener);
 			};
 
-			var loadEventListener = (e:any) => {
+			var loadEventListener = (e: any) => {
 				unbind();
 				callback();
 			};
 
-			var errorEventListener = (e:any) => {
+			var errorEventListener = (e: any) => {
 				unbind();
 				errorback(e);
 			};
@@ -59,35 +59,35 @@ module CSSLoaderPlugin {
 			linkNode.addEventListener('error', errorEventListener);
 		}
 
-		public _onLoad(name:string, callback:()=>void): void {
-			this._pendingLoads --;
+		public _onLoad(name: string, callback: () => void): void {
+			this._pendingLoads--;
 			callback();
 		}
 
-		public _onLoadError(name:string, errorback:(err:any)=>void, err:any): void {
-			this._pendingLoads --;
+		public _onLoadError(name: string, errorback: (err: any) => void, err: any): void {
+			this._pendingLoads--;
 			errorback(err);
 		}
 
-		public _insertLinkNode(linkNode:HTMLLinkElement): void {
-			this._pendingLoads ++;
+		public _insertLinkNode(linkNode: HTMLLinkElement): void {
+			this._pendingLoads++;
 			var head = document.head || document.getElementsByTagName('head')[0];
-			var other:NodeListOf<HTMLElement> = head.getElementsByTagName('link') || document.head.getElementsByTagName('script');
+			var other: NodeListOf<HTMLElement> = head.getElementsByTagName('link') || document.head.getElementsByTagName('script');
 			if (other.length > 0) {
-				head.insertBefore(linkNode, other[other.length-1]);
+				head.insertBefore(linkNode, other[other.length - 1]);
 			} else {
 				head.appendChild(linkNode);
 			}
 		}
 
-		public createLinkTag(name:string, cssUrl:string, externalCallback:()=>void, externalErrorback:(err:any)=>void): HTMLLinkElement {
+		public createLinkTag(name: string, cssUrl: string, externalCallback: () => void, externalErrorback: (err: any) => void): HTMLLinkElement {
 			var linkNode = document.createElement('link');
 			linkNode.setAttribute('rel', 'stylesheet');
 			linkNode.setAttribute('type', 'text/css');
 			linkNode.setAttribute('data-name', name);
 
 			var callback = () => this._onLoad(name, externalCallback);
-			var errorback = (err:any) => this._onLoadError(name, externalErrorback, err);
+			var errorback = (err: any) => this._onLoadError(name, externalErrorback, err);
 
 			this.attachListeners(name, linkNode, callback, errorback);
 			linkNode.setAttribute('href', cssUrl);
@@ -95,12 +95,12 @@ module CSSLoaderPlugin {
 			return linkNode;
 		}
 
-		public _linkTagExists(name:string, cssUrl:string): boolean {
+		public _linkTagExists(name: string, cssUrl: string): boolean {
 
-			var i:number,
-				len:number,
-				nameAttr:string,
-				hrefAttr:string,
+			var i: number,
+				len: number,
+				nameAttr: string,
+				hrefAttr: string,
 				links = document.getElementsByTagName('link');
 
 			for (i = 0, len = links.length; i < len; i++) {
@@ -113,7 +113,7 @@ module CSSLoaderPlugin {
 			return false;
 		}
 
-		public load(name:string, cssUrl:string, externalCallback:(contents?:string)=>void, externalErrorback:(err:any)=>void): void {
+		public load(name: string, cssUrl: string, externalCallback: (contents?: string) => void, externalErrorback: (err: any) => void): void {
 			if (this._linkTagExists(name, cssUrl)) {
 				externalCallback();
 				return;
@@ -128,8 +128,8 @@ module CSSLoaderPlugin {
 	}
 
 	interface IE9StyleSheet {
-		rules:{cssText:string;}[];
-		insertRule(rule:string, position:number): void;
+		rules: { cssText: string; }[];
+		insertRule(rule: string, position: number): void;
 	}
 	/**
 	 * Prior to IE10, IE could not go above 31 stylesheets in a page
@@ -141,8 +141,8 @@ module CSSLoaderPlugin {
 	 */
 	class IE9CSSLoader extends BrowserCSSLoader {
 
-		private _blockedLoads:HTMLLinkElement[];
-		private _mergeStyleSheetsTimeout:number;
+		private _blockedLoads: HTMLLinkElement[];
+		private _mergeStyleSheetsTimeout: number;
 
 		constructor() {
 			super();
@@ -150,7 +150,7 @@ module CSSLoaderPlugin {
 			this._mergeStyleSheetsTimeout = -1;
 		}
 
-		public load(name:string, cssUrl:string, externalCallback:(contents?:string)=>void, externalErrorback:(err:any)=>void): void {
+		public load(name: string, cssUrl: string, externalCallback: (contents?: string) => void, externalErrorback: (err: any) => void): void {
 			if (this._linkTagExists(name, cssUrl)) {
 				externalCallback();
 				return;
@@ -170,12 +170,12 @@ module CSSLoaderPlugin {
 			return linkCount + styleCount;
 		}
 
-		public _onLoad(name:string, callback:()=>void): void {
+		public _onLoad(name: string, callback: () => void): void {
 			super._onLoad(name, callback);
 			this._handleBlocked();
 		}
 
-		public _onLoadError(name:string, errorback:(err:any)=>void, err:any): void {
+		public _onLoadError(name: string, errorback: (err: any) => void, err: any): void {
 			super._onLoadError(name, errorback, err);
 			this._handleBlocked();
 		}
@@ -187,13 +187,13 @@ module CSSLoaderPlugin {
 			}
 		}
 
-		private _mergeStyleSheet(dstPath:string, dst:IE9StyleSheet, srcPath:string, src:IE9StyleSheet): void {
+		private _mergeStyleSheet(dstPath: string, dst: IE9StyleSheet, srcPath: string, src: IE9StyleSheet): void {
 			for (var i = src.rules.length - 1; i >= 0; i--) {
 				dst.insertRule(Utilities.rewriteUrls(srcPath, dstPath, src.rules[i].cssText), 0);
 			}
 		}
 
-		private _asIE9HTMLLinkElement(linkElement:HTMLLinkElement): IE9HTMLLinkElement {
+		private _asIE9HTMLLinkElement(linkElement: HTMLLinkElement): IE9HTMLLinkElement {
 			return <IE9HTMLLinkElement><any>linkElement;
 		}
 
@@ -201,9 +201,9 @@ module CSSLoaderPlugin {
 			this._mergeStyleSheetsTimeout = -1;
 			var blockedLoadsCount = this._blockedLoads.length;
 
-			var i:number, linkDomNodes = document.getElementsByTagName('link');
+			var i: number, linkDomNodes = document.getElementsByTagName('link');
 			var linkDomNodesCount = linkDomNodes.length;
-			var mergeCandidates:{ linkNode:HTMLLinkElement; rulesLength:number; }[] = [];
+			var mergeCandidates: { linkNode: HTMLLinkElement; rulesLength: number; }[] = [];
 			for (i = 0; i < linkDomNodesCount; i++) {
 				if (linkDomNodes[i].readyState === 'loaded' || linkDomNodes[i].readyState === 'complete') {
 					mergeCandidates.push({
@@ -229,8 +229,8 @@ module CSSLoaderPlugin {
 				return b.rulesLength - a.rulesLength;
 			});
 
-			var srcIndex:number, dstIndex:number;
-			for (i = 0; i < mergeCount; i ++) {
+			var srcIndex: number, dstIndex: number;
+			for (i = 0; i < mergeCount; i++) {
 				srcIndex = mergeCandidates.length - 1 - i;
 				dstIndex = i % (mergeCandidates.length - mergeCount);
 
@@ -239,13 +239,13 @@ module CSSLoaderPlugin {
 
 				// Remove dom node of src
 				mergeCandidates[srcIndex].linkNode.parentNode.removeChild(mergeCandidates[srcIndex].linkNode);
-				linkDomNodesCount --;
+				linkDomNodesCount--;
 			}
 
 			var styleSheetCount = this._styleSheetCount();
 			while (styleSheetCount < 31 && this._blockedLoads.length > 0) {
 				this._insertLinkNode(this._blockedLoads.shift());
-				styleSheetCount ++;
+				styleSheetCount++;
 			}
 		}
 	}
@@ -256,7 +256,7 @@ module CSSLoaderPlugin {
 			super();
 		}
 
-		public attachListeners(name:string, linkNode:HTMLLinkElement, callback:()=>void, errorback:(err:any)=>void): void {
+		public attachListeners(name: string, linkNode: HTMLLinkElement, callback: () => void, errorback: (err: any) => void): void {
 			linkNode.onload = () => {
 				linkNode.onload = null;
 				callback();
@@ -265,19 +265,19 @@ module CSSLoaderPlugin {
 	}
 
 	interface INodeFS {
-		readFileSync(filename:string, encoding:string): string;
+		readFileSync(filename: string, encoding: string): string;
 	}
 	class NodeCSSLoader implements ICSSLoader {
 
 		static BOM_CHAR_CODE = 65279;
 
-		private fs:INodeFS;
+		private fs: INodeFS;
 
 		constructor() {
 			this.fs = require.nodeRequire('fs');
 		}
 
-		public load(name:string, cssUrl:string, externalCallback:(contents?:string)=>void, externalErrorback:(err:any)=>void): void {
+		public load(name: string, cssUrl: string, externalCallback: (contents?: string) => void, externalErrorback: (err: any) => void): void {
 			var contents = this.fs.readFileSync(cssUrl, 'utf8');
 			// Remove BOM
 			if (contents.charCodeAt(0) === NodeCSSLoader.BOM_CHAR_CODE) {
@@ -293,35 +293,35 @@ module CSSLoaderPlugin {
 
 	export class CSSPlugin implements AMDLoader.ILoaderPlugin {
 
-		static BUILD_MAP:{[moduleName:string]:string;} = {};
-		static BUILD_PATH_MAP:{[moduleName:string]:string;} = {};
+		static BUILD_MAP: { [moduleName: string]: string; } = {};
+		static BUILD_PATH_MAP: { [moduleName: string]: string; } = {};
 
-		private cssLoader:ICSSLoader;
+		private cssLoader: ICSSLoader;
 
-		constructor(cssLoader:ICSSLoader) {
+		constructor(cssLoader: ICSSLoader) {
 			this.cssLoader = cssLoader;
 		}
 
-		public load(name:string, req:AMDLoader.IRelativeRequire, load:AMDLoader.IPluginLoadCallback, config:AMDLoader.IConfigurationOptions): void {
+		public load(name: string, req: AMDLoader.IRelativeRequire, load: AMDLoader.IPluginLoadCallback, config: AMDLoader.IConfigurationOptions): void {
 			config = config || {};
 			let myConfig = config['vs/css'] || {};
 			global.inlineResources = myConfig.inlineResources;
 			var cssUrl = req.toUrl(name + '.css');
-			this.cssLoader.load(name, cssUrl, (contents?:string) => {
+			this.cssLoader.load(name, cssUrl, (contents?: string) => {
 				// Contents has the CSS file contents if we are in a build
 				if (config.isBuild) {
 					CSSPlugin.BUILD_MAP[name] = contents;
 					CSSPlugin.BUILD_PATH_MAP[name] = cssUrl;
 				}
 				load({});
-			}, (err:any) => {
+			}, (err: any) => {
 				if (typeof load.error === 'function') {
 					load.error('Could not find ' + cssUrl + ' or it was empty');
 				}
 			});
 		}
 
-		public write(pluginName:string, moduleName:string, write:AMDLoader.IPluginWriteCallback): void {
+		public write(pluginName: string, moduleName: string, write: AMDLoader.IPluginWriteCallback): void {
 			// getEntryPoint is a Monaco extension to r.js
 			var entryPoint = write.getEntryPoint();
 
@@ -340,14 +340,14 @@ module CSSLoaderPlugin {
 			);
 		}
 
-		public writeFile(pluginName:string, moduleName:string, req:AMDLoader.IRelativeRequire, write:AMDLoader.IPluginWriteFileCallback, config:AMDLoader.IConfigurationOptions): void {
+		public writeFile(pluginName: string, moduleName: string, req: AMDLoader.IRelativeRequire, write: AMDLoader.IPluginWriteFileCallback, config: AMDLoader.IConfigurationOptions): void {
 			if (global.cssPluginEntryPoints && global.cssPluginEntryPoints.hasOwnProperty(moduleName)) {
 				var fileName = req.toUrl(moduleName + '.css');
 				var contents = [
-						'/*---------------------------------------------------------',
-						' * Copyright (c) Microsoft Corporation. All rights reserved.',
-						' *--------------------------------------------------------*/'
-					],
+					'/*---------------------------------------------------------',
+					' * Copyright (c) Microsoft Corporation. All rights reserved.',
+					' *--------------------------------------------------------*/'
+				],
 					entries = global.cssPluginEntryPoints[moduleName];
 				for (var i = 0; i < entries.length; i++) {
 					if (global.inlineResources) {
@@ -367,14 +367,14 @@ module CSSLoaderPlugin {
 
 	export class Utilities {
 
-		public static startsWith(haystack:string, needle:string): boolean {
+		public static startsWith(haystack: string, needle: string): boolean {
 			return haystack.length >= needle.length && haystack.substr(0, needle.length) === needle;
 		}
 
 		/**
 		 * Find the path of a file.
 		 */
-		public static pathOf(filename:string): string {
+		public static pathOf(filename: string): string {
 			var lastSlash = filename.lastIndexOf('/');
 			if (lastSlash !== -1) {
 				return filename.substr(0, lastSlash + 1);
@@ -388,9 +388,9 @@ module CSSLoaderPlugin {
 		 * Takes into account if `a` contains a protocol.
 		 * Also normalizes the result: e.g.: a/b/ + ../c => a/c
 		 */
-		public static joinPaths(a:string, b:string): string {
+		public static joinPaths(a: string, b: string): string {
 
-			function findSlashIndexAfterPrefix(haystack:string, prefix:string): number {
+			function findSlashIndexAfterPrefix(haystack: string, prefix: string): number {
 				if (Utilities.startsWith(haystack, prefix)) {
 					return Math.max(prefix.length, haystack.indexOf('/', prefix.length));
 				}
@@ -402,7 +402,7 @@ module CSSLoaderPlugin {
 			aPathStartIndex = aPathStartIndex || findSlashIndexAfterPrefix(a, 'http://');
 			aPathStartIndex = aPathStartIndex || findSlashIndexAfterPrefix(a, 'https://');
 
-			function pushPiece(pieces:string[], piece:string): void {
+			function pushPiece(pieces: string[], piece: string): void {
 				if (piece === './') {
 					// Ignore
 					return;
@@ -423,7 +423,7 @@ module CSSLoaderPlugin {
 				pieces.push(piece);
 			}
 
-			function push(pieces:string[], path:string): void {
+			function push(pieces: string[], path: string): void {
 				while (path.length > 0) {
 					var slashIndex = path.indexOf('/');
 					var piece = (slashIndex >= 0 ? path.substring(0, slashIndex + 1) : path);
@@ -432,7 +432,7 @@ module CSSLoaderPlugin {
 				}
 			}
 
-			var pieces:string[] = [];
+			var pieces: string[] = [];
 			push(pieces, a.substr(aPathStartIndex));
 			if (b.length > 0 && b.charAt(0) === '/') {
 				pieces = [];
@@ -442,7 +442,7 @@ module CSSLoaderPlugin {
 			return a.substring(0, aPathStartIndex) + pieces.join('');
 		}
 
-		public static commonPrefix(str1:string, str2:string): string {
+		public static commonPrefix(str1: string, str2: string): string {
 			var len = Math.min(str1.length, str2.length);
 			for (var i = 0; i < len; i++) {
 				if (str1.charCodeAt(i) !== str2.charCodeAt(i)) {
@@ -452,7 +452,7 @@ module CSSLoaderPlugin {
 			return str1.substring(0, i);
 		}
 
-		public static commonFolderPrefix(fromPath:string, toPath:string): string {
+		public static commonFolderPrefix(fromPath: string, toPath: string): string {
 			var prefix = Utilities.commonPrefix(fromPath, toPath);
 			var slashIndex = prefix.lastIndexOf('/');
 			if (slashIndex === -1) {
@@ -461,7 +461,7 @@ module CSSLoaderPlugin {
 			return prefix.substring(0, slashIndex + 1);
 		}
 
-		public static relativePath(fromPath:string, toPath:string): string {
+		public static relativePath(fromPath: string, toPath: string): string {
 			if (Utilities.startsWith(toPath, '/') || Utilities.startsWith(toPath, 'http://') || Utilities.startsWith(toPath, 'https://')) {
 				return toPath;
 			}
@@ -479,9 +479,9 @@ module CSSLoaderPlugin {
 			return result + toPath;
 		}
 
-		private static _replaceURL(contents:string, replacer:(url:string)=>string): string {
+		private static _replaceURL(contents: string, replacer: (url: string) => string): string {
 			// Use ")" as the terminator as quotes are oftentimes not used at all
-			return contents.replace(/url\(\s*([^\)]+)\s*\)?/g, (_:string, ...matches:string[]) => {
+			return contents.replace(/url\(\s*([^\)]+)\s*\)?/g, (_: string, ...matches: string[]) => {
 				var url = matches[0];
 				// Eliminate starting quotes (the initial whitespace is not captured)
 				if (url.charAt(0) === '"' || url.charAt(0) === '\'') {
@@ -504,14 +504,14 @@ module CSSLoaderPlugin {
 			});
 		}
 
-		public static rewriteUrls(originalFile:string, newFile:string, contents:string): string {
+		public static rewriteUrls(originalFile: string, newFile: string, contents: string): string {
 			return this._replaceURL(contents, (url) => {
 				var absoluteUrl = Utilities.joinPaths(Utilities.pathOf(originalFile), url);
 				return Utilities.relativePath(newFile, absoluteUrl);
 			});
 		}
 
-		public static rewriteOrInlineUrls(originalFileFSPath:string, originalFile:string, newFile:string, contents:string, forceBase64:boolean): string {
+		public static rewriteOrInlineUrls(originalFileFSPath: string, originalFile: string, newFile: string, contents: string, forceBase64: boolean): string {
 			let fs = require.nodeRequire('fs');
 			let path = require.nodeRequire('path');
 
@@ -534,12 +534,12 @@ module CSSLoaderPlugin {
 						if (!forceBase64 && /\.svg$/.test(url)) {
 							// .svg => url encode as explained at https://codepen.io/tigt/post/optimizing-svgs-in-data-uris
 							let newText = fileContents.toString()
-											.replace(/"/g,'\'')
-											.replace(/</g,'%3C')
-											.replace(/>/g,'%3E')
-											.replace(/&/g,'%26')
-											.replace(/#/g,'%23')
-											.replace(/\s+/g,' ');
+								.replace(/"/g, '\'')
+								.replace(/</g, '%3C')
+								.replace(/>/g, '%3E')
+								.replace(/&/g, '%26')
+								.replace(/#/g, '%23')
+								.replace(/\s+/g, ' ');
 							let encodedData = ',' + newText;
 							if (encodedData.length < DATA.length) {
 								DATA = encodedData;
@@ -555,8 +555,8 @@ module CSSLoaderPlugin {
 		}
 	}
 
-	(function() {
-		var cssLoader:ICSSLoader = null;
+	(function () {
+		var cssLoader: ICSSLoader = null;
 		var isElectron = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions['electron'] !== 'undefined');
 		if (typeof process !== 'undefined' && process.versions && !!process.versions.node && !isElectron) {
 			cssLoader = new NodeCSSLoader();

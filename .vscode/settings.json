@@ -3,8 +3,11 @@
 	"files.trimTrailingWhitespace": true,
 	"editor.tabSize": 4,
 	"editor.insertSpaces": false,
+	"editor.formatOnSave": true,
 	"files.exclude": {
 		".git": true,
-		"**/*.js": { "when": "$(basename).ts"}
+		"**/*.js": {
+			"when": "$(basename).ts"
+		}
 	}
 }

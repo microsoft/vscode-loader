@@ -10,6 +10,6 @@ interface HTMLLinkElement {
 
 interface HTMLScriptElement {
 	readyState: string;
-	attachEvent(type:string, callback:(e:any)=>void);
-	detachEvent(type:string, callback:(e:any)=>void);
+	attachEvent(type: string, callback: (e: any) => void);
+	detachEvent(type: string, callback: (e: any) => void);
 }
