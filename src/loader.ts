@@ -2338,8 +2338,6 @@ module AMDLoader {
 						this._moduleManager.recordChecksum(scriptSrc, hash);
 					}
 
-					recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
-
 					let vmScriptSrc = this._path.normalize(scriptSrc);
 					// Make the script src friendly towards electron
 					if (isElectronRenderer) {
@@ -2364,12 +2362,7 @@ module AMDLoader {
 
 					if (!opts.nodeCachedDataDir) {
 
-						const r = this._vm.runInThisContext(contents, { filename: vmScriptSrc });
-
-						r.call(global, RequireFunc, DefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
-
-						recorder.record(LoaderEventType.NodeEndEvaluatingScript, scriptSrc);
-
+						this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, { filename: vmScriptSrc }, recorder);
 						callback();
 
 					} else {
@@ -2385,13 +2378,7 @@ module AMDLoader {
 								cachedData: data
 							};
 
-							// create script, run script
-							const script = new this._vm.Script(contents, scriptOptions);
-							const r = script.runInThisContext(scriptOptions);
-							r.call(global, RequireFunc, DefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
-
-							// signal done
-							recorder.record(LoaderEventType.NodeEndEvaluatingScript, scriptSrc);
+							const script = this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, scriptOptions, recorder);
 							callback();
 
 							// cached code after math
@@ -2430,6 +2417,21 @@ module AMDLoader {
 					}
 				});
 			}
+		}
+
+		private _loadAndEvalScript(scriptSrc: string, vmScriptSrc: string, contents: string, options: INodeVMScriptOptions, recorder: ILoaderEventRecorder): INodeVMScript {
+
+			// create script, run script
+			recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
+
+			const script = new this._vm.Script(contents, options);
+			const r = script.runInThisContext(options);
+			r.call(global, RequireFunc, DefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
+
+			// signal done
+			recorder.record(LoaderEventType.NodeEndEvaluatingScript, scriptSrc);
+
+			return script;
 		}
 
 		private _getCachedDataPath(baseDir: string, filename: string): string {

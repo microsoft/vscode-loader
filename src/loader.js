@@ -1767,7 +1767,6 @@ var AMDLoader;
                             .replace(/=+$/, '');
                         _this._moduleManager.recordChecksum(scriptSrc, hash);
                     }
-                    recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
                     var vmScriptSrc = _this._path.normalize(scriptSrc);
                     // Make the script src friendly towards electron
                     if (isElectronRenderer) {
@@ -1786,9 +1785,7 @@ var AMDLoader;
                     }
                     contents = nodeInstrumenter(contents, vmScriptSrc);
                     if (!opts.nodeCachedDataDir) {
-                        var r = _this._vm.runInThisContext(contents, { filename: vmScriptSrc });
-                        r.call(global, RequireFunc, DefineFunc, vmScriptSrc, _this._path.dirname(scriptSrc));
-                        recorder.record(LoaderEventType.NodeEndEvaluatingScript, scriptSrc);
+                        _this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, { filename: vmScriptSrc }, recorder);
                         callback();
                     }
                     else {
@@ -1800,12 +1797,7 @@ var AMDLoader;
                                 produceCachedData: typeof data === 'undefined',
                                 cachedData: data
                             };
-                            // create script, run script
-                            var script = new _this._vm.Script(contents, scriptOptions);
-                            var r = script.runInThisContext(scriptOptions);
-                            r.call(global, RequireFunc, DefineFunc, vmScriptSrc, _this._path.dirname(scriptSrc));
-                            // signal done
-                            recorder.record(LoaderEventType.NodeEndEvaluatingScript, scriptSrc);
+                            var script = _this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, scriptOptions, recorder);
                             callback();
                             // cached code after math
                             if (script.cachedDataRejected) {
@@ -1840,6 +1832,16 @@ var AMDLoader;
                     }
                 });
             }
+        };
+        NodeScriptLoader.prototype._loadAndEvalScript = function (scriptSrc, vmScriptSrc, contents, options, recorder) {
+            // create script, run script
+            recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
+            var script = new this._vm.Script(contents, options);
+            var r = script.runInThisContext(options);
+            r.call(global, RequireFunc, DefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
+            // signal done
+            recorder.record(LoaderEventType.NodeEndEvaluatingScript, scriptSrc);
+            return script;
         };
         NodeScriptLoader.prototype._getCachedDataPath = function (baseDir, filename) {
             var hash = this._crypto.createHash('md5').update(filename, 'utf8').digest('hex');
