@@ -269,7 +269,6 @@ module AMDLoader {
 		nodeInstrumenter?: (source: string, vmScriptSrc: string) => string;
 		nodeMain?: string;
 		nodeModules?: string[];
-		checksum?: boolean;
 		/**
 		 * Optional data directory for reading/writing v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
 		 */
@@ -1267,11 +1266,6 @@ module AMDLoader {
 		 */
 		private _resolvedScriptPaths: { [moduleId: string]: string; };
 
-		/**
-		 * Hash map of scriptSrc => checksum.
-		 */
-		private _checksums: { [scriptSrc: string]: string; };
-
 		constructor(scriptLoader: IScriptLoader) {
 			this._config = new Configuration();
 			this._scriptLoader = scriptLoader;
@@ -1283,7 +1277,6 @@ module AMDLoader {
 			this._queuedDefineCalls = [];
 			this._loadingScriptsCount = 0;
 			this._resolvedScriptPaths = {};
-			this._checksums = {};
 		}
 
 		private static _findRelevantLocationInStack(needle: string, stack: string): IPosition {
@@ -1357,14 +1350,6 @@ module AMDLoader {
 
 		public getLoaderEvents(): LoaderEvent[] {
 			return this.getRecorder().getEvents();
-		}
-
-		public recordChecksum(scriptSrc: string, checksum: string): void {
-			this._checksums[scriptSrc] = checksum;
-		}
-
-		public getChecksums(): { [scriptSrc: string]: string } {
-			return this._checksums;
 		}
 
 		/**
@@ -1743,9 +1728,6 @@ module AMDLoader {
 			};
 			result.getStats = () => {
 				return this.getLoaderEvents();
-			};
-			result.getChecksums = () => {
-				return this.getChecksums();
 			};
 			(<any>result).__$__nodeRequire = global.nodeRequire;
 			return result;
@@ -2295,7 +2277,6 @@ module AMDLoader {
 
 		public load(scriptSrc: string, callback: () => void, errorback: (err: any) => void, recorder: ILoaderEventRecorder): void {
 			const opts = this._moduleManager.getConfigurationOptions();
-			const checksum = opts.checksum || false;
 			const nodeRequire = (opts.nodeRequire || global.nodeRequire);
 			const nodeInstrumenter = (opts.nodeInstrumenter || function (c) { return c; });
 			this._init(nodeRequire);
@@ -2326,16 +2307,6 @@ module AMDLoader {
 					if (err) {
 						errorback(err);
 						return;
-					}
-
-					if (checksum) {
-						let hash = this._crypto
-							.createHash('md5')
-							.update(data, 'utf8')
-							.digest('base64')
-							.replace(/=+$/, '');
-
-						this._moduleManager.recordChecksum(scriptSrc, hash);
 					}
 
 					let vmScriptSrc = this._path.normalize(scriptSrc);
@@ -2528,13 +2499,6 @@ module AMDLoader {
 		 */
 		public static getStats(): LoaderEvent[] {
 			return moduleManager.getLoaderEvents();
-		}
-
-		/**
-		 * Non standard extension to fetch checksums
-		 */
-		public static getChecksums(): { [scriptSrc: string]: string } {
-			return moduleManager.getChecksums();
 		}
 	}
 
