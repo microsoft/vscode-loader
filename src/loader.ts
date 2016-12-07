@@ -2363,7 +2363,7 @@ module AMDLoader {
 
 								NodeScriptLoader._runSoon(() => this._fs.unlink(cachedDataPath, err => {
 									if (err) {
-										opts.onNodeCachedDataError({
+										this._moduleManager.getConfigurationOptions().onNodeCachedDataError({
 											errorCode: 'unlink',
 											path: cachedDataPath,
 											detail: err
@@ -2376,7 +2376,7 @@ module AMDLoader {
 
 								NodeScriptLoader._runSoon(() => this._fs.writeFile(cachedDataPath, script.cachedData, err => {
 									if (err) {
-										opts.onNodeCachedDataError({
+										this._moduleManager.getConfigurationOptions().onNodeCachedDataError({
 											errorCode: 'writeFile',
 											path: cachedDataPath,
 											detail: err
