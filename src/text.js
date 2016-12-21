@@ -93,9 +93,9 @@ var TextLoaderPlugin;
                 write('define("' + pluginName + '!' + moduleName + '", function () { return "' + escapedText + '"; });');
             }
         };
-        TextPlugin.BUILD_MAP = {};
         return TextPlugin;
     }());
+    TextPlugin.BUILD_MAP = {};
     TextLoaderPlugin.TextPlugin = TextPlugin;
     var Utilities = (function () {
         function Utilities() {
