@@ -2065,39 +2065,9 @@ module AMDLoader {
 
 		/**
 		 * Attach load / error listeners to a script element and remove them when either one has fired.
-		 * Implemented for browssers supporting 'onreadystatechange' events, such as IE8 or IE9
-		 */
-		private attachListenersV1(script: HTMLScriptElement, callback: () => void, errorback: (err: any) => void): void {
-			var unbind = () => {
-				script.detachEvent('onreadystatechange', loadEventListener);
-				if (script.addEventListener) {
-					script.removeEventListener('error', errorEventListener);
-				}
-			};
-
-			var loadEventListener = (e: any) => {
-				if (script.readyState === 'loaded' || script.readyState === 'complete') {
-					unbind();
-					callback();
-				}
-			};
-
-			var errorEventListener = (e: any) => {
-				unbind();
-				errorback(e);
-			};
-
-			script.attachEvent('onreadystatechange', loadEventListener);
-			if (script.addEventListener) {
-				script.addEventListener('error', errorEventListener);
-			}
-		}
-
-		/**
-		 * Attach load / error listeners to a script element and remove them when either one has fired.
 		 * Implemented for browssers supporting HTML5 standard 'load' and 'error' events.
 		 */
-		private attachListenersV2(script: HTMLScriptElement, callback: () => void, errorback: (err: any) => void): void {
+		private attachListeners(script: HTMLScriptElement, callback: () => void, errorback: (err: any) => void): void {
 			var unbind = () => {
 				script.removeEventListener('load', loadEventListener);
 				script.removeEventListener('error', errorEventListener);
@@ -2126,11 +2096,7 @@ module AMDLoader {
 			script.setAttribute('async', 'async');
 			script.setAttribute('type', 'text/javascript');
 
-			if (global.attachEvent) {
-				this.attachListenersV1(script, callback, errorback);
-			} else {
-				this.attachListenersV2(script, callback, errorback);
-			}
+			this.attachListeners(script, callback, errorback);
 
 			script.setAttribute('src', scriptSrc);
 

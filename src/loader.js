@@ -1587,35 +1587,9 @@ var AMDLoader;
         }
         /**
          * Attach load / error listeners to a script element and remove them when either one has fired.
-         * Implemented for browssers supporting 'onreadystatechange' events, such as IE8 or IE9
-         */
-        BrowserScriptLoader.prototype.attachListenersV1 = function (script, callback, errorback) {
-            var unbind = function () {
-                script.detachEvent('onreadystatechange', loadEventListener);
-                if (script.addEventListener) {
-                    script.removeEventListener('error', errorEventListener);
-                }
-            };
-            var loadEventListener = function (e) {
-                if (script.readyState === 'loaded' || script.readyState === 'complete') {
-                    unbind();
-                    callback();
-                }
-            };
-            var errorEventListener = function (e) {
-                unbind();
-                errorback(e);
-            };
-            script.attachEvent('onreadystatechange', loadEventListener);
-            if (script.addEventListener) {
-                script.addEventListener('error', errorEventListener);
-            }
-        };
-        /**
-         * Attach load / error listeners to a script element and remove them when either one has fired.
          * Implemented for browssers supporting HTML5 standard 'load' and 'error' events.
          */
-        BrowserScriptLoader.prototype.attachListenersV2 = function (script, callback, errorback) {
+        BrowserScriptLoader.prototype.attachListeners = function (script, callback, errorback) {
             var unbind = function () {
                 script.removeEventListener('load', loadEventListener);
                 script.removeEventListener('error', errorEventListener);
@@ -1638,12 +1612,7 @@ var AMDLoader;
             var script = document.createElement('script');
             script.setAttribute('async', 'async');
             script.setAttribute('type', 'text/javascript');
-            if (global.attachEvent) {
-                this.attachListenersV1(script, callback, errorback);
-            }
-            else {
-                this.attachListenersV2(script, callback, errorback);
-            }
+            this.attachListeners(script, callback, errorback);
             script.setAttribute('src', scriptSrc);
             document.getElementsByTagName('head')[0].appendChild(script);
         };
