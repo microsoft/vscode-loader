@@ -106,9 +106,9 @@ var CSSLoaderPlugin;
             }
             externalCallback(contents);
         };
+        NodeCSSLoader.BOM_CHAR_CODE = 65279;
         return NodeCSSLoader;
     }());
-    NodeCSSLoader.BOM_CHAR_CODE = 65279;
     // ------------------------------ Finally, the plugin
     var CSSPlugin = (function () {
         function CSSPlugin(cssLoader) {
@@ -168,10 +168,10 @@ var CSSLoaderPlugin;
         CSSPlugin.prototype.getInlinedResources = function () {
             return global.cssInlinedResources || [];
         };
+        CSSPlugin.BUILD_MAP = {};
+        CSSPlugin.BUILD_PATH_MAP = {};
         return CSSPlugin;
     }());
-    CSSPlugin.BUILD_MAP = {};
-    CSSPlugin.BUILD_PATH_MAP = {};
     CSSLoaderPlugin.CSSPlugin = CSSPlugin;
     var Utilities = (function () {
         function Utilities() {

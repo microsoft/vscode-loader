@@ -584,8 +584,7 @@ QUnit.test('More dependencies, many interactions', function () {
         'v4',
         'v2',
         'v3',
-        'v1'
-    ]);
+        'v1']);
     m.cleanUp();
     QUnit.equal(m.isComplete(), true);
     QUnit.deepEqual(m.getExports(), { a: 'my-exports' });

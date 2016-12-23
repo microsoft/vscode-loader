@@ -120,9 +120,9 @@ var AMDLoader;
         Utilities.isAnonymousModule = function (id) {
             return id.indexOf('===anonymous') === 0;
         };
+        Utilities.NEXT_ANONYMOUS_ID = 1;
         return Utilities;
     }());
-    Utilities.NEXT_ANONYMOUS_ID = 1;
     AMDLoader.Utilities = Utilities;
     var ConfigurationOptionsUtil = (function () {
         function ConfigurationOptionsUtil() {
@@ -336,7 +336,7 @@ var AMDLoader;
                 callback: function () {
                     var depsValues = [];
                     for (var _i = 0; _i < arguments.length; _i++) {
-                        depsValues[_i] = arguments[_i];
+                        depsValues[_i - 0] = arguments[_i];
                     }
                     if (typeof shimMD.init === 'function') {
                         var initReturnValue = shimMD.init.apply(global, depsValues);
@@ -856,7 +856,6 @@ var AMDLoader;
     AMDLoader.Module = Module;
     // ------------------------------------------------------------------------
     // LoaderEvent
-    var LoaderEventType;
     (function (LoaderEventType) {
         LoaderEventType[LoaderEventType["LoaderAvailable"] = 1] = "LoaderAvailable";
         LoaderEventType[LoaderEventType["BeginLoadingScript"] = 10] = "BeginLoadingScript";
@@ -868,7 +867,8 @@ var AMDLoader;
         LoaderEventType[LoaderEventType["NodeEndEvaluatingScript"] = 32] = "NodeEndEvaluatingScript";
         LoaderEventType[LoaderEventType["NodeBeginNativeRequire"] = 33] = "NodeBeginNativeRequire";
         LoaderEventType[LoaderEventType["NodeEndNativeRequire"] = 34] = "NodeEndNativeRequire";
-    })(LoaderEventType = AMDLoader.LoaderEventType || (AMDLoader.LoaderEventType = {}));
+    })(AMDLoader.LoaderEventType || (AMDLoader.LoaderEventType = {}));
+    var LoaderEventType = AMDLoader.LoaderEventType;
     function getHighPerformanceTimestamp() {
         return (hasPerformanceNow ? global.performance.now() : Date.now());
     }
@@ -903,9 +903,9 @@ var AMDLoader;
         NullLoaderEventRecorder.prototype.getEvents = function () {
             return [];
         };
+        NullLoaderEventRecorder.INSTANCE = new NullLoaderEventRecorder();
         return NullLoaderEventRecorder;
     }());
-    NullLoaderEventRecorder.INSTANCE = new NullLoaderEventRecorder();
     AMDLoader.NullLoaderEventRecorder = NullLoaderEventRecorder;
     var ModuleManager = (function () {
         function ModuleManager(scriptLoader) {
@@ -1009,7 +1009,7 @@ var AMDLoader;
         ModuleManager.prototype.enqueueDefineAnonymousModule = function (dependencies, callback) {
             var stack = null;
             if (this._config.isBuild()) {
-                stack = new Error('StackLocation').stack;
+                stack = (new Error('StackLocation')).stack;
             }
             this._queuedDefineCalls.push({
                 id: null,
@@ -1698,15 +1698,12 @@ var AMDLoader;
                 var pieces = scriptSrc.split('|');
                 var moduleExports = null;
                 try {
-                    recorder.record(LoaderEventType.NodeBeginNativeRequire, pieces[2]);
                     moduleExports = nodeRequire(pieces[2]);
                 }
                 catch (err) {
-                    recorder.record(LoaderEventType.NodeEndNativeRequire, pieces[2]);
                     errorback(err);
                     return;
                 }
-                recorder.record(LoaderEventType.NodeEndNativeRequire, pieces[2]);
                 this._moduleManager.enqueueDefineAnonymousModule([], function () { return moduleExports; });
                 callback();
             }
@@ -1802,9 +1799,9 @@ var AMDLoader;
             var timeout = minTimeout + Math.ceil(Math.random() * minTimeout);
             setTimeout(callback, timeout);
         };
+        NodeScriptLoader._BOM = 0xFEFF;
         return NodeScriptLoader;
     }());
-    NodeScriptLoader._BOM = 0xFEFF;
     // ------------------------------------------------------------------------
     // ------------------------------------------------------------------------
     // ------------------------------------------------------------------------
@@ -1830,11 +1827,11 @@ var AMDLoader;
                 moduleManager.enqueueDefineAnonymousModule(dependencies, callback);
             }
         }
+        DefineFunc.amd = {
+            jQuery: true
+        };
         return DefineFunc;
     }());
-    DefineFunc.amd = {
-        jQuery: true
-    };
     var RequireFunc = (function () {
         function RequireFunc() {
             if (arguments.length === 1) {
@@ -1943,9 +1940,12 @@ var AMDLoader;
             var _nodeRequire = (global.require || require);
             var nodeRequire = function (what) {
                 moduleManager.getRecorder().record(LoaderEventType.NodeBeginNativeRequire, what);
-                var r = _nodeRequire(what);
-                moduleManager.getRecorder().record(LoaderEventType.NodeEndNativeRequire, what);
-                return r;
+                try {
+                    return _nodeRequire(what);
+                }
+                finally {
+                    moduleManager.getRecorder().record(LoaderEventType.NodeEndNativeRequire, what);
+                }
             };
             global.nodeRequire = nodeRequire;
             RequireFunc.nodeRequire = nodeRequire;
