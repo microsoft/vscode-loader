@@ -2253,14 +2253,11 @@ module AMDLoader {
 
 				var moduleExports = null;
 				try {
-					recorder.record(LoaderEventType.NodeBeginNativeRequire, pieces[2]);
 					moduleExports = nodeRequire(pieces[2]);
 				} catch (err) {
-					recorder.record(LoaderEventType.NodeEndNativeRequire, pieces[2]);
 					errorback(err);
 					return;
 				}
-				recorder.record(LoaderEventType.NodeEndNativeRequire, pieces[2]);
 
 				this._moduleManager.enqueueDefineAnonymousModule([], () => moduleExports);
 				callback();
@@ -2546,9 +2543,11 @@ module AMDLoader {
 			var _nodeRequire = (global.require || require);
 			var nodeRequire = function (what) {
 				moduleManager.getRecorder().record(LoaderEventType.NodeBeginNativeRequire, what);
-				var r = _nodeRequire(what);
-				moduleManager.getRecorder().record(LoaderEventType.NodeEndNativeRequire, what);
-				return r;
+				try {
+					return _nodeRequire(what);
+				} finally {
+					moduleManager.getRecorder().record(LoaderEventType.NodeEndNativeRequire, what);
+				}
 			};
 
 			global.nodeRequire = nodeRequire;
