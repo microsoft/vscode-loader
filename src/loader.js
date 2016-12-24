@@ -93,17 +93,11 @@ var AMDLoader;
             });
             return isEmpty;
         };
-        Utilities.isArray = function (obj) {
-            if (Array.isArray) {
-                return Array.isArray(obj);
-            }
-            return Object.prototype.toString.call(obj) === '[object Array]';
-        };
         Utilities.recursiveClone = function (obj) {
             if (!obj || typeof obj !== 'object') {
                 return obj;
             }
-            var result = Utilities.isArray(obj) ? [] : {};
+            var result = Array.isArray(obj) ? [] : {};
             Utilities.forEachProperty(obj, function (key, value) {
                 if (value && typeof value === 'object') {
                     result[key] = Utilities.recursiveClone(value);
@@ -180,7 +174,7 @@ var AMDLoader;
             if (typeof options.onError !== 'function') {
                 options.onError = defaultOnError;
             }
-            if (typeof options.ignoreDuplicateModules !== 'object' || !Utilities.isArray(options.ignoreDuplicateModules)) {
+            if (typeof options.ignoreDuplicateModules !== 'object' || !Array.isArray(options.ignoreDuplicateModules)) {
                 options.ignoreDuplicateModules = [];
             }
             if (options.baseUrl.length > 0) {
@@ -214,7 +208,7 @@ var AMDLoader;
             // Merge known properties and overwrite the unknown ones
             Utilities.forEachProperty(overwrite, function (key, value) {
                 if (key === 'bundles' && typeof result.bundles !== 'undefined') {
-                    if (Utilities.isArray(value)) {
+                    if (Array.isArray(value)) {
                         // Compatibility style
                         result.bundles = result.bundles.concat(value);
                     }
@@ -295,7 +289,7 @@ var AMDLoader;
             // result in a more specific -> less specific order
             this.sortedPathsRules = [];
             Utilities.forEachProperty(this.options.paths, function (from, to) {
-                if (!Utilities.isArray(to)) {
+                if (!Array.isArray(to)) {
                     _this.sortedPathsRules.push({
                         from: from,
                         to: [to]
@@ -383,7 +377,7 @@ var AMDLoader;
                 if (!shimMD) {
                     return;
                 }
-                if (Utilities.isArray(shimMD)) {
+                if (Array.isArray(shimMD)) {
                     _this._ensureShimModule1(path, shimMD);
                     return;
                 }
@@ -1813,7 +1807,7 @@ var AMDLoader;
                 dependencies = id;
                 id = null;
             }
-            if (typeof dependencies !== 'object' || !Utilities.isArray(dependencies)) {
+            if (typeof dependencies !== 'object' || !Array.isArray(dependencies)) {
                 callback = dependencies;
                 dependencies = null;
             }
@@ -1835,7 +1829,7 @@ var AMDLoader;
     var RequireFunc = (function () {
         function RequireFunc() {
             if (arguments.length === 1) {
-                if ((arguments[0] instanceof Object) && !Utilities.isArray(arguments[0])) {
+                if ((arguments[0] instanceof Object) && !Array.isArray(arguments[0])) {
                     RequireFunc.config(arguments[0]);
                     return;
                 }
@@ -1844,7 +1838,7 @@ var AMDLoader;
                 }
             }
             if (arguments.length === 2 || arguments.length === 3) {
-                if (Utilities.isArray(arguments[0])) {
+                if (Array.isArray(arguments[0])) {
                     moduleManager.defineModule(Utilities.generateAnonymousModule(), arguments[0], arguments[1], arguments[2], null);
                     return;
                 }

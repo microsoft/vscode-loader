@@ -154,18 +154,11 @@ module AMDLoader {
 			return isEmpty;
 		}
 
-		public static isArray(obj: any): boolean {
-			if (Array.isArray) {
-				return Array.isArray(obj);
-			}
-			return Object.prototype.toString.call(obj) === '[object Array]';
-		}
-
 		public static recursiveClone(obj: any): any {
 			if (!obj || typeof obj !== 'object') {
 				return obj;
 			}
-			let result = Utilities.isArray(obj) ? [] : {};
+			let result = Array.isArray(obj) ? [] : {};
 			Utilities.forEachProperty(obj, (key: string, value: any) => {
 				if (value && typeof value === 'object') {
 					result[key] = Utilities.recursiveClone(value);
@@ -341,7 +334,7 @@ module AMDLoader {
 			if (typeof options.onError !== 'function') {
 				options.onError = defaultOnError;
 			}
-			if (typeof options.ignoreDuplicateModules !== 'object' || !Utilities.isArray(options.ignoreDuplicateModules)) {
+			if (typeof options.ignoreDuplicateModules !== 'object' || !Array.isArray(options.ignoreDuplicateModules)) {
 				options.ignoreDuplicateModules = [];
 			}
 			if (options.baseUrl.length > 0) {
@@ -376,7 +369,7 @@ module AMDLoader {
 			// Merge known properties and overwrite the unknown ones
 			Utilities.forEachProperty(overwrite, (key: string, value: any) => {
 				if (key === 'bundles' && typeof result.bundles !== 'undefined') {
-					if (Utilities.isArray(value)) {
+					if (Array.isArray(value)) {
 						// Compatibility style
 						result.bundles = result.bundles.concat(value);
 					} else {
@@ -480,7 +473,7 @@ module AMDLoader {
 			// result in a more specific -> less specific order
 			this.sortedPathsRules = [];
 			Utilities.forEachProperty(this.options.paths, (from: string, to: any) => {
-				if (!Utilities.isArray(to)) {
+				if (!Array.isArray(to)) {
 					this.sortedPathsRules.push({
 						from: from,
 						to: [to]
@@ -569,7 +562,7 @@ module AMDLoader {
 					return;
 				}
 
-				if (Utilities.isArray(shimMD)) {
+				if (Array.isArray(shimMD)) {
 					this._ensureShimModule1(path, <string[]>shimMD);
 					return;
 				}
@@ -2393,7 +2386,7 @@ module AMDLoader {
 				dependencies = id;
 				id = null;
 			}
-			if (typeof dependencies !== 'object' || !Utilities.isArray(dependencies)) {
+			if (typeof dependencies !== 'object' || !Array.isArray(dependencies)) {
 				callback = dependencies;
 				dependencies = null;
 			}
@@ -2417,7 +2410,7 @@ module AMDLoader {
 
 		constructor() {
 			if (arguments.length === 1) {
-				if ((arguments[0] instanceof Object) && !Utilities.isArray(arguments[0])) {
+				if ((arguments[0] instanceof Object) && !Array.isArray(arguments[0])) {
 					RequireFunc.config(arguments[0]);
 					return;
 				}
@@ -2426,7 +2419,7 @@ module AMDLoader {
 				}
 			}
 			if (arguments.length === 2 || arguments.length === 3) {
-				if (Utilities.isArray(arguments[0])) {
+				if (Array.isArray(arguments[0])) {
 					moduleManager.defineModule(Utilities.generateAnonymousModule(), arguments[0], arguments[1], arguments[2], null);
 					return;
 				}
