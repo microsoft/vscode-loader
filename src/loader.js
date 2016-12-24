@@ -911,8 +911,7 @@ var AMDLoader;
             this._inverseDependencies = {};
             this._dependencies = {};
             this._inversePluginDependencies = {};
-            this._queuedDefineCalls = [];
-            this._loadingScriptsCount = 0;
+            this._currentAnnonymousDefineCall = null;
             this._resolvedScriptPaths = {};
         }
         ModuleManager._findRelevantLocationInStack = function (needle, stack) {
@@ -982,18 +981,7 @@ var AMDLoader;
          * @param callback @see defineModule
          */
         ModuleManager.prototype.enqueueDefineModule = function (id, dependencies, callback) {
-            if (this._loadingScriptsCount === 0) {
-                // There are no scripts currently loading, so no load event will be fired, so the queue will not be consumed
-                this.defineModule(id, dependencies, callback, null, null);
-            }
-            else {
-                this._queuedDefineCalls.push({
-                    id: id,
-                    stack: null,
-                    dependencies: dependencies,
-                    callback: callback
-                });
-            }
+            this.defineModule(id, dependencies, callback, null, null);
         };
         /**
          * Defines an anonymous module (without an id). Its name will be resolved as we receive a callback from the scriptLoader.
@@ -1001,16 +989,18 @@ var AMDLoader;
          * @param callback @see defineModule
          */
         ModuleManager.prototype.enqueueDefineAnonymousModule = function (dependencies, callback) {
+            if (this._currentAnnonymousDefineCall !== null) {
+                throw new Error('Can only have one anonymous define call per script file');
+            }
             var stack = null;
             if (this._config.isBuild()) {
                 stack = new Error('StackLocation').stack;
             }
-            this._queuedDefineCalls.push({
-                id: null,
+            this._currentAnnonymousDefineCall = {
                 stack: stack,
                 dependencies: dependencies,
                 callback: callback
-            });
+            };
         };
         /**
          * Creates a module and stores it in _modules. The manager will immediately begin resolving its dependencies.
@@ -1096,51 +1086,18 @@ var AMDLoader;
          * This means its code is available and has been executed.
          */
         ModuleManager.prototype._onLoad = function (id) {
-            var defineCall;
-            this._loadingScriptsCount--;
             if (this._config.isShimmed(id)) {
                 // Do not consume queue, might end up consuming a module that is later expected
                 // If a shimmed module has loaded, create a define call for it
-                defineCall = this._config.getShimmedModuleDefine(id);
+                var defineCall = this._config.getShimmedModuleDefine(id);
                 this.defineModule(id, defineCall.dependencies, defineCall.callback, null, defineCall.stack);
+                return;
             }
-            else {
-                if (this._queuedDefineCalls.length === 0) {
-                    // Loaded a file and it didn't call `define`
-                    this._loadingScriptsCount++;
-                    this._onLoadError(id, new Error('No define call received from module ' + id + '.'));
-                }
-                else {
-                    // Consume queue until first anonymous define call
-                    // or until current id is found in the queue
-                    while (this._queuedDefineCalls.length > 0) {
-                        defineCall = this._queuedDefineCalls.shift();
-                        if (defineCall.id === id || defineCall.id === null) {
-                            // Hit an anonymous define call or its own define call
-                            defineCall.id = id;
-                            this.defineModule(defineCall.id, defineCall.dependencies, defineCall.callback, null, defineCall.stack);
-                            break;
-                        }
-                        else {
-                            // Hit other named define calls
-                            this.defineModule(defineCall.id, defineCall.dependencies, defineCall.callback, null, defineCall.stack);
-                        }
-                    }
-                }
-            }
-            if (this._loadingScriptsCount === 0) {
-                // No more on loads will be triggered, so make sure queue is empty
-                while (this._queuedDefineCalls.length > 0) {
-                    defineCall = this._queuedDefineCalls.shift();
-                    if (defineCall.id === null) {
-                        console.warn('Found an unmatched anonymous define call in the define queue. Ignoring it!');
-                        console.warn(defineCall.callback);
-                    }
-                    else {
-                        // Hit other named define calls
-                        this.defineModule(defineCall.id, defineCall.dependencies, defineCall.callback, null, defineCall.stack);
-                    }
-                }
+            if (this._currentAnnonymousDefineCall !== null) {
+                var defineCall = this._currentAnnonymousDefineCall;
+                this._currentAnnonymousDefineCall = null;
+                // Hit an anonymous define call
+                this.defineModule(id, defineCall.dependencies, defineCall.callback, null, defineCall.stack);
             }
         };
         /**
@@ -1148,7 +1105,6 @@ var AMDLoader;
          * This means that the script was not found (e.g. 404) or there was an error in the script.
          */
         ModuleManager.prototype._onLoadError = function (id, err) {
-            this._loadingScriptsCount--;
             var error = {
                 errorCode: 'load',
                 moduleId: id,
@@ -1469,7 +1425,6 @@ var AMDLoader;
         };
         ModuleManager.prototype._loadModule = function (anyModuleIdResolver, moduleId) {
             var _this = this;
-            this._loadingScriptsCount++;
             var paths = anyModuleIdResolver.moduleIdToPaths(moduleId);
             var lastPathIndex = -1;
             var loadNextPath = function (err) {
