@@ -137,7 +137,7 @@ module AMDLoader {
 
 		public static forEachProperty(obj: any, callback: (key: string, value: any) => void): void {
 			if (obj) {
-				var key: string;
+				let key: string;
 				for (key in obj) {
 					if (obj.hasOwnProperty(key)) {
 						callback(key, obj[key]);
@@ -147,7 +147,7 @@ module AMDLoader {
 		}
 
 		public static isEmpty(obj: any): boolean {
-			var isEmpty = true;
+			let isEmpty = true;
 			Utilities.forEachProperty(obj, () => {
 				isEmpty = false;
 			});
@@ -165,7 +165,7 @@ module AMDLoader {
 			if (!obj || typeof obj !== 'object') {
 				return obj;
 			}
-			var result = Utilities.isArray(obj) ? [] : {};
+			let result = Utilities.isArray(obj) ? [] : {};
 			Utilities.forEachProperty(obj, (key: string, value: any) => {
 				if (value && typeof value === 'object') {
 					result[key] = Utilities.recursiveClone(value);
@@ -371,7 +371,7 @@ module AMDLoader {
 		}
 
 		public static mergeConfigurationOptions(overwrite: IConfigurationOptions = null, base: IConfigurationOptions = null): IConfigurationOptions {
-			var result: IConfigurationOptions = Utilities.recursiveClone(base || {});
+			let result: IConfigurationOptions = Utilities.recursiveClone(base || {});
 
 			// Merge known properties and overwrite the unknown ones
 			Utilities.forEachProperty(overwrite, (key: string, value: any) => {
@@ -382,7 +382,7 @@ module AMDLoader {
 					} else {
 						// AMD API style
 						Utilities.forEachProperty(value, (key: string, value: any) => {
-							var bundleConfiguration: IBundleConfiguration = {
+							let bundleConfiguration: IBundleConfiguration = {
 								location: key,
 								modules: value
 							};
@@ -441,13 +441,13 @@ module AMDLoader {
 
 			if (this.options.baseUrl === '') {
 				if (isNode && this.options.nodeRequire && this.options.nodeRequire.main && this.options.nodeRequire.main.filename) {
-					var nodeMain = this.options.nodeRequire.main.filename;
-					var dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
+					let nodeMain = this.options.nodeRequire.main.filename;
+					let dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
 					this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
 				}
 				if (isNode && this.options.nodeMain) {
-					var nodeMain = this.options.nodeMain;
-					var dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
+					let nodeMain = this.options.nodeMain;
+					let dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
 					this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
 				}
 			}
@@ -455,12 +455,12 @@ module AMDLoader {
 
 		private _createOverwriteModuleIdToPath(): void {
 			this.overwriteModuleIdToPath = {};
-			for (var i = 0; i < this.options.bundles.length; i++) {
-				var bundle = this.options.bundles[i];
+			for (let i = 0; i < this.options.bundles.length; i++) {
+				let bundle = this.options.bundles[i];
 
-				var location = bundle.location;
+				let location = bundle.location;
 				if (bundle.modules) {
-					for (var j = 0; j < bundle.modules.length; j++) {
+					for (let j = 0; j < bundle.modules.length; j++) {
 						this.overwriteModuleIdToPath[bundle.modules[j]] = location;
 					}
 				}
@@ -470,7 +470,7 @@ module AMDLoader {
 		private _createIgnoreDuplicateModulesMap(): void {
 			// Build a map out of the ignoreDuplicateModules array
 			this.ignoreDuplicateModulesMap = {};
-			for (var i = 0; i < this.options.ignoreDuplicateModules.length; i++) {
+			for (let i = 0; i < this.options.ignoreDuplicateModules.length; i++) {
 				this.ignoreDuplicateModulesMap[this.options.ignoreDuplicateModules[i]] = true;
 			}
 		}
@@ -499,8 +499,8 @@ module AMDLoader {
 
 		private _ensureShimModule1(path: string, shimMD: string[]): void {
 			// Ensure dependencies are also shimmed
-			for (var i = 0; i < shimMD.length; i++) {
-				var dependencyId = shimMD[i];
+			for (let i = 0; i < shimMD.length; i++) {
+				let dependencyId = shimMD[i];
 
 				if (!this.shimModules.hasOwnProperty(dependencyId)) {
 					this._ensureShimModule1(dependencyId, []);
@@ -524,7 +524,7 @@ module AMDLoader {
 				dependencies: shimMD.deps || [],
 				callback: (...depsValues: any[]) => {
 					if (typeof shimMD.init === 'function') {
-						var initReturnValue = shimMD.init.apply(global, depsValues);
+						let initReturnValue = shimMD.init.apply(global, depsValues);
 						if (typeof initReturnValue !== 'undefined') {
 							return initReturnValue;
 						}
@@ -535,9 +535,9 @@ module AMDLoader {
 					}
 
 					if (typeof shimMD.exports === 'string') {
-						var pieces = (<string>shimMD.exports).split('.');
-						var obj = global;
-						for (var i = 0; i < pieces.length; i++) {
+						let pieces = (<string>shimMD.exports).split('.');
+						let obj = global;
+						for (let i = 0; i < pieces.length; i++) {
 							if (obj) {
 								obj = obj[pieces[i]];
 							}
@@ -595,12 +595,12 @@ module AMDLoader {
 		}
 
 		private _applyPaths(moduleId: string): string[] {
-			var pathRule: { from: string; to: string[]; };
-			for (var i = 0, len = this.sortedPathsRules.length; i < len; i++) {
+			let pathRule: { from: string; to: string[]; };
+			for (let i = 0, len = this.sortedPathsRules.length; i < len; i++) {
 				pathRule = this.sortedPathsRules[i];
 				if (Utilities.startsWith(moduleId, pathRule.from)) {
-					var result: string[] = [];
-					for (var j = 0, lenJ = pathRule.to.length; j < lenJ; j++) {
+					let result: string[] = [];
+					for (let j = 0, lenJ = pathRule.to.length; j < lenJ; j++) {
 						result.push(pathRule.to[j] + moduleId.substr(pathRule.from.length));
 					}
 					return result;
@@ -626,7 +626,7 @@ module AMDLoader {
 
 		private _addUrlArgsIfNecessaryToUrls(urls: string[]): string[] {
 			if (this.options.urlArgs) {
-				for (var i = 0, len = urls.length; i < len; i++) {
+				for (let i = 0, len = urls.length; i < len; i++) {
 					urls[i] = this._addUrlArgsToUrl(urls[i]);
 				}
 			}
@@ -643,17 +643,17 @@ module AMDLoader {
 				return ['empty:'];
 			}
 
-			var result = moduleId;
+			let result = moduleId;
 
 			if (this.overwriteModuleIdToPath.hasOwnProperty(result)) {
 				result = this.overwriteModuleIdToPath[result];
 			}
 
-			var results: string[];
+			let results: string[];
 			if (!Utilities.endsWith(result, '.js') && !Utilities.isAbsolutePath(result)) {
 				results = this._applyPaths(result);
 
-				for (var i = 0, len = results.length; i < len; i++) {
+				for (let i = 0, len = results.length; i < len; i++) {
 					if (this.isBuild() && results[i] === 'empty:') {
 						continue;
 					}
@@ -680,7 +680,7 @@ module AMDLoader {
 		 * Transform a module id or url to a location.
 		 */
 		public requireToUrl(url: string): string {
-			var result = url;
+			let result = url;
 
 			if (!Utilities.isAbsolutePath(result)) {
 				result = this._applyPaths(result)[0];
@@ -767,7 +767,7 @@ module AMDLoader {
 		constructor(config: Configuration, fromModuleId: string) {
 			this._config = config;
 
-			var lastSlash = fromModuleId.lastIndexOf('/');
+			let lastSlash = fromModuleId.lastIndexOf('/');
 			if (lastSlash !== -1) {
 				this.fromModulePath = fromModuleId.substr(0, lastSlash + 1);
 			} else {
@@ -783,7 +783,7 @@ module AMDLoader {
 		 * Normalize 'a/../name' to 'name', etc.
 		 */
 		static _normalizeModuleId(moduleId: string): string {
-			var r = moduleId,
+			let r = moduleId,
 				pattern: RegExp;
 
 			// replace /./ => /
@@ -811,7 +811,7 @@ module AMDLoader {
 		 * Resolve relative module ids
 		 */
 		public resolveModule(moduleId: string): string {
-			var result = moduleId;
+			let result = moduleId;
 
 			if (!Utilities.isAbsolutePath(result)) {
 				if (Utilities.startsWith(result, './') || Utilities.startsWith(result, '../')) {
@@ -826,7 +826,7 @@ module AMDLoader {
 		 * Transform a module id to a location. Appends .js to module ids
 		 */
 		public moduleIdToPaths(moduleId: string): string[] {
-			var r = this._config.moduleIdToPaths(moduleId);
+			let r = this._config.moduleIdToPaths(moduleId);
 
 			if (isNode && moduleId.indexOf('/') === -1) {
 				r.push('node|' + this.fromModulePath + '|' + moduleId);
@@ -910,7 +910,7 @@ module AMDLoader {
 			this._managerDependencies = [];
 			this._managerDependenciesMap = {};
 
-			var i: number, len: number, d: string;
+			let i: number, len: number, d: string;
 			for (i = 0, len = this._dependencies.length; i < len; i++) {
 				d = this._dependencies[i];
 
@@ -945,10 +945,10 @@ module AMDLoader {
 					this.addManagerDependency(d, i);
 				} else {
 					// Normalize dependency and then request it from the manager
-					var bangIndex = d.indexOf('!');
+					let bangIndex = d.indexOf('!');
 					if (bangIndex >= 0) {
-						var pluginId = d.substring(0, bangIndex);
-						var pluginParam = d.substring(bangIndex + 1, d.length);
+						let pluginId = d.substring(0, bangIndex);
+						let pluginParam = d.substring(bangIndex + 1, d.length);
 						d = this._moduleIdResolver.resolveModule(pluginId) + '!' + pluginParam;
 					} else {
 						d = this._moduleIdResolver.resolveModule(d);
@@ -978,7 +978,7 @@ module AMDLoader {
 				throw new Error('Loader: Cannot rename an unknown dependency!');
 			}
 
-			var index = this._managerDependenciesMap[oldDependencyId];
+			let index = this._managerDependenciesMap[oldDependencyId];
 			delete this._managerDependenciesMap[oldDependencyId];
 			this._managerDependenciesMap[newDependencyId] = index;
 			this._normalizedDependencies[index] = newDependencyId;
@@ -1029,7 +1029,7 @@ module AMDLoader {
 					producedError: null
 				};
 			}
-			var producedError: any = null,
+			let producedError: any = null,
 				returnedValue: any = null;
 
 			if (this._moduleIdResolver.shouldCatchError()) {
@@ -1051,12 +1051,12 @@ module AMDLoader {
 		}
 
 		private _complete(): void {
-			var producedError: any = null;
+			let producedError: any = null;
 			if (this._callback) {
 				if (typeof this._callback === 'function') {
 
 					this._recorder.record(LoaderEventType.BeginInvokeFactory, this._id);
-					var r = this._invokeFactory();
+					let r = this._invokeFactory();
 					producedError = r.producedError;
 					this._recorder.record(LoaderEventType.EndInvokeFactory, this._id);
 
@@ -1280,18 +1280,18 @@ module AMDLoader {
 		}
 
 		private static _findRelevantLocationInStack(needle: string, stack: string): IPosition {
-			var normalize = (str) => str.replace(/\\/g, '/');
-			var normalizedPath = normalize(needle);
+			let normalize = (str) => str.replace(/\\/g, '/');
+			let normalizedPath = normalize(needle);
 
-			var stackPieces = stack.split(/\n/);
-			for (var i = 0; i < stackPieces.length; i++) {
-				var m = stackPieces[i].match(/(.*):(\d+):(\d+)\)?$/);
+			let stackPieces = stack.split(/\n/);
+			for (let i = 0; i < stackPieces.length; i++) {
+				let m = stackPieces[i].match(/(.*):(\d+):(\d+)\)?$/);
 				if (m) {
-					var stackPath = m[1];
-					var stackLine = m[2];
-					var stackColumn = m[3];
+					let stackPath = m[1];
+					let stackLine = m[2];
+					let stackColumn = m[3];
 
-					var trimPathOffset = Math.max(
+					let trimPathOffset = Math.max(
 						stackPath.lastIndexOf(' ') + 1,
 						stackPath.lastIndexOf('(') + 1
 					);
@@ -1300,7 +1300,7 @@ module AMDLoader {
 					stackPath = normalize(stackPath);
 
 					if (stackPath === normalizedPath) {
-						var r = {
+						let r = {
 							line: parseInt(stackLine, 10),
 							col: parseInt(stackColumn, 10)
 						};
@@ -1321,10 +1321,10 @@ module AMDLoader {
 			}
 
 			return Object.keys(this._modules).map((moduleId) => {
-				var m = this._modules[moduleId];
+				let m = this._modules[moduleId];
 
-				var location = this._resolvedScriptPaths[moduleId] || null;
-				var defineStack = m.getDefineCallStack();
+				let location = this._resolvedScriptPaths[moduleId] || null;
+				let defineStack = m.getDefineCallStack();
 				return {
 					id: moduleId,
 					path: location,
@@ -1378,7 +1378,7 @@ module AMDLoader {
 		 * @param callback @see defineModule
 		 */
 		public enqueueDefineAnonymousModule(dependencies: string[], callback: any): void {
-			var stack: string = null;
+			let stack: string = null;
 			if (this._config.isBuild()) {
 				stack = (<any>new Error('StackLocation')).stack;
 			}
@@ -1404,8 +1404,8 @@ module AMDLoader {
 				// Super important! Completely ignore duplicate module definition
 				return;
 			}
-			var moduleConfig = this._config.getConfigForModule(id);
-			var m = new Module(id, dependencies, callback, errorback, this.getRecorder(), moduleIdResolver, moduleConfig, stack);
+			let moduleConfig = this._config.getConfigForModule(id);
+			let m = new Module(id, dependencies, callback, errorback, this.getRecorder(), moduleIdResolver, moduleConfig, stack);
 			this._modules[id] = m;
 
 			// Resolving of dependencies is immediate (not in a timeout). If there's a need to support a packer that concatenates in an
@@ -1427,13 +1427,13 @@ module AMDLoader {
 		 * @return The exports of module 'id'
 		 */
 		public synchronousRequire(id: string, moduleIdResolver: ModuleIdResolver = new ModuleIdResolver(this._config, id)): any {
-			var moduleId = moduleIdResolver.resolveModule(id);
+			let moduleId = moduleIdResolver.resolveModule(id);
 
-			var bangIndex = moduleId.indexOf('!');
+			let bangIndex = moduleId.indexOf('!');
 			if (bangIndex >= 0) {
 				// This is a synchronous require for a plugin dependency, so be sure to normalize the pluginParam (the piece after '!')
 
-				var pluginId = moduleId.substring(0, bangIndex),
+				let pluginId = moduleId.substring(0, bangIndex),
 					pluginParam = moduleId.substring(bangIndex + 1, moduleId.length),
 					plugin: ILoaderPlugin = {};
 
@@ -1442,7 +1442,7 @@ module AMDLoader {
 				}
 
 				// Helper to normalize the part which comes after '!'
-				var normalize = (_arg: string) => {
+				let normalize = (_arg: string) => {
 					return moduleIdResolver.resolveModule(_arg);
 				};
 				if (typeof plugin.normalize === 'function') {
@@ -1458,7 +1458,7 @@ module AMDLoader {
 				throw new Error('Check dependency list! Synchronous require cannot resolve module \'' + moduleId + '\'. This is the first mention of this module!');
 			}
 
-			var m = this._modules[moduleId];
+			let m = this._modules[moduleId];
 
 			if (!m.isComplete()) {
 				throw new Error('Check dependency list! Synchronous require cannot resolve module \'' + moduleId + '\'. This module has not been resolved completely yet.');
@@ -1468,7 +1468,7 @@ module AMDLoader {
 		}
 
 		public configure(params: IConfigurationOptions, shouldOverwrite: boolean): void {
-			var oldShouldRecordStats = this._config.shouldRecordStats();
+			let oldShouldRecordStats = this._config.shouldRecordStats();
 			if (shouldOverwrite) {
 				this._config = new Configuration(params);
 			} else {
@@ -1488,7 +1488,7 @@ module AMDLoader {
 		 * This means its code is available and has been executed.
 		 */
 		private _onLoad(id: string): void {
-			var defineCall: IDefineCall;
+			let defineCall: IDefineCall;
 
 			this._loadingScriptsCount--;
 
@@ -1542,7 +1542,7 @@ module AMDLoader {
 		private _onLoadError(id: string, err: any): void {
 			this._loadingScriptsCount--;
 
-			var error = {
+			let error = {
 				errorCode: 'load',
 				moduleId: id,
 				neededBy: (this._inverseDependencies[id] ? this._inverseDependencies[id].slice(0) : []),
@@ -1550,7 +1550,7 @@ module AMDLoader {
 			};
 
 			// Find any 'local' error handlers, walk the entire chain of inverse dependencies if necessary.
-			var seenModuleId: { [moduleId: string]: boolean; } = {},
+			let seenModuleId: { [moduleId: string]: boolean; } = {},
 				queueElement: string,
 				someoneNotified = false,
 				queue: string[] = [];
@@ -1565,7 +1565,7 @@ module AMDLoader {
 				}
 
 				if (this._inverseDependencies[queueElement]) {
-					for (var i = 0, len = this._inverseDependencies[queueElement].length; i < len; i++) {
+					for (let i = 0, len = this._inverseDependencies[queueElement].length; i < len; i++) {
 						if (!seenModuleId.hasOwnProperty(this._inverseDependencies[queueElement][i])) {
 							queue.push(this._inverseDependencies[queueElement][i]);
 							seenModuleId[this._inverseDependencies[queueElement][i]] = true;
@@ -1585,7 +1585,7 @@ module AMDLoader {
 		 * @param exports module's exports
 		 */
 		private _onModuleComplete(id: string, exports: any): void {
-			var i: number,
+			let i: number,
 				len: number,
 				inverseDependencyId: string,
 				inverseDependency: Module;
@@ -1595,7 +1595,7 @@ module AMDLoader {
 
 			if (this._inverseDependencies.hasOwnProperty(id)) {
 				// Fetch and clear inverse dependencies
-				var inverseDependencies = this._inverseDependencies[id];
+				let inverseDependencies = this._inverseDependencies[id];
 				delete this._inverseDependencies[id];
 
 				// Resolve one inverse dependency at a time, always
@@ -1615,13 +1615,13 @@ module AMDLoader {
 				// This module is used as a plugin at least once
 				// Fetch and clear these inverse plugin dependencies
 
-				var inversePluginDependencies = this._inversePluginDependencies[id];
+				let inversePluginDependencies = this._inversePluginDependencies[id];
 				delete this._inversePluginDependencies[id];
 
 				// Resolve plugin dependencies one at a time
 				for (i = 0, len = inversePluginDependencies.length; i < len; i++) {
-					var inversePluginDependencyId = inversePluginDependencies[i].moduleId;
-					var inversePluginDependency = this._modules[inversePluginDependencyId];
+					let inversePluginDependencyId = inversePluginDependencies[i].moduleId;
+					let inversePluginDependency = this._modules[inversePluginDependencyId];
 
 					this._resolvePluginDependencySync(inversePluginDependencyId, inversePluginDependencies[i].dependencyId, exports);
 
@@ -1648,7 +1648,7 @@ module AMDLoader {
 		 * @param to Module id to look for
 		 */
 		private _hasDependencyPath(from: string, to: string): boolean {
-			var i: number,
+			let i: number,
 				len: number,
 				inQueue: { [moduleId: string]: boolean; } = {},
 				queue: string[] = [],
@@ -1702,11 +1702,11 @@ module AMDLoader {
 			if (!this._dependencies.hasOwnProperty(from)) {
 				return null;
 			}
-			var path: string[],
+			let path: string[],
 				dependencies = this._dependencies[from];
 
 			// Walk the element's dependencies
-			for (var i = 0, len = dependencies.length; i < len; i++) {
+			for (let i = 0, len = dependencies.length; i < len; i++) {
 				path = this._findCyclePath(dependencies[i], to, depth + 1);
 				if (path !== null) {
 					path.push(from);
@@ -1720,7 +1720,7 @@ module AMDLoader {
 		 * Create the local 'require' that is passed into modules
 		 */
 		private _createRequire(moduleIdResolver: ModuleIdResolver): IRelativeRequire {
-			var result: IRelativeRequire = <any>((dependencies: any, callback?: Function, errorback?: Function) => {
+			let result: IRelativeRequire = <any>((dependencies: any, callback?: Function, errorback?: Function) => {
 				return this._relativeRequire(moduleIdResolver, dependencies, callback, errorback);
 			});
 			result.toUrl = (id: string) => {
@@ -1740,14 +1740,14 @@ module AMDLoader {
 		 * @param plugin The plugin (what the plugin exports)
 		 */
 		private _resolvePluginDependencySync(moduleId: string, dependencyId: string, plugin: ILoaderPlugin): void {
-			var m = this._modules[moduleId],
+			let m = this._modules[moduleId],
 				moduleIdResolver = m.getModuleIdResolver(),
 				bangIndex = dependencyId.indexOf('!'),
 				pluginId = dependencyId.substring(0, bangIndex),
 				pluginParam = dependencyId.substring(bangIndex + 1, dependencyId.length);
 
 			// Helper to normalize the part which comes after '!'
-			var normalize = (_arg: string) => {
+			let normalize = (_arg: string) => {
 				return moduleIdResolver.resolveModule(_arg);
 			};
 			if (typeof plugin.normalize === 'function') {
@@ -1758,7 +1758,7 @@ module AMDLoader {
 
 			if (!plugin.dynamic) {
 				// Now normalize the entire dependency
-				var oldDependencyId = dependencyId;
+				let oldDependencyId = dependencyId;
 				dependencyId = pluginId + '!' + pluginParam;
 
 				// Let the module know that the dependency has been normalized so it can update its internal state
@@ -1766,7 +1766,7 @@ module AMDLoader {
 
 				this._resolveDependency(moduleId, dependencyId, (moduleId: string) => {
 					// Delegate the loading of the resource to the plugin
-					var load: IPluginLoadCallback = <any>((value: any) => {
+					let load: IPluginLoadCallback = <any>((value: any) => {
 						this.defineModule(dependencyId, [], value, null, null);
 					});
 					load.error = (err: any) => {
@@ -1784,7 +1784,7 @@ module AMDLoader {
 				// This plugin is dynamic and does not want the loader to cache anything on its behalf
 
 				// Delegate the loading of the resource to the plugin
-				var load: IPluginLoadCallback = <any>((value: any) => {
+				let load: IPluginLoadCallback = <any>((value: any) => {
 					m.resolveDependency(dependencyId, value);
 					if (m.isComplete()) {
 						this._onModuleComplete(moduleId, m.getExports());
@@ -1809,7 +1809,7 @@ module AMDLoader {
 		 * @param dependencyId The semi-normalized dependency that appears in the module. e.g. 'vs/css!./mycssfile'. Only the plugin part (before !) is normalized
 		 */
 		private _resolvePluginDependencyAsync(moduleId: string, dependencyId: string): void {
-			var m = this._modules[moduleId],
+			let m = this._modules[moduleId],
 				bangIndex = dependencyId.indexOf('!'),
 				pluginId = dependencyId.substring(0, bangIndex);
 
@@ -1833,7 +1833,7 @@ module AMDLoader {
 		 * @param dependencyId The semi-normalized dependency that appears in the module. e.g. 'vs/css!./mycssfile'. Only the plugin part (before !) is normalized
 		 */
 		private _resolvePluginDependency(moduleId: string, dependencyId: string): void {
-			var bangIndex = dependencyId.indexOf('!'),
+			let bangIndex = dependencyId.indexOf('!'),
 				pluginId = dependencyId.substring(0, bangIndex);
 
 			if (this._modules.hasOwnProperty(pluginId) && this._modules[pluginId].isComplete()) {
@@ -1856,7 +1856,7 @@ module AMDLoader {
 			// and only when those are loaded we can load the shimmed module.
 			// To achieve this, we inject a module definition with those dependencies
 			// and from its factory method we really load the shimmed module.
-			var defineInfo = this._config.getShimmedModuleDefine(dependencyId);
+			let defineInfo = this._config.getShimmedModuleDefine(dependencyId);
 			if (defineInfo.dependencies.length > 0) {
 				this.defineModule(
 					Utilities.generateAnonymousModule(),
@@ -1877,7 +1877,7 @@ module AMDLoader {
 		 * @param loadCallback Callback that will be called to trigger the loading of 'dependencyId' if needed
 		 */
 		private _resolveDependency(moduleId: string, dependencyId: string, loadCallback: (moduleId: string) => void): void {
-			var m = this._modules[moduleId];
+			let m = this._modules[moduleId];
 
 			if (this._modules.hasOwnProperty(dependencyId) && this._modules[dependencyId].isComplete()) {
 				// Dependency has already been loaded & resolved
@@ -1890,14 +1890,14 @@ module AMDLoader {
 
 				if (this._hasDependencyPath(dependencyId, moduleId)) {
 					console.warn('There is a dependency cycle between \'' + dependencyId + '\' and \'' + moduleId + '\'. The cyclic path follows:');
-					var cyclePath = this._findCyclePath(dependencyId, moduleId, 0);
+					let cyclePath = this._findCyclePath(dependencyId, moduleId, 0);
 					cyclePath.reverse();
 					cyclePath.push(dependencyId);
 					console.warn(cyclePath.join(' => \n'));
 
 					// Break the cycle
-					var dependency = this._modules.hasOwnProperty(dependencyId) ? this._modules[dependencyId] : null;
-					var dependencyValue: any;
+					let dependency = this._modules.hasOwnProperty(dependencyId) ? this._modules[dependencyId] : null;
+					let dependencyValue: any;
 					if (dependency && dependency.isExportsPassedIn()) {
 						// If dependency uses 'exports', then resolve it with that object
 						dependencyValue = dependency.getExports();
@@ -1927,17 +1927,17 @@ module AMDLoader {
 		private _loadModule(anyModuleIdResolver: ModuleIdResolver, moduleId: string): void {
 			this._loadingScriptsCount++;
 
-			var paths = anyModuleIdResolver.moduleIdToPaths(moduleId);
-			var lastPathIndex = -1;
-			var loadNextPath = (err: any) => {
+			let paths = anyModuleIdResolver.moduleIdToPaths(moduleId);
+			let lastPathIndex = -1;
+			let loadNextPath = (err: any) => {
 				lastPathIndex++;
 
 				if (lastPathIndex >= paths.length) {
 					// No more paths to try
 					this._onLoadError(moduleId, err);
 				} else {
-					var currentPath = paths[lastPathIndex];
-					var recorder = this.getRecorder();
+					let currentPath = paths[lastPathIndex];
+					let recorder = this.getRecorder();
 
 					if (this._config.isBuild() && currentPath === 'empty:') {
 						this._resolvedScriptPaths[moduleId] = currentPath;
@@ -1967,7 +1967,7 @@ module AMDLoader {
 		 * Examine the dependencies of module 'module' and resolve them as needed.
 		 */
 		private _resolve(m: Module): void {
-			var i: number,
+			let i: number,
 				len: number,
 				id: string,
 				dependencies: string[],
@@ -1980,7 +1980,7 @@ module AMDLoader {
 
 			this._dependencies[id] = [];
 
-			var loadCallback = (moduleId: string) => this._loadModule(moduleIdResolver, moduleId);
+			let loadCallback = (moduleId: string) => this._loadModule(moduleIdResolver, moduleId);
 
 			for (i = 0, len = dependencies.length; i < len; i++) {
 				dependencyId = dependencies[i];
@@ -2030,7 +2030,7 @@ module AMDLoader {
 		}
 
 		public load(scriptSrc: string, callback: () => void, errorback: (err: any) => void, recorder: ILoaderEventRecorder): void {
-			var scriptCallbacks: IScriptCallbacks = {
+			let scriptCallbacks: IScriptCallbacks = {
 				callback: callback,
 				errorback: errorback
 			};
@@ -2043,19 +2043,19 @@ module AMDLoader {
 		}
 
 		private triggerCallback(scriptSrc: string): void {
-			var scriptCallbacks = this.callbackMap[scriptSrc];
+			let scriptCallbacks = this.callbackMap[scriptSrc];
 			delete this.callbackMap[scriptSrc];
 
-			for (var i = 0; i < scriptCallbacks.length; i++) {
+			for (let i = 0; i < scriptCallbacks.length; i++) {
 				scriptCallbacks[i].callback();
 			}
 		}
 
 		private triggerErrorback(scriptSrc: string, err: any): void {
-			var scriptCallbacks = this.callbackMap[scriptSrc];
+			let scriptCallbacks = this.callbackMap[scriptSrc];
 			delete this.callbackMap[scriptSrc];
 
-			for (var i = 0; i < scriptCallbacks.length; i++) {
+			for (let i = 0; i < scriptCallbacks.length; i++) {
 				scriptCallbacks[i].errorback(err);
 			}
 		}
@@ -2068,17 +2068,17 @@ module AMDLoader {
 		 * Implemented for browssers supporting HTML5 standard 'load' and 'error' events.
 		 */
 		private attachListeners(script: HTMLScriptElement, callback: () => void, errorback: (err: any) => void): void {
-			var unbind = () => {
+			let unbind = () => {
 				script.removeEventListener('load', loadEventListener);
 				script.removeEventListener('error', errorEventListener);
 			};
 
-			var loadEventListener = (e: any) => {
+			let loadEventListener = (e: any) => {
 				unbind();
 				callback();
 			};
 
-			var errorEventListener = (e: any) => {
+			let errorEventListener = (e: any) => {
 				unbind();
 				errorback(e);
 			};
@@ -2092,7 +2092,7 @@ module AMDLoader {
 		}
 
 		public load(scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
-			var script = document.createElement('script');
+			let script = document.createElement('script');
 			script.setAttribute('async', 'async');
 			script.setAttribute('type', 'text/javascript');
 
@@ -2139,16 +2139,16 @@ module AMDLoader {
 		}
 
 		private _load(): void {
-			var loadCalls = this.loadCalls;
+			let loadCalls = this.loadCalls;
 			this.loadCalls = [];
 
-			var i: number, len = loadCalls.length, scripts: string[] = [];
+			let i: number, len = loadCalls.length, scripts: string[] = [];
 
 			for (i = 0; i < len; i++) {
 				scripts.push(loadCalls[i].scriptSrc);
 			}
 
-			var errorOccured = false;
+			let errorOccured = false;
 			try {
 				importScripts.apply(null, scripts);
 			} catch (e) {
@@ -2249,9 +2249,9 @@ module AMDLoader {
 
 			if (/^node\|/.test(scriptSrc)) {
 
-				var pieces = scriptSrc.split('|');
+				let pieces = scriptSrc.split('|');
 
-				var moduleExports = null;
+				let moduleExports = null;
 				try {
 					moduleExports = nodeRequire(pieces[2]);
 				} catch (err) {
@@ -2513,7 +2513,7 @@ module AMDLoader {
 		if (!isWebWorker && !isNode) {
 			window.onload = function () {
 
-				var i: number,
+				let i: number,
 					len: number,
 					main: string,
 					scripts = document.getElementsByTagName('script');

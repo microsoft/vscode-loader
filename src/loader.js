@@ -78,7 +78,7 @@ var AMDLoader;
         };
         Utilities.forEachProperty = function (obj, callback) {
             if (obj) {
-                var key;
+                var key = void 0;
                 for (key in obj) {
                     if (obj.hasOwnProperty(key)) {
                         callback(key, obj[key]);
@@ -274,10 +274,10 @@ var AMDLoader;
             this.overwriteModuleIdToPath = {};
             for (var i = 0; i < this.options.bundles.length; i++) {
                 var bundle = this.options.bundles[i];
-                var location = bundle.location;
+                var location_1 = bundle.location;
                 if (bundle.modules) {
                     for (var j = 0; j < bundle.modules.length; j++) {
-                        this.overwriteModuleIdToPath[bundle.modules[j]] = location;
+                        this.overwriteModuleIdToPath[bundle.modules[j]] = location_1;
                     }
                 }
             }
@@ -1446,7 +1446,7 @@ var AMDLoader;
                     console.warn(cyclePath.join(' => \n'));
                     // Break the cycle
                     var dependency = this._modules.hasOwnProperty(dependencyId) ? this._modules[dependencyId] : null;
-                    var dependencyValue;
+                    var dependencyValue = void 0;
                     if (dependency && dependency.isExportsPassedIn()) {
                         // If dependency uses 'exports', then resolve it with that object
                         dependencyValue = dependency.getExports();
@@ -1485,25 +1485,25 @@ var AMDLoader;
                     _this._onLoadError(moduleId, err);
                 }
                 else {
-                    var currentPath = paths[lastPathIndex];
-                    var recorder = _this.getRecorder();
-                    if (_this._config.isBuild() && currentPath === 'empty:') {
-                        _this._resolvedScriptPaths[moduleId] = currentPath;
+                    var currentPath_1 = paths[lastPathIndex];
+                    var recorder_1 = _this.getRecorder();
+                    if (_this._config.isBuild() && currentPath_1 === 'empty:') {
+                        _this._resolvedScriptPaths[moduleId] = currentPath_1;
                         _this.enqueueDefineModule(moduleId, [], null);
                         _this._onLoad(moduleId);
                         return;
                     }
-                    recorder.record(LoaderEventType.BeginLoadingScript, currentPath);
-                    _this._scriptLoader.load(currentPath, function () {
+                    recorder_1.record(LoaderEventType.BeginLoadingScript, currentPath_1);
+                    _this._scriptLoader.load(currentPath_1, function () {
                         if (_this._config.isBuild()) {
-                            _this._resolvedScriptPaths[moduleId] = currentPath;
+                            _this._resolvedScriptPaths[moduleId] = currentPath_1;
                         }
-                        recorder.record(LoaderEventType.EndLoadingScriptOK, currentPath);
+                        recorder_1.record(LoaderEventType.EndLoadingScriptOK, currentPath_1);
                         _this._onLoad(moduleId);
                     }, function (err) {
-                        recorder.record(LoaderEventType.EndLoadingScriptError, currentPath);
+                        recorder_1.record(LoaderEventType.EndLoadingScriptError, currentPath_1);
                         loadNextPath(err);
-                    }, recorder);
+                    }, recorder_1);
                 }
             };
             loadNextPath(null);
@@ -1696,15 +1696,15 @@ var AMDLoader;
             this._init(nodeRequire);
             if (/^node\|/.test(scriptSrc)) {
                 var pieces = scriptSrc.split('|');
-                var moduleExports = null;
+                var moduleExports_1 = null;
                 try {
-                    moduleExports = nodeRequire(pieces[2]);
+                    moduleExports_1 = nodeRequire(pieces[2]);
                 }
                 catch (err) {
                     errorback(err);
                     return;
                 }
-                this._moduleManager.enqueueDefineAnonymousModule([], function () { return moduleExports; });
+                this._moduleManager.enqueueDefineAnonymousModule([], function () { return moduleExports_1; });
                 callback();
             }
             else {
