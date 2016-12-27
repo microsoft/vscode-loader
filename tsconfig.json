@@ -1,8 +1,17 @@
 {
 	"compilerOptions": {
 		"target": "es5",
-		"newLine": "LF"
+		"newLine": "LF",
+		"noUnusedLocals": true
 	},
+	"files": [
+		"src/loader.d.ts",
+		"src/css.ts",
+		"src/nls.ts",
+		"tests/qunit/qunit.d.ts",
+		"tests/loader.test.ts",
+		"tests/css.test.ts"
+	],
 	"exclude": [
 		"node_modules"
 	]

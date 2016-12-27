@@ -11,14 +11,11 @@ QUnit.module('ConfigurationOptionsUtil');
  * Assert that two configuration options are equal and disregard `onError`
  */
 function assertConfigurationIs(actual:loader.IConfigurationOptions, expected:loader.IConfigurationOptions): void {
-	var actualOnError = actual.onError;
-	var expectedOnError = expected.onError;
-
 	actual.onError = null;
+	actual.onNodeCachedDataError = null;
 	expected.onError = null;
+	expected.onNodeCachedDataError = null;
 	QUnit.deepEqual(actual, expected, 'Configuration options are equal');
-	actual.onError = actualOnError;
-	expected.onError = expectedOnError;
 }
 
 QUnit.test('Default configuration', () => {
@@ -29,10 +26,9 @@ QUnit.test('Default configuration', () => {
 		ignoreDuplicateModules: [],
 		isBuild: false,
 		paths: {},
-		bundles: [],
-		shim: {},
 		config: {},
 		urlArgs: '',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 });
@@ -44,10 +40,9 @@ function createSimpleKnownConfigurationOptions(): loader.IConfigurationOptions {
 		ignoreDuplicateModules: [ 'a' ],
 		isBuild: false,
 		paths: { 'a': 'b' },
-		shim: { 'c': {} },
 		config: { 'd': {} },
-		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
 		urlArgs: 'myUrlArgs',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 }
@@ -60,10 +55,9 @@ QUnit.test('Simple known configuration options', () => {
 		ignoreDuplicateModules: [ 'a' ],
 		isBuild: false,
 		paths: { 'a': 'b' },
-		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
-		shim: { 'c': {} },
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 });
@@ -79,10 +73,9 @@ QUnit.test('Overwriting known configuration options', () => {
 		ignoreDuplicateModules: [ 'a' ],
 		isBuild: false,
 		paths: { 'a': 'b' },
-		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
-		shim: { 'c': {} },
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -96,10 +89,9 @@ QUnit.test('Overwriting known configuration options', () => {
 		ignoreDuplicateModules: [ 'a' ],
 		isBuild: false,
 		paths: { 'a': 'b' },
-		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
-		shim: { 'c': {} },
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -113,10 +105,9 @@ QUnit.test('Overwriting known configuration options', () => {
 		ignoreDuplicateModules: [ 'a' ],
 		isBuild: false,
 		paths: { 'a': 'b' },
-		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
-		shim: { 'c': {} },
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -130,54 +121,11 @@ QUnit.test('Overwriting known configuration options', () => {
 		ignoreDuplicateModules: [ 'a', 'b' ],
 		isBuild: false,
 		paths: { 'a': 'b' },
-		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
-		shim: { 'c': {} },
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
-
-	// Contribute additional bundles
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
-		bundles: [{ location: 'x/y/z.js', modules: [ 'x', 'y' ] }]
-	}, createSimpleKnownConfigurationOptions());
-	assertConfigurationIs(result, {
-		baseUrl: 'myBaseUrl/',
-		catchError: true,
-		ignoreDuplicateModules: [ 'a' ],
-		isBuild: false,
-		paths: { 'a': 'b' },
-		bundles: [
-			{ location: 'a/b/c.js', modules: [ 'a', 'b' ] },
-			{ location: 'x/y/z.js', modules: [ 'x', 'y' ] }
-		],
-		shim: { 'c': {} },
-		config: { 'd': {} },
-		urlArgs: 'myUrlArgs',
-		nodeModules: []
-	});
-
-	// Contribute additional bundles through AMD API
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
-		bundles: { 'x/y/z.js': [ 'x', 'y' ] }
-	}, createSimpleKnownConfigurationOptions());
-	assertConfigurationIs(result, {
-		baseUrl: 'myBaseUrl/',
-		catchError: true,
-		ignoreDuplicateModules: [ 'a' ],
-		isBuild: false,
-		paths: { 'a': 'b' },
-		bundles: [
-			{ location: 'a/b/c.js', modules: [ 'a', 'b' ] },
-			{ location: 'x/y/z.js', modules: [ 'x', 'y' ] }
-		],
-		shim: { 'c': {} },
-		config: { 'd': {} },
-		urlArgs: 'myUrlArgs',
-		nodeModules: []
-	});
-
-
 
 	// Change defined paths
 	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -189,44 +137,9 @@ QUnit.test('Overwriting known configuration options', () => {
 		ignoreDuplicateModules: [ 'a' ],
 		isBuild: false,
 		paths: { 'a': 'c' },
-		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
-		shim: { 'c': {} },
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
-		nodeModules: []
-	});
-
-	// Contribute additional shims
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
-		shim: { 'e': {} }
-	}, createSimpleKnownConfigurationOptions());
-	assertConfigurationIs(result, {
-		baseUrl: 'myBaseUrl/',
-		catchError: true,
-		ignoreDuplicateModules: [ 'a' ],
-		isBuild: false,
-		paths: { 'a': 'b' },
-		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
-		shim: { 'c': {}, 'e': {} },
-		config: { 'd': {} },
-		urlArgs: 'myUrlArgs',
-		nodeModules: []
-	});
-
-	// Change defined shims
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(<any>{
-		shim: { 'c': { 'a': 'a' } }
-	}, createSimpleKnownConfigurationOptions());
-	assertConfigurationIs(result, <any>{
-		baseUrl: 'myBaseUrl/',
-		catchError: true,
-		ignoreDuplicateModules: [ 'a' ],
-		isBuild: false,
-		paths: { 'a': 'b' },
-		bundles: [{ location: 'a/b/c.js', modules: [ 'a', 'b' ] }],
-		shim: { 'c': { 'a': 'a' } },
-		config: { 'd': {} },
-		urlArgs: 'myUrlArgs',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -240,10 +153,9 @@ QUnit.test('Overwriting known configuration options', () => {
 		ignoreDuplicateModules: ['a'],
 		isBuild: false,
 		paths: { 'a': 'b' },
-		bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
-		shim: { 'c': {} },
 		config: { 'd': {}, 'e': {} },
 		urlArgs: 'myUrlArgs',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -257,10 +169,9 @@ QUnit.test('Overwriting known configuration options', () => {
 		ignoreDuplicateModules: ['a'],
 		isBuild: false,
 		paths: { 'a': 'b' },
-		bundles: [{ location: 'a/b/c.js', modules: ['a', 'b'] }],
-		shim: { 'c': {} },
 		config: { 'd': { 'a': 'a' } },
 		urlArgs: 'myUrlArgs',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 });
@@ -273,10 +184,9 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		ignoreDuplicateModules: [],
 		isBuild: false,
 		paths: {},
-		bundles: [],
-		shim: {},
 		config: {},
 		urlArgs: '',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -290,11 +200,10 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		ignoreDuplicateModules: [],
 		isBuild: false,
 		paths: {},
-		bundles: [],
-		shim: {},
 		config: {},
 		urlArgs: '',
 		unknownKey1: 'value1',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -308,12 +217,11 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		ignoreDuplicateModules: [],
 		isBuild: false,
 		paths: {},
-		bundles: [],
-		shim: {},
 		config: {},
 		urlArgs: '',
 		unknownKey1: 'value1',
 		unknownKey2: 'value2',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -327,12 +235,11 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		ignoreDuplicateModules: [],
 		isBuild: false,
 		paths: {},
-		bundles: [],
-		shim: {},
 		config: {},
 		urlArgs: '',
 		unknownKey1: 'value1',
 		unknownKey2: 'new-value2',
+		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 });
@@ -347,17 +254,7 @@ QUnit.test('moduleIdToPath', () => {
 			'a' : 'newa',
 			'knockout': 'http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js',
 			'editor': '/src/editor'
-		},
-		bundles: [
-			{
-				location: 'redirect/bundlejs?v=12345',
-				modules: [ 'x' , 'z' ]
-			},
-			{
-				location: '/redirect/other?v=34523452345',
-				modules: [ 'y' , 'z' ]
-			}
-		]
+		}
 	});
 
 	// baseUrl is applied
@@ -391,14 +288,6 @@ QUnit.test('moduleIdToPath', () => {
 	QUnit.equal(config.moduleIdToPaths('https://b/c/d'), 'https://b/c/d.js?suffix');
 	QUnit.equal(config.moduleIdToPaths('https://a/b/c/d'), 'https://a/b/c/d.js?suffix');
 	QUnit.equal(config.moduleIdToPaths('https://a'), 'https://a.js?suffix');
-
-	// bundles
-	QUnit.equal(config.moduleIdToPaths('x'), 'prefix/redirect/bundlejs?v=12345&suffix');
-	QUnit.equal(config.moduleIdToPaths('x/y'), 'prefix/x/y.js?suffix');
-	QUnit.equal(config.moduleIdToPaths('z'), '/redirect/other?v=34523452345&suffix');
-	QUnit.equal(config.moduleIdToPaths('z/t'), 'prefix/z/t.js?suffix');
-	QUnit.equal(config.moduleIdToPaths('y'), '/redirect/other?v=34523452345&suffix');
-
 });
 
 QUnit.test('requireToUrl', () => {
@@ -453,56 +342,10 @@ QUnit.test('ignoreDuplicateModules', () => {
 	QUnit.equal(config.isDuplicateMessageIgnoredFor('a'), false);
 });
 
-QUnit.test('shim', () => {
-	(<any>window).shim_export_value = 3;
-	var config = new loader.Configuration({
-		shim: {
-			'a': {
-				deps: ['a1', 'a2'],
-				exports: function() {
-					return 'a';
-				}
-			},
-			'b': {
-				exports: function() {
-					return 'b';
-				}
-			},
-			'c': {
-				exports: 'shim_export_value'
-			},
-			'd': {
-				exports: {
-					d: 'd'
-				}
-			}
-		}
-	});
-
-	QUnit.equal(config.isShimmed('a'), true);
-	QUnit.equal(config.isShimmed('b'), true);
-	QUnit.equal(config.isShimmed('c'), true);
-
-	var a = config.getShimmedModuleDefine('a');
-	QUnit.deepEqual(a.dependencies, ['a1', 'a2']);
-	QUnit.deepEqual(a.callback(), 'a');
-
-	var b = config.getShimmedModuleDefine('b');
-	QUnit.deepEqual(b.dependencies, []);
-	QUnit.deepEqual(b.callback(), 'b');
-
-	var c = config.getShimmedModuleDefine('c');
-	QUnit.deepEqual(c.dependencies, []);
-	QUnit.deepEqual(c.callback(), 3);
-
-	var d = config.getShimmedModuleDefine('d');
-	QUnit.deepEqual(d.dependencies, []);
-});
-
 QUnit.module('ModuleIdResolver');
 
 QUnit.test('resolveModule', () => {
-	var resolver = new loader.ModuleIdResolver(null, 'a/b/c/d');
+	var resolver = new loader.ModuleIdResolver('a/b/c/d');
 
 	// normal modules
 	QUnit.equal(resolver.resolveModule('e/f/g'), 'e/f/g');
@@ -552,161 +395,23 @@ QUnit.test('resolveModule', () => {
 	QUnit.equal(loader.ModuleIdResolver._normalizeModuleId('../../ab/../a'), '../../a');
 });
 
-QUnit.module('Module');
-
-QUnit.test('Basic dependencies', () => {
-	var moduleIdResolver = new loader.ModuleIdResolver(new loader.Configuration(), 'a/b/c/d');
-	var config: AMDLoader.IModuleConfiguration = {};
-	var depsValues:any[] = null;
-	function factory(): string {
-		depsValues = Array.prototype.slice.call(arguments, 0);
-		return 'exports';
-	}
-
-	// No dependencies
-	depsValues = null;
-	var m = new loader.Module('a/b/c/d', [], factory, null, loader.NullLoaderEventRecorder.INSTANCE, moduleIdResolver);
-	QUnit.deepEqual(m.getDependencies(), []);
-	QUnit.equal(m.getExports(), 'exports');
-	QUnit.equal(m.getId(), 'a/b/c/d');
-	QUnit.equal(m.isComplete(), true);
-	QUnit.deepEqual(depsValues, []);
-
-	// Basic dependencies
-	depsValues = null;
-	m = new loader.Module('a/b/c/d', ['exports', 'module'], factory, null, loader.NullLoaderEventRecorder.INSTANCE, moduleIdResolver);
-	QUnit.equal(m.isComplete(), true);
-	m = new loader.Module('a/b/c/d', ['exports', 'module'], factory, null, loader.NullLoaderEventRecorder.INSTANCE, moduleIdResolver, config);
-	QUnit.equal(m.isComplete(), true);
-	QUnit.equal(depsValues.length, 2);
-	QUnit.equal(typeof depsValues[1].config, "function");
-	QUnit.deepEqual(depsValues[1].config(), config);
-	delete depsValues[1]["config"];
-	QUnit.deepEqual(depsValues, [ {}, { id: 'a/b/c/d' } ]);
-
-	// Relative dependency
-
-});
-
-QUnit.test('Relative dependency, renamed and resolved', () => {
-	var moduleIdResolver = new loader.ModuleIdResolver(new loader.Configuration(), 'a/b/c/d');
-	var depsValues:any[] = null;
-	function factory(): string {
-		depsValues = Array.prototype.slice.call(arguments, 0);
-		return 'exports';
-	}
-
-	var m = new loader.Module('a/b/c/d', ['./e'], factory, null, loader.NullLoaderEventRecorder.INSTANCE, moduleIdResolver);
-	QUnit.deepEqual(m.getDependencies(), [ 'a/b/c/e' ]);
-	QUnit.equal(m.isComplete(), false);
-
-	m.renameDependency('a/b/c/e', 'a/b/c/f');
-	QUnit.equal(m.isComplete(), false);
-
-	m.resolveDependency('a/b/c/f', 'v');
-	QUnit.equal(m.isComplete(), true);
-	QUnit.deepEqual(depsValues, [ 'v' ]);
-});
-
-QUnit.test('Plugin dependency, renamed and resolved', () => {
-	var moduleIdResolver = new loader.ModuleIdResolver(new loader.Configuration(), 'a/b/c/d');
-	var depsValues:any[] = null;
-	function factory(): string {
-		depsValues = Array.prototype.slice.call(arguments, 0);
-		return 'exports';
-	}
-
-	var m = new loader.Module('a/b/c/d', ['../e!../x/y/z'], factory, null, loader.NullLoaderEventRecorder.INSTANCE, moduleIdResolver);
-	QUnit.deepEqual(m.getDependencies(), [ 'a/b/e!../x/y/z' ]);
-	QUnit.equal(m.isComplete(), false);
-
-	m.renameDependency('a/b/e!../x/y/z', 'a/b/e!xyz');
-	QUnit.equal(m.isComplete(), false);
-
-	m.resolveDependency('a/b/e!xyz', 'v');
-	QUnit.equal(m.isComplete(), true);
-	QUnit.deepEqual(depsValues, [ 'v' ]);
-});
-
-QUnit.test('More dependencies, many interactions', () => {
-	var moduleIdResolver = new loader.ModuleIdResolver(new loader.Configuration(), 'a/b/c/d');
-	var config: AMDLoader.IModuleConfiguration = {};
-	var depsValues:any[] = null;
-	function factory(): void {
-		depsValues = Array.prototype.slice.call(arguments, 0);
-		depsValues[0].a = 'my-exports';
-	}
-
-	var m = new loader.Module('a/b/c/d', ['exports', 'module', 'require', 'f' ,'g/h', '../e!../x/y/z'], factory, null, loader.NullLoaderEventRecorder.INSTANCE, moduleIdResolver, config);
-	QUnit.deepEqual(m.getDependencies(), [ 'require', 'f', 'g/h', 'a/b/e!../x/y/z' ]);
-	QUnit.equal(m.isComplete(), false);
-
-	m.renameDependency('a/b/e!../x/y/z', 'a/b/e!xyz');
-	QUnit.equal(m.isComplete(), false);
-
-	m.resolveDependency('a/b/e!xyz', 'v1');
-	QUnit.equal(m.isComplete(), false);
-
-	m.resolveDependency('f', 'v2');
-	QUnit.equal(m.isComplete(), false);
-
-	m.resolveDependency('g/h', 'v3');
-	QUnit.equal(m.isComplete(), false);
-
-	m.resolveDependency('require', 'v4');
-	QUnit.equal(m.isComplete(), true);
-	QUnit.equal(depsValues.length, 6);
-	QUnit.equal(typeof depsValues[1].config, "function");
-	QUnit.deepEqual(depsValues[1].config(), {});
-	delete depsValues[1].config;
-	QUnit.deepEqual(depsValues, [
-		{ a: 'my-exports' },
-		{ id: 'a/b/c/d' },
-		'v4',
-		'v2',
-		'v3',
-		'v1' ]);
-
-	m.cleanUp();
-	QUnit.equal(m.isComplete(), true);
-	QUnit.deepEqual(m.getExports(), { a: 'my-exports' });
-});
-
-QUnit.test('Duplicate dependencies', () => {
-	var moduleIdResolver = new loader.ModuleIdResolver(new loader.Configuration(), 'a/b/c/d');
-	var depsValues:any[] = null;
-	function factory(): void {
-		depsValues = Array.prototype.slice.call(arguments, 0);
-		depsValues[0].a = 'my-exports';
-	}
-
-	QUnit.throws(()=>{
-		var m = new loader.Module('a/b/c/d', ['exports', 'module', 'require', 'f' ,'g/h', 'f'], factory, null, loader.NullLoaderEventRecorder.INSTANCE, moduleIdResolver);
-	});
-
-	QUnit.throws(()=>{
-		var m = new loader.Module('a/b/c/d', ['exports', 'module', 'require', 'a/b/c/f' ,'g/h', './f'], factory, null, loader.NullLoaderEventRecorder.INSTANCE, moduleIdResolver);
-	});
-});
-
 QUnit.module('ModuleManager');
 
 QUnit.test('Loading 3 simple modules', () => {
 	QUnit.expect(3);
 
 	var scriptLoader:loader.IScriptLoader = {
-		load: (scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
 			if (scriptPath === 'a1.js') {
 				mm.enqueueDefineAnonymousModule([], 'a1');
 				loadCallback();
 			} else if (scriptPath === 'a2.js') {
-				mm.enqueueDefineModule('a2', [], 'a2');
+				mm.defineModule('a2', [], 'a2', null, null);
 				loadCallback();
 			} else {
 				QUnit.ok(false);
 			}
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);
@@ -724,7 +429,7 @@ QUnit.test('Loading a plugin dependency', () => {
 	QUnit.expect(5);
 
 	var scriptLoader:loader.IScriptLoader = {
-		load: (scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
 			if (scriptPath === 'plugin.js') {
 				mm.enqueueDefineAnonymousModule([], {
 					normalize: (pluginParam:string, normalize:(moduleId:string)=>string) => {
@@ -742,7 +447,6 @@ QUnit.test('Loading a plugin dependency', () => {
 				QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
 			}
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);
@@ -763,53 +467,14 @@ QUnit.test('Loading a plugin dependency', () => {
 	QUnit.equal(mm.synchronousRequire('a2'), 'a2');
 });
 
-QUnit.test('Loading a shimmed dependency', () => {
-	QUnit.expect(2);
-
-	var scriptLoader:loader.IScriptLoader = {
-		load: (scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
-			if (scriptPath === 'a/b/shim.js') {
-				loadCallback();
-			} else if (scriptPath === 'a/b/shim1.js') {
-				mm.enqueueDefineModule('a/b/shim1', [], 'shim1');
-				loadCallback();
-			} else if (scriptPath === 'a/b/shim2.js') {
-				mm.enqueueDefineAnonymousModule([], 'shim2');
-				loadCallback();
-			} else {
-				QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
-			}
-		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
-	};
-
-	var mm = new loader.ModuleManager(scriptLoader);
-	mm.configure({
-		shim: {
-			'a/b/shim': {
-				deps: ['a/b/shim1', 'a/b/shim2'],
-				exports: function() {
-					return 'shimValue';
-				}
-			}
-		}
-	}, false);
-
-	mm.defineModule('a/b/c', ['./shim'], (r:any) => {
-		QUnit.equal(r, 'shimValue');
-		return 'a/b/c';
-	}, null, null);
-
-	QUnit.equal(mm.synchronousRequire('a/b/c'), 'a/b/c');
-});
-
 QUnit.test('Loading a dependency cycle', () => {
 	QUnit.expect(6);
 
 	var scriptLoader:loader.IScriptLoader = {
-		load: (scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
 			if (scriptPath === 'b.js') {
 				mm.enqueueDefineAnonymousModule(['c'], (c:any) => {
+					// This is how the cycle is broken. One of the modules receives undefined as the argument value
 					QUnit.equal(c, 'c');
 					return 'b';
 				});
@@ -817,7 +482,8 @@ QUnit.test('Loading a dependency cycle', () => {
 			} else if (scriptPath === 'c.js') {
 				mm.enqueueDefineAnonymousModule(['a'], (a:any) => {
 					// This is how the cycle is broken. One of the modules receives undefined as the argument value
-					QUnit.ok(typeof a === 'undefined');
+					QUnit.deepEqual(a, {});
+					// QUnit.ok(typeof a === 'undefined');
 					return 'c';
 				});
 				loadCallback();
@@ -825,7 +491,6 @@ QUnit.test('Loading a dependency cycle', () => {
 				QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
 			}
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);
@@ -845,14 +510,13 @@ QUnit.test('Using a local error handler immediate script loading failure', () =>
 	// a -> b and b fails to load
 
 	var scriptLoader:loader.IScriptLoader = {
-		load: (scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
 			if (scriptPath === 'b.js') {
 				errorCallback('b.js not found');
 			} else {
 				QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
 			}
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);
@@ -871,7 +535,7 @@ QUnit.test('Using a local error handler secondary script loading failure', () =>
 	// a -> b -> c and c fails to load
 
 	var scriptLoader:loader.IScriptLoader = {
-		load: (scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
 			if (scriptPath === 'b.js') {
 				mm.enqueueDefineAnonymousModule(['c'], (c:any) => {
 					QUnit.equal(c, 'c');
@@ -884,7 +548,6 @@ QUnit.test('Using a local error handler secondary script loading failure', () =>
 				QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
 			}
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);
@@ -901,14 +564,13 @@ QUnit.test('No path config', () => {
 	QUnit.expect(1);
 
 	var scriptLoader: loader.IScriptLoader = {
-		load: (scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
 			if (scriptPath === 'a.js') {
 				errorCallback('a.js not found');
 			} else {
 				QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
 			}
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);
@@ -923,14 +585,13 @@ QUnit.test('With path config', () => {
 	QUnit.expect(1);
 
 	var scriptLoader: loader.IScriptLoader = {
-		load: (scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
 			if (scriptPath === 'alocation.js') {
 				errorCallback('alocation.js not found');
 			} else {
 				QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
 			}
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);
@@ -950,7 +611,7 @@ QUnit.test('With one fallback', () => {
 	QUnit.expect(1);
 
 	var scriptLoader: loader.IScriptLoader = {
-		load: (scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
 			if (scriptPath === 'alocation.js') {
 				errorCallback('alocation.js not found');
 			} else if (scriptPath === 'afallback.js') {
@@ -962,7 +623,6 @@ QUnit.test('With one fallback', () => {
 				QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
 			}
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);
@@ -984,7 +644,7 @@ QUnit.test('With two fallbacks', () => {
 	QUnit.expect(1);
 
 	var scriptLoader: loader.IScriptLoader = {
-		load: (scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
 			if (scriptPath === 'alocation.js') {
 				errorCallback('alocation.js not found');
 			} else if (scriptPath === 'afallback.js') {
@@ -998,7 +658,6 @@ QUnit.test('With two fallbacks', () => {
 				QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
 			}
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);
@@ -1019,19 +678,13 @@ QUnit.test('With two fallbacks', () => {
 QUnit.module('Bugs');
 
 QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dependency to resolve is a (missing) plugin dependency', () => {
-	QUnit.expect(3);
+	QUnit.expect(2);
 
 	// A script loader that captures the load request for 'plugin.js'
-	var pluginJSCallback:()=>void = null;
 	var scriptLoader:loader.IScriptLoader = {
-		load: (scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
-			if (scriptPath === 'plugin.js') {
-				pluginJSCallback = loadCallback;
-			} else {
-				QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
-			}
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
+			QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);
@@ -1061,18 +714,6 @@ QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dep
 	}, (err) => {
 		QUnit.ok(false);
 	}, null);
-
-	QUnit.ok(pluginJSCallback, 'Loader asked for plugin.js');
-
-	// Define the plugin
-	mm.enqueueDefineAnonymousModule([], () => {
-		return {
-			load: (name:string, req:AMDLoader.IRelativeRequire, load:AMDLoader.IPluginLoadCallback, config:AMDLoader.IConfigurationOptions) => {
-				QUnit.ok(false, 'Plugin.load should not be called');
-			}
-		};
-	});
-	pluginJSCallback();
 });
 
 QUnit.test('Bug #12024: [loader] Should not append .js to URLs containing query string', () => {
@@ -1091,10 +732,9 @@ QUnit.test('Bug #12020: [loader] relative (synchronous) require does not normali
 	QUnit.expect(3);
 
 	var scriptLoader:loader.IScriptLoader = {
-		load: (scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath:string, loadCallback:()=>void, errorCallback:(err:any)=>void) => {
 			QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
 		},
-		setModuleManager: (moduleManager:loader.ModuleManager) => { /**/ }
 	};
 
 	var mm = new loader.ModuleManager(scriptLoader);

@@ -65,18 +65,16 @@ QUnit.start();
 		</script>
 		<script src="../src/loader.js"></script>
 		<script src="../src/css.js"></script>
-		<script src="../src/text.js"></script>
 
 		<script src="loader.test.js"></script>
 		<script src="css.test.js"></script>
-		<script src="text.test.js"></script>
 
 <script>
 // amdjs-tests
 function startAMDJSTESTS() {
 	var amdjsTests = [
-		{ path: 'ms-specific/tests/', name:'tfs_scenario' },
-		{ path: 'ms-specific/tests/', name: 'bundles_config' },
+		// { path: 'ms-specific/tests/', name:'tfs_scenario' },
+		// { path: 'ms-specific/tests/', name: 'bundles_config' },
 		{ path: 'ms-specific/tests/', name: 'fallback_original_works' },
 		{ path: 'ms-specific/tests/', name: 'fallback_single_fallback' },
 		{ path: 'ms-specific/tests/', name: 'fallback_double_fallback' },
@@ -90,21 +88,21 @@ function startAMDJSTESTS() {
 		{ path: 'amdjs-tests/tests/', name:'basic_no_deps' },
 		{ path: 'amdjs-tests/tests/', name:'basic_require' },
 		{ path: 'amdjs-tests/tests/', name:'basic_simple' },
-//		{ path: 'amdjs-tests/tests/', name:'cjs_define' }, // this uses commonJS
-//		{ path: 'amdjs-tests/tests/', name:'cjs_named' }, // this uses commonJS
-//		{ path: 'amdjs-tests/tests/', name:'config_map' }, // this uses map
-//		{ path: 'amdjs-tests/tests/', name:'config_map_star' }, // this uses map
-//		{ path: 'amdjs-tests/tests/', name:'config_map_star_adapter' }, // this uses map
-//		{ path: 'amdjs-tests/tests/', name:'config_module' },
-//		{ path: 'amdjs-tests/tests/', name:'config_packages' },
+		// { path: 'amdjs-tests/tests/', name:'cjs_define' }, // this uses commonJS
+		// { path: 'amdjs-tests/tests/', name:'cjs_named' }, // this uses commonJS
+		// { path: 'amdjs-tests/tests/', name:'config_map' }, // this uses map
+		// { path: 'amdjs-tests/tests/', name:'config_map_star' }, // this uses map
+		// { path: 'amdjs-tests/tests/', name:'config_map_star_adapter' }, // this uses map
+		// { path: 'amdjs-tests/tests/', name:'config_module' },
+		// { path: 'amdjs-tests/tests/', name:'config_packages' },
 		{ path: 'amdjs-tests/tests/', name:'config_paths' },
 		{ path: 'amdjs-tests/tests/', name:'config_paths_relative' },
-		{ path: 'amdjs-tests/tests/', name:'config_shim' },
+		// { path: 'amdjs-tests/tests/', name:'config_shim' },
 		{ path: 'amdjs-tests/tests/', name:'plugin_double' },
-		{ path: 'amdjs-tests/tests/', name:'plugin_dynamic' },
-//		{ path: 'amdjs-tests/tests/', name:'plugin_dynamic_string' }, // this uses commonJS
-//		{ path: 'amdjs-tests/tests/', name:'plugin_fromtext' }, // this would imply adding an eval() in the loader
-//		{ path: 'amdjs-tests/tests/', name:'plugin_normalize' } // this uses commonJS
+		// { path: 'amdjs-tests/tests/', name:'plugin_dynamic' },
+		// { path: 'amdjs-tests/tests/', name:'plugin_dynamic_string' }, // this uses commonJS
+		// { path: 'amdjs-tests/tests/', name:'plugin_fromtext' }, // this would imply adding an eval() in the loader
+		// { path: 'amdjs-tests/tests/', name:'plugin_normalize' } // this uses commonJS
 	];
 	var currentTestIndex = -1, currentTest = null, currentTestTimeout = null;
 

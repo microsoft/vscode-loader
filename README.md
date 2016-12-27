@@ -12,7 +12,6 @@ In nodejs and electron, when loading a module, if it cannot be found with the AM
 
 * Runs factory methods as soon as dependencies are resolved.
 * Contains a CSS loader (`vs/css`).
-* Contains a text resource loader (`vs/text`).
 * Contains a natural language strings loader (`vs/nls`).
 
 ## Using
@@ -42,8 +41,6 @@ loader(['an/amd/module'], function(value) {
 * Supported config options:
  * `baseUrl` - The prefix that will be aplied to all modules when they are resolved to a location
  * `paths` - Redirect rules for modules. The redirect rules will affect the module ids themselves
- * `bundles` - Bundle mappings for modules.
- * `shim` - Definitions for non-AMD scripts.
  * `config` - Per-module configuration
  * `catchError` - Catch errors when invoking the module factories
  * `recordStats` - Record statistics
@@ -91,12 +88,12 @@ The project uses as a submodule the [AMD compliance tests](https://github.com/am
 * ~~CommonJS Compatibility (funcString)~~
 * ~~CommonJS Compatibility with Named Modules (namedWrap)~~
 * AMD Loader Plugins (plugins)
-* Dynamic Plugins (pluginsDynamic)
+* ~~Dynamic Plugins (pluginsDynamic)~~
 * ~~Common Config: Packages~~
 * ~~Common Config: Map~~
 * ~~Common Config: Module~~
 * Common Config: Path
-* Common Config: Shim
+* ~~Common Config: Shim~~
 
 ## Developing
 
