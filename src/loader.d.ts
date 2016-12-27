@@ -6,10 +6,13 @@ declare var process: {
     platform: string;
     type: string;
     versions: {
+        node: string;
         electron: string;
     };
 };
-declare var require: {};
+declare var require: {
+    nodeRequire(module: string): any;
+};
 interface Map<K, V> {
     clear(): void;
     delete(key: K): boolean;
@@ -265,6 +268,16 @@ declare namespace AMDLoader {
     interface IPluginLoadCallback {
         (value: any): void;
         error(err: any): void;
+    }
+    interface IPluginWriteCallback {
+        (contents: string): void;
+        getEntryPoint(): string;
+        asModule(moduleId: string, contents: string): void;
+    }
+    interface IPluginWriteFileCallback {
+        (filename: string, contents: string): void;
+        getEntryPoint(): string;
+        asModule(moduleId: string, contents: string): void;
     }
     class ModuleIdResolver {
         static ROOT: ModuleIdResolver;

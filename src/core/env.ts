@@ -24,10 +24,13 @@ declare var process: {
 	platform: string;
 	type: string;
 	versions: {
+		node: string;
 		electron: string;
 	}
 };
-declare var require: {};
+declare var require: {
+	nodeRequire(module:string):any;
+};
 
 interface Map<K, V> {
 	clear(): void;

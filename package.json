@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "watch1": "cd src && tsc -w",
+    "watch1": "cd src && cd core && tsc -w",
     "watch2": "tsc -w",
     "compile": "tsc",
     "test": "node ./tests/run-tests.js",

@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"target": "es5",
+		"newLine": "LF",
+		"noUnusedLocals": true,
+		"outFile": "../loader.js",
+		"declaration": true
+	},
+	"files": [
+		"env.ts",
+		"loaderEvents.ts",
+		"utils.ts",
+		"configuration.ts",
+		"scriptLoader.ts",
+		"moduleManager.ts",
+		"main.ts"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}

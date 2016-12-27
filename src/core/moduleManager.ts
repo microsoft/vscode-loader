@@ -31,6 +31,17 @@ namespace AMDLoader {
 		error(err: any): void;
 	}
 
+	export interface IPluginWriteCallback {
+		(contents: string): void;
+		getEntryPoint(): string;
+		asModule(moduleId: string, contents: string): void;
+	}
+
+	export interface IPluginWriteFileCallback {
+		(filename: string, contents: string): void;
+		getEntryPoint(): string;
+		asModule(moduleId: string, contents: string): void;
+	}
 
 	// ------------------------------------------------------------------------
 	// ModuleIdResolver

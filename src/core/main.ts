@@ -117,7 +117,7 @@ namespace AMDLoader {
 			define = function () {
 				DefineFunc.apply(null, arguments);
 			};
-			require = RequireFunc;
+			require = <any>RequireFunc;
 		} else {
 			// The global variable require can configure the loader
 			if (typeof global.require !== 'undefined' && typeof global.require !== 'function') {
