@@ -755,9 +755,15 @@ QUnit.test('Utilities.fileUriToFilePath', () => {
 	var test = (input:string, expected:string) => {
 		QUnit.equal(loader.Utilities.fileUriToFilePath(input), expected, 'Result for ' + input);
 	};
-	test('file:///c:/alex.txt', 'c:/alex.txt');
-	test('file://monacotools/isi.txt', '//monacotools/isi.txt');
-	test('file://monacotools1/certificates/SSL/', '//monacotools1/certificates/SSL/');
+	if (AMDLoader.isWindows) {
+		test('file:///c:/alex.txt', 'c:/alex.txt');
+		test('file://monacotools/isi.txt', '//monacotools/isi.txt');
+		test('file://monacotools1/certificates/SSL/', '//monacotools1/certificates/SSL/');
+	} else {
+		test('file:///c:/alex.txt', '/c:/alex.txt');
+		test('file://monacotools/isi.txt', 'monacotools/isi.txt');
+		test('file://monacotools1/certificates/SSL/', 'monacotools1/certificates/SSL/');
+	}
 });
 
 QUnit.test('Utilities.containsQueryString', () => {
