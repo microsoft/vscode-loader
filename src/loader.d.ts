@@ -182,11 +182,16 @@ declare namespace AMDLoader {
          */
         private ignoreDuplicateModulesMap;
         /**
+         * Generated from the `nodeModules` configuration option.
+         */
+        private nodeModulesMap;
+        /**
          * Generated from the `paths` configuration option. These are sorted with the longest `from` first.
          */
         private sortedPathsRules;
         constructor(options?: IConfigurationOptions);
         private _createIgnoreDuplicateModulesMap();
+        private _createNodeModulesMap();
         private _createSortedPathsRules();
         /**
          * Clone current configuration and overwrite options selectively.

@@ -189,6 +189,11 @@ namespace AMDLoader {
 		private ignoreDuplicateModulesMap: { [moduleId: string]: boolean; };
 
 		/**
+		 * Generated from the `nodeModules` configuration option.
+		 */
+		private nodeModulesMap: { [nodeModuleId: string]: boolean };
+
+		/**
 		 * Generated from the `paths` configuration option. These are sorted with the longest `from` first.
 		 */
 		private sortedPathsRules: { from: string; to: string[]; }[];
@@ -197,6 +202,7 @@ namespace AMDLoader {
 			this.options = ConfigurationOptionsUtil.mergeConfigurationOptions(options);
 
 			this._createIgnoreDuplicateModulesMap();
+			this._createNodeModulesMap();
 			this._createSortedPathsRules();
 
 			if (this.options.baseUrl === '') {
@@ -218,6 +224,14 @@ namespace AMDLoader {
 			this.ignoreDuplicateModulesMap = {};
 			for (let i = 0; i < this.options.ignoreDuplicateModules.length; i++) {
 				this.ignoreDuplicateModulesMap[this.options.ignoreDuplicateModules[i]] = true;
+			}
+		}
+
+		private _createNodeModulesMap(): void {
+			// Build a map out of nodeModules array
+			this.nodeModulesMap = Object.create(null);
+			for (const nodeModule of this.options.nodeModules) {
+				this.nodeModulesMap[nodeModule] = true;
 			}
 		}
 
@@ -303,9 +317,15 @@ namespace AMDLoader {
 		 */
 		public moduleIdToPaths(moduleId: string): string[] {
 
-			if (this.isBuild() && this.options.nodeModules.indexOf(moduleId) >= 0) {
-				// This is a node module and we are at build time, drop it
-				return ['empty:'];
+			if (this.nodeModulesMap[moduleId] === true) {
+				// This is a node module...
+				if (this.isBuild()) {
+					// ...and we are at build time, drop it
+					return ['empty:'];
+				} else {
+					// ...and at runtime we create a `shortcut`-path
+					return ['node|' + moduleId];
+				}
 			}
 
 			let result = moduleId;
