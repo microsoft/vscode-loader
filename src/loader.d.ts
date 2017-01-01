@@ -456,9 +456,7 @@ declare namespace AMDLoader {
          * Examine the dependencies of module 'module' and resolve them as needed.
          */
         private _resolve(module);
-        private _completingQueue;
-        private _onModuleComplete2(module);
-        private _processCompletingQueue();
+        private _onModuleComplete(module);
     }
 }
 declare var define: any;
