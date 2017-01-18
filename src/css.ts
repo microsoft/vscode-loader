@@ -379,7 +379,7 @@ module CSSLoaderPlugin {
 					let fsPath = path.join(path.dirname(originalFileFSPath), url);
 					let fileContents = fs.readFileSync(fsPath);
 
-					if (fileContents.length < 3000) {
+					if (fileContents.length < 5000) {
 						global.cssInlinedResources = global.cssInlinedResources || [];
 						let normalizedFSPath = fsPath.replace(/\\/g, '/');
 						if (global.cssInlinedResources.indexOf(normalizedFSPath) >= 0) {
