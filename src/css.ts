@@ -165,6 +165,7 @@ module CSSLoaderPlugin {
 			config = config || {};
 			let myConfig = config['vs/css'] || {};
 			global.inlineResources = myConfig.inlineResources;
+			global.inlineResourcesLimit = myConfig.inlineResourcesLimit || 5000;
 			var cssUrl = req.toUrl(name + '.css');
 			this.cssLoader.load(name, cssUrl, (contents?: string) => {
 				// Contents has the CSS file contents if we are in a build
@@ -210,7 +211,7 @@ module CSSLoaderPlugin {
 					entries = global.cssPluginEntryPoints[moduleName];
 				for (var i = 0; i < entries.length; i++) {
 					if (global.inlineResources) {
-						contents.push(Utilities.rewriteOrInlineUrls(entries[i].fsPath, entries[i].moduleName, moduleName, entries[i].contents, global.inlineResources === 'base64'));
+						contents.push(Utilities.rewriteOrInlineUrls(entries[i].fsPath, entries[i].moduleName, moduleName, entries[i].contents, global.inlineResources === 'base64', global.inlineResourcesLimit));
 					} else {
 						contents.push(Utilities.rewriteUrls(entries[i].moduleName, moduleName, entries[i].contents));
 					}
@@ -370,7 +371,7 @@ module CSSLoaderPlugin {
 			});
 		}
 
-		public static rewriteOrInlineUrls(originalFileFSPath: string, originalFile: string, newFile: string, contents: string, forceBase64: boolean): string {
+		public static rewriteOrInlineUrls(originalFileFSPath: string, originalFile: string, newFile: string, contents: string, forceBase64: boolean, inlineByteLimit: number): string {
 			let fs = require.nodeRequire('fs');
 			let path = require.nodeRequire('path');
 
@@ -379,7 +380,7 @@ module CSSLoaderPlugin {
 					let fsPath = path.join(path.dirname(originalFileFSPath), url);
 					let fileContents = fs.readFileSync(fsPath);
 
-					if (fileContents.length < 5000) {
+					if (fileContents.length < inlineByteLimit) {
 						global.cssInlinedResources = global.cssInlinedResources || [];
 						let normalizedFSPath = fsPath.replace(/\\/g, '/');
 						if (global.cssInlinedResources.indexOf(normalizedFSPath) >= 0) {
