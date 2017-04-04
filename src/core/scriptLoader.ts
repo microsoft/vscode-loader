@@ -221,7 +221,8 @@ namespace AMDLoader {
 						return;
 					}
 
-					let vmScriptSrc = this._path.normalize(scriptSrc);
+					let normalizedScriptSrc = this._path.normalize(scriptSrc);
+					let vmScriptSrc = normalizedScriptSrc;
 					// Make the script src friendly towards electron
 					if (isElectronRenderer) {
 						let driveLetterMatch = vmScriptSrc.match(/^([a-z])\:(.*)/i);
@@ -241,7 +242,7 @@ namespace AMDLoader {
 						contents = prefix + data + suffix;
 					}
 
-					contents = nodeInstrumenter(contents, vmScriptSrc);
+					contents = nodeInstrumenter(contents, normalizedScriptSrc);
 
 					if (!opts.nodeCachedDataDir) {
 
@@ -308,6 +309,7 @@ namespace AMDLoader {
 			recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
 
 			const script = new this._vm.Script(contents, options);
+
 			const r = script.runInThisContext(options);
 			r.call(global, RequireFunc, DefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
 
