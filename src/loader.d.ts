@@ -5,6 +5,8 @@ declare var module: {
 declare var process: {
     platform: string;
     type: string;
+    mainModule: string;
+    argv: string[];
     versions: {
         node: string;
         electron: string;

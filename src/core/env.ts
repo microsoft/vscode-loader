@@ -23,13 +23,15 @@ declare var module: {
 declare var process: {
 	platform: string;
 	type: string;
+	mainModule: string;
+	argv: string[];
 	versions: {
 		node: string;
 		electron: string;
 	}
 };
 declare var require: {
-	nodeRequire(module:string):any;
+	nodeRequire(module: string): any;
 };
 
 interface Map<K, V> {

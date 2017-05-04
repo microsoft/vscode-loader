@@ -126,6 +126,7 @@ namespace AMDLoader {
 	interface INodeFS {
 		readFile(filename: string, options: { encoding?: string; flag?: string }, callback: (err: any, data: any) => void): void;
 		readFile(filename: string, callback: (err: any, data: Buffer) => void): void;
+		readFileSync(filename: string): string;
 		writeFile(filename: string, data: Buffer, callback: (err: any) => void): void;
 		unlink(path: string, callback: (err: any) => void): void;
 	}
@@ -168,25 +169,95 @@ namespace AMDLoader {
 
 		private static _BOM = 0xFEFF;
 
-		private _initialized: boolean;
+		private _didPatchNodeRequire: boolean;
+		private _didInitialize: boolean;
+		private _jsflags: string;
 		private _fs: INodeFS;
 		private _vm: INodeVM;
 		private _path: INodePath;
 		private _crypto: INodeCrypto;
 
 		constructor() {
-			this._initialized = false;
+			this._didInitialize = false;
+			this._didPatchNodeRequire = false;
+
+			// js-flags have an impact on cached data
+			this._jsflags = '';
+			for (const arg of process.argv) {
+				if (arg.indexOf('--js-flags=') === 0) {
+					this._jsflags = arg;
+					break;
+				}
+			}
 		}
 
 		private _init(nodeRequire: INodeRequire): void {
-			if (this._initialized) {
+			if (this._didInitialize) {
 				return;
 			}
-			this._initialized = true;
+			this._didInitialize = true;
 			this._fs = nodeRequire('fs');
 			this._vm = nodeRequire('vm');
 			this._path = nodeRequire('path');
 			this._crypto = nodeRequire('crypto');
+		}
+
+		// patch require-function of nodejs such that we can manually create a script
+		// from cached data. this is done by overriding the `Module._compile` function
+		private _initNodeRequire(nodeRequire: INodeRequire, moduleManager: IModuleManager): void {
+
+			const {nodeCachedDataDir} = moduleManager.getConfig().getOptionsLiteral();
+			if (!nodeCachedDataDir || this._didPatchNodeRequire) {
+				return;
+			}
+			this._didPatchNodeRequire = true;
+
+			const that = this
+			const Module = nodeRequire('module');
+
+			function makeRequireFunction(mod: any) {
+				const Module = mod.constructor;
+				let require = <any>function require(path) {
+					try {
+						return mod.require(path);
+					} finally {
+						// nothing
+					}
+				}
+				require.resolve = function resolve(request) {
+					return Module._resolveFilename(request, mod);
+				};
+				require.main = process.mainModule;
+				require.extensions = Module._extensions;
+				require.cache = Module._cache;
+				return require;
+			}
+
+			Module.prototype._compile = function (content: string, filename: string) {
+				// remove shebang
+				content = content.replace(/^#!.*/, '')
+
+				// create wrapper function
+				const wrapper = Module.wrap(content);
+
+				const cachedDataPath = that._getCachedDataPath(nodeCachedDataDir, filename);
+				const options: INodeVMScriptOptions = { filename };
+				try {
+					options.cachedData = that._fs.readFileSync(cachedDataPath)
+				} catch (e) {
+					options.produceCachedData = true;
+				}
+				const script = new that._vm.Script(wrapper, options);
+				const compileWrapper = script.runInThisContext(options);
+
+				const dirname = that._path.dirname(filename);
+				const require = makeRequireFunction(this);
+				const args = [this.exports, require, this, filename, dirname, process, global, Buffer];
+				const result = compileWrapper.apply(this.exports, args);
+
+				that._processCachedData(moduleManager, script, cachedDataPath);
+				return result;
+			}
 		}
 
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
@@ -194,6 +265,7 @@ namespace AMDLoader {
 			const nodeRequire = (opts.nodeRequire || global.nodeRequire);
 			const nodeInstrumenter = (opts.nodeInstrumenter || function (c) { return c; });
 			this._init(nodeRequire);
+			this._initNodeRequire(nodeRequire, moduleManager);
 			let recorder = moduleManager.getRecorder();
 
 			if (/^node\|/.test(scriptSrc)) {
@@ -252,51 +324,16 @@ namespace AMDLoader {
 					} else {
 
 						const cachedDataPath = this._getCachedDataPath(opts.nodeCachedDataDir, scriptSrc);
-
-						this._fs.readFile(cachedDataPath, (err, data) => {
-
+						this._fs.readFile(cachedDataPath, (err, cachedData) => {
 							// create script options
-							const scriptOptions: INodeVMScriptOptions = {
+							const options: INodeVMScriptOptions = {
 								filename: vmScriptSrc,
-								produceCachedData: typeof data === 'undefined',
-								cachedData: data
+								produceCachedData: typeof cachedData === 'undefined',
+								cachedData
 							};
-
-							const script = this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, scriptOptions, recorder);
+							const script = this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, options, recorder);
 							callback();
-
-							// cached code after math
-							if (script.cachedDataRejected) {
-								// data rejected => delete cache file
-
-								opts.onNodeCachedDataError({
-									errorCode: 'cachedDataRejected',
-									path: cachedDataPath
-								});
-
-								NodeScriptLoader._runSoon(() => this._fs.unlink(cachedDataPath, err => {
-									if (err) {
-										moduleManager.getConfig().getOptionsLiteral().onNodeCachedDataError({
-											errorCode: 'unlink',
-											path: cachedDataPath,
-											detail: err
-										});
-									}
-								}), opts.nodeCachedDataWriteDelay);
-
-							} else if (script.cachedDataProduced) {
-								// data produced => write cache file
-
-								NodeScriptLoader._runSoon(() => this._fs.writeFile(cachedDataPath, script.cachedData, err => {
-									if (err) {
-										moduleManager.getConfig().getOptionsLiteral().onNodeCachedDataError({
-											errorCode: 'writeFile',
-											path: cachedDataPath,
-											detail: err
-										});
-									}
-								}), opts.nodeCachedDataWriteDelay);
-							}
+							this._processCachedData(moduleManager, script, cachedDataPath);
 						});
 					}
 				});
@@ -319,10 +356,43 @@ namespace AMDLoader {
 			return script;
 		}
 
-		private _getCachedDataPath(baseDir: string, filename: string): string {
-			const hash = this._crypto.createHash('md5').update(filename, 'utf8').digest('hex');
+		private _getCachedDataPath(basedir: string, filename: string): string {
+			const hash = this._crypto.createHash('md5').update(filename, 'utf8').update(this._jsflags, 'utf8').digest('hex');
 			const basename = this._path.basename(filename).replace(/\.js$/, '');
-			return this._path.join(baseDir, `${hash}-${basename}.code`);
+			return this._path.join(basedir, `${basename}-${hash}.code`);
+		}
+
+		private _processCachedData(moduleManager: IModuleManager, script: INodeVMScript, cachedDataPath: string): void {
+
+			if (script.cachedDataRejected) {
+				// data rejected => delete cache file
+				moduleManager.getConfig().getOptionsLiteral().onNodeCachedDataError({
+					errorCode: 'cachedDataRejected',
+					path: cachedDataPath
+				});
+
+				NodeScriptLoader._runSoon(() => this._fs.unlink(cachedDataPath, err => {
+					if (err) {
+						moduleManager.getConfig().getOptionsLiteral().onNodeCachedDataError({
+							errorCode: 'unlink',
+							path: cachedDataPath,
+							detail: err
+						});
+					}
+				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedDataWriteDelay);
+
+			} else if (script.cachedDataProduced) {
+				// data produced => write cache file
+				NodeScriptLoader._runSoon(() => this._fs.writeFile(cachedDataPath, script.cachedData, err => {
+					if (err) {
+						moduleManager.getConfig().getOptionsLiteral().onNodeCachedDataError({
+							errorCode: 'writeFile',
+							path: cachedDataPath,
+							detail: err
+						});
+					}
+				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedDataWriteDelay);
+			}
 		}
 
 		private static _runSoon(callback: Function, minTimeout: number): void {
