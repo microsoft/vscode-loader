@@ -73,9 +73,9 @@ namespace AMDLoader {
 		 */
 		nodeCachedDataWriteDelay?: number;
 		/**
-		 * Optional callback that will be invoked when errors with cached code occur
+		 * Optional callback that will be invoked when cached data has been created
 		 */
-		onNodeCachedDataError?: (err: any) => void;
+		onNodeCachedData?: (err: any, data?: any) => void;
 	}
 
 	export class ConfigurationOptionsUtil {
@@ -144,14 +144,20 @@ namespace AMDLoader {
 			if (typeof options.nodeCachedDataWriteDelay !== 'number' || options.nodeCachedDataWriteDelay < 0) {
 				options.nodeCachedDataWriteDelay = 1000 * 7;
 			}
-			if (typeof options.onNodeCachedDataError !== 'function') {
-				options.onNodeCachedDataError = (err) => {
-					if (err.errorCode === 'cachedDataRejected') {
+			if (typeof options.onNodeCachedData !== 'function') {
+				options.onNodeCachedData = (err, data?) => {
+					if (!err) {
+						// ignore
+
+					} else if (err.errorCode === 'cachedDataRejected') {
 						console.warn('Rejected cached data from file: ' + err.path);
 
 					} else if (err.errorCode === 'unlink' || err.errorCode === 'writeFile') {
 						console.error('Problems writing cached data file: ' + err.path);
 						console.error(err.detail);
+
+					} else {
+						console.error(err);
 					}
 				};
 			}

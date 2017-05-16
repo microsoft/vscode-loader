@@ -9,9 +9,9 @@ QUnit.module('ConfigurationOptionsUtil');
  */
 function assertConfigurationIs(actual, expected) {
     actual.onError = null;
-    actual.onNodeCachedDataError = null;
+    actual.onNodeCachedData = null;
     expected.onError = null;
-    expected.onNodeCachedDataError = null;
+    expected.onNodeCachedData = null;
     QUnit.deepEqual(actual, expected, 'Configuration options are equal');
 }
 QUnit.test('Default configuration', function () {

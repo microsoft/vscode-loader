@@ -166,9 +166,9 @@ declare namespace AMDLoader {
          */
         nodeCachedDataWriteDelay?: number;
         /**
-         * Optional callback that will be invoked when errors with cached code occur
+         * Optional callback that will be invoked when cached data has been created
          */
-        onNodeCachedDataError?: (err: any) => void;
+        onNodeCachedData?: (err: any, data?: any) => void;
     }
     class ConfigurationOptionsUtil {
         /**

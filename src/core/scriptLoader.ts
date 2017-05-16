@@ -120,7 +120,7 @@ namespace AMDLoader {
 	}
 
 	declare class Buffer {
-
+		length: number;
 	}
 
 	interface INodeFS {
@@ -366,14 +366,14 @@ namespace AMDLoader {
 
 			if (script.cachedDataRejected) {
 				// data rejected => delete cache file
-				moduleManager.getConfig().getOptionsLiteral().onNodeCachedDataError({
+				moduleManager.getConfig().getOptionsLiteral().onNodeCachedData({
 					errorCode: 'cachedDataRejected',
 					path: cachedDataPath
 				});
 
 				NodeScriptLoader._runSoon(() => this._fs.unlink(cachedDataPath, err => {
 					if (err) {
-						moduleManager.getConfig().getOptionsLiteral().onNodeCachedDataError({
+						moduleManager.getConfig().getOptionsLiteral().onNodeCachedData({
 							errorCode: 'unlink',
 							path: cachedDataPath,
 							detail: err
@@ -382,10 +382,17 @@ namespace AMDLoader {
 				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedDataWriteDelay);
 
 			} else if (script.cachedDataProduced) {
+
+				// data produced => tell outside world
+				moduleManager.getConfig().getOptionsLiteral().onNodeCachedData(undefined, {
+					path: cachedDataPath,
+					length: script.cachedData.length
+				});
+
 				// data produced => write cache file
 				NodeScriptLoader._runSoon(() => this._fs.writeFile(cachedDataPath, script.cachedData, err => {
 					if (err) {
-						moduleManager.getConfig().getOptionsLiteral().onNodeCachedDataError({
+						moduleManager.getConfig().getOptionsLiteral().onNodeCachedData({
 							errorCode: 'writeFile',
 							path: cachedDataPath,
 							detail: err
