@@ -299,9 +299,12 @@ namespace AMDLoader {
 					if (isElectronRenderer) {
 						let driveLetterMatch = vmScriptSrc.match(/^([a-z])\:(.*)/i);
 						if (driveLetterMatch) {
-							vmScriptSrc = driveLetterMatch[1].toUpperCase() + ':' + driveLetterMatch[2];
+							// windows
+							vmScriptSrc = `file:///${(driveLetterMatch[1].toUpperCase() + ':' + driveLetterMatch[2]).replace(/\\/g, '/')}`;
+						} else {
+							// nix
+							vmScriptSrc = `file://${vmScriptSrc}`;
 						}
-						vmScriptSrc = 'file:///' + vmScriptSrc.replace(/\\/g, '/');
 					}
 
 					let contents: string,
