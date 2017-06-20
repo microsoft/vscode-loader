@@ -10,6 +10,8 @@
     "watch1": "cd src && cd core && tsc -w",
     "watch2": "tsc -w",
     "compile": "tsc",
+    "compile-all": "tsc -p src/core/tsconfig.json && tsc",
+    "watch-all": "tsc -w -p src/core/tsconfig.json && tsc -w",
     "test": "node ./tests/run-tests.js",
     "simpleserver": "http-server -p 9999"
   },
