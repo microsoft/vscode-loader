@@ -183,6 +183,19 @@ namespace AMDLoader {
 			this._env = env;
 			this._didInitialize = false;
 			this._didPatchNodeRequire = false;
+		}
+
+		private _init(nodeRequire: INodeRequire): void {
+			if (this._didInitialize) {
+				return;
+			}
+			this._didInitialize = true;
+
+			// capture node modules
+			this._fs = nodeRequire('fs');
+			this._vm = nodeRequire('vm');
+			this._path = nodeRequire('path');
+			this._crypto = nodeRequire('crypto');
 
 			// js-flags have an impact on cached data
 			this._jsflags = '';
@@ -192,17 +205,6 @@ namespace AMDLoader {
 					break;
 				}
 			}
-		}
-
-		private _init(nodeRequire: INodeRequire): void {
-			if (this._didInitialize) {
-				return;
-			}
-			this._didInitialize = true;
-			this._fs = nodeRequire('fs');
-			this._vm = nodeRequire('vm');
-			this._path = nodeRequire('path');
-			this._crypto = nodeRequire('crypto');
 		}
 
 		// patch require-function of nodejs such that we can manually create a script
