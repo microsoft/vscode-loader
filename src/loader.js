@@ -31,7 +31,6 @@ var AMDLoader;
     })();
     AMDLoader.isWebWorker = (typeof AMDLoader.global.importScripts === 'function');
     AMDLoader.isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
-    AMDLoader.isElectronMain = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'browser');
     AMDLoader.hasPerformanceNow = (AMDLoader.global.performance && typeof AMDLoader.global.performance.now === 'function');
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
@@ -40,7 +39,6 @@ var AMDLoader;
  *--------------------------------------------------------------------------------------------*/
 var AMDLoader;
 (function (AMDLoader) {
-    var LoaderEventType;
     (function (LoaderEventType) {
         LoaderEventType[LoaderEventType["LoaderAvailable"] = 1] = "LoaderAvailable";
         LoaderEventType[LoaderEventType["BeginLoadingScript"] = 10] = "BeginLoadingScript";
@@ -52,7 +50,8 @@ var AMDLoader;
         LoaderEventType[LoaderEventType["NodeEndEvaluatingScript"] = 32] = "NodeEndEvaluatingScript";
         LoaderEventType[LoaderEventType["NodeBeginNativeRequire"] = 33] = "NodeBeginNativeRequire";
         LoaderEventType[LoaderEventType["NodeEndNativeRequire"] = 34] = "NodeEndNativeRequire";
-    })(LoaderEventType = AMDLoader.LoaderEventType || (AMDLoader.LoaderEventType = {}));
+    })(AMDLoader.LoaderEventType || (AMDLoader.LoaderEventType = {}));
+    var LoaderEventType = AMDLoader.LoaderEventType;
     function getHighPerformanceTimestamp() {
         return (AMDLoader.hasPerformanceNow ? AMDLoader.global.performance.now() : Date.now());
     }
@@ -88,9 +87,9 @@ var AMDLoader;
         NullLoaderEventRecorder.prototype.getEvents = function () {
             return [];
         };
+        NullLoaderEventRecorder.INSTANCE = new NullLoaderEventRecorder();
         return NullLoaderEventRecorder;
     }());
-    NullLoaderEventRecorder.INSTANCE = new NullLoaderEventRecorder();
     AMDLoader.NullLoaderEventRecorder = NullLoaderEventRecorder;
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
@@ -178,9 +177,9 @@ var AMDLoader;
         Utilities.isAnonymousModule = function (id) {
             return /^===anonymous/.test(id);
         };
+        Utilities.NEXT_ANONYMOUS_ID = 1;
         return Utilities;
     }());
-    Utilities.NEXT_ANONYMOUS_ID = 1;
     AMDLoader.Utilities = Utilities;
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
@@ -256,7 +255,6 @@ var AMDLoader;
             if (typeof options.onNodeCachedData !== 'function') {
                 options.onNodeCachedData = function (err, data) {
                     if (!err) {
-                        // ignore
                     }
                     else if (err.errorCode === 'cachedDataRejected') {
                         console.warn('Rejected cached data from file: ' + err.path);
@@ -628,7 +626,6 @@ var AMDLoader;
                         return mod.require(path);
                     }
                     finally {
-                        // nothing
                     }
                 };
                 require.resolve = function resolve(request) {
@@ -788,9 +785,9 @@ var AMDLoader;
             var timeout = minTimeout + Math.ceil(Math.random() * minTimeout);
             setTimeout(callback, timeout);
         };
+        NodeScriptLoader._BOM = 0xFEFF;
         return NodeScriptLoader;
     }());
-    NodeScriptLoader._BOM = 0xFEFF;
     AMDLoader.scriptLoader = new OnlyOnceScriptLoader(AMDLoader.isWebWorker ?
         new WorkerScriptLoader()
         : AMDLoader.isNode ?
@@ -848,9 +845,9 @@ var AMDLoader;
             }
             return result;
         };
+        ModuleIdResolver.ROOT = new ModuleIdResolver('');
         return ModuleIdResolver;
     }());
-    ModuleIdResolver.ROOT = new ModuleIdResolver('');
     AMDLoader.ModuleIdResolver = ModuleIdResolver;
     // ------------------------------------------------------------------------
     // Module
@@ -975,11 +972,11 @@ var AMDLoader;
         function RegularDependency(id) {
             this.id = id;
         }
+        RegularDependency.EXPORTS = new RegularDependency(0 /* EXPORTS */);
+        RegularDependency.MODULE = new RegularDependency(1 /* MODULE */);
+        RegularDependency.REQUIRE = new RegularDependency(2 /* REQUIRE */);
         return RegularDependency;
     }());
-    RegularDependency.EXPORTS = new RegularDependency(0 /* EXPORTS */);
-    RegularDependency.MODULE = new RegularDependency(1 /* MODULE */);
-    RegularDependency.REQUIRE = new RegularDependency(2 /* REQUIRE */);
     AMDLoader.RegularDependency = RegularDependency;
     var PluginDependency = (function () {
         function PluginDependency(id, pluginId, pluginParam) {
@@ -1552,11 +1549,11 @@ var AMDLoader;
                 moduleManager.enqueueDefineAnonymousModule(dependencies, callback);
             }
         }
+        DefineFunc.amd = {
+            jQuery: true
+        };
         return DefineFunc;
     }());
-    DefineFunc.amd = {
-        jQuery: true
-    };
     AMDLoader.DefineFunc = DefineFunc;
     var RequireFunc = (function () {
         function RequireFunc() {

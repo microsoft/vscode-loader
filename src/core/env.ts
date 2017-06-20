@@ -73,6 +73,5 @@ namespace AMDLoader {
 	})();
 	export const isWebWorker = (typeof global.importScripts === 'function');
 	export const isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
-	export const isElectronMain = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'browser');
 	export const hasPerformanceNow = (global.performance && typeof global.performance.now === 'function');
 }

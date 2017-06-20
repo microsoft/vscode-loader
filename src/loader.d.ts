@@ -35,7 +35,6 @@ declare namespace AMDLoader {
     const isWindows: boolean;
     const isWebWorker: boolean;
     const isElectronRenderer: boolean;
-    const isElectronMain: boolean;
     const hasPerformanceNow: boolean;
 }
 declare namespace AMDLoader {
