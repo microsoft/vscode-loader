@@ -176,7 +176,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         nodeModules: []
     });
     // Adding unknown key
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         unknownKey1: 'value1'
     }, result);
     assertConfigurationIs(result, {
@@ -192,7 +192,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         nodeModules: []
     });
     // Adding another unknown key
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         unknownKey2: 'value2'
     }, result);
     assertConfigurationIs(result, {
@@ -209,7 +209,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         nodeModules: []
     });
     // Overwriting unknown key
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         unknownKey2: 'new-value2'
     }, result);
     assertConfigurationIs(result, {

@@ -139,8 +139,8 @@ function startAMDJSTESTS() {
 
 	// HACK(1) to the loader to get the tests to run as if they were running independently out of their folder
 	var originalValidateConfigurationOptions = AMDLoader.ConfigurationOptionsUtil.validateConfigurationOptions;
-	AMDLoader.ConfigurationOptionsUtil.validateConfigurationOptions = function(options) {
-		var r = originalValidateConfigurationOptions(options);
+	AMDLoader.ConfigurationOptionsUtil.validateConfigurationOptions = function(isWebWorker, options) {
+		var r = originalValidateConfigurationOptions(isWebWorker, options);
 		if (currentTest && r.baseUrl.indexOf(currentTest.path) === -1) {
 			r.baseUrl = currentTest.path + currentTest.name + '/' + r.baseUrl;
 		}
