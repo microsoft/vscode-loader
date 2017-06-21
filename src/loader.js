@@ -51,7 +51,6 @@ var AMDLoader;
         return Environment;
     }());
     AMDLoader.Environment = Environment;
-    AMDLoader._env = Environment.detect();
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -818,11 +817,14 @@ var AMDLoader;
         return NodeScriptLoader;
     }());
     NodeScriptLoader._BOM = 0xFEFF;
-    AMDLoader.scriptLoader = new OnlyOnceScriptLoader(AMDLoader._env.isWebWorker ?
-        new WorkerScriptLoader()
-        : AMDLoader._env.isNode ?
-            new NodeScriptLoader(AMDLoader._env)
-            : new BrowserScriptLoader());
+    function createScriptLoader(env) {
+        return new OnlyOnceScriptLoader(env.isWebWorker ?
+            new WorkerScriptLoader()
+            : env.isNode ?
+                new NodeScriptLoader(env)
+                : new BrowserScriptLoader());
+    }
+    AMDLoader.createScriptLoader = createScriptLoader;
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -1552,8 +1554,10 @@ var AMDLoader;
 var define;
 var AMDLoader;
 (function (AMDLoader) {
+    var _env = AMDLoader.Environment.detect();
     var moduleManager;
     var loaderAvailableTimestamp;
+    var scriptLoader = AMDLoader.createScriptLoader(_env);
     var DefineFunc = (function () {
         function DefineFunc(id, dependencies, callback) {
             if (typeof id !== 'string') {
@@ -1611,7 +1615,7 @@ var AMDLoader;
          * Non standard extension to reset completely the loader state. This is used for running amdjs tests
          */
         RequireFunc.reset = function () {
-            moduleManager = new AMDLoader.ModuleManager(AMDLoader._env, AMDLoader.scriptLoader, loaderAvailableTimestamp);
+            moduleManager = new AMDLoader.ModuleManager(_env, scriptLoader, loaderAvailableTimestamp);
         };
         /**
          * Non standard extension to fetch loader state for building purposes.
@@ -1629,7 +1633,7 @@ var AMDLoader;
     }());
     AMDLoader.RequireFunc = RequireFunc;
     function init(env) {
-        moduleManager = new AMDLoader.ModuleManager(env, AMDLoader.scriptLoader, loaderAvailableTimestamp);
+        moduleManager = new AMDLoader.ModuleManager(env, scriptLoader, loaderAvailableTimestamp);
         if (env.isNode) {
             var _nodeRequire = (AMDLoader.global.require || require);
             var nodeRequire = function (what) {
@@ -1670,7 +1674,7 @@ var AMDLoader;
         }
     }
     if (typeof AMDLoader.global.define !== 'function' || !AMDLoader.global.define.amd) {
-        init(AMDLoader._env);
+        init(_env);
         loaderAvailableTimestamp = AMDLoader.Utilities.getHighPerformanceTimestamp();
     }
 })(AMDLoader || (AMDLoader = {}));

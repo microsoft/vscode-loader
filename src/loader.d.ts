@@ -45,7 +45,6 @@ declare namespace AMDLoader {
         });
         private static _isWindows();
     }
-    const _env: Environment;
 }
 declare namespace AMDLoader {
     enum LoaderEventType {
@@ -264,7 +263,7 @@ declare namespace AMDLoader {
     interface IScriptLoader {
         load(moduleManager: IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void): void;
     }
-    const scriptLoader: IScriptLoader;
+    function createScriptLoader(env: Environment): IScriptLoader;
 }
 declare namespace AMDLoader {
     interface ILoaderPlugin {

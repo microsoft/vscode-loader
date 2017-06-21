@@ -11,8 +11,10 @@ var define;
 
 namespace AMDLoader {
 
+	const _env = Environment.detect();
 	let moduleManager: ModuleManager;
 	let loaderAvailableTimestamp: number;
+	const scriptLoader: IScriptLoader = createScriptLoader(_env);
 
 	export class DefineFunc {
 

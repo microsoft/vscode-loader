@@ -100,6 +100,4 @@ namespace AMDLoader {
 			return false;
 		}
 	}
-
-	export const _env = Environment.detect();
 }

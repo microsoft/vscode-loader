@@ -145,7 +145,7 @@ namespace AMDLoader {
 	}
 
 	interface INodeVM {
-		Script: { new (contents: string, options: INodeVMScriptOptions): INodeVMScript }
+		Script: { new(contents: string, options: INodeVMScriptOptions): INodeVMScript }
 		runInThisContext(contents: string, { filename: string });
 		runInThisContext(contents: string, filename: string);
 	}
@@ -211,7 +211,7 @@ namespace AMDLoader {
 		// from cached data. this is done by overriding the `Module._compile` function
 		private _initNodeRequire(nodeRequire: INodeRequire, moduleManager: IModuleManager): void {
 
-			const {nodeCachedDataDir} = moduleManager.getConfig().getOptionsLiteral();
+			const { nodeCachedDataDir } = moduleManager.getConfig().getOptionsLiteral();
 			if (!nodeCachedDataDir || this._didPatchNodeRequire) {
 				return;
 			}
@@ -416,11 +416,13 @@ namespace AMDLoader {
 		}
 	}
 
-	export const scriptLoader: IScriptLoader = new OnlyOnceScriptLoader(
-		_env.isWebWorker ?
-			new WorkerScriptLoader()
-			: _env.isNode ?
-				new NodeScriptLoader(_env)
-				: new BrowserScriptLoader()
-	);
+	export function createScriptLoader(env: Environment): IScriptLoader {
+		return new OnlyOnceScriptLoader(
+			env.isWebWorker ?
+				new WorkerScriptLoader()
+				: env.isNode ?
+					new NodeScriptLoader(env)
+					: new BrowserScriptLoader()
+		);
+	}
 }
