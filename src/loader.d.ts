@@ -31,18 +31,20 @@ interface MapConstructor {
 declare var Map: MapConstructor;
 declare namespace AMDLoader {
     const global: any;
-    const isNode: boolean;
     const isWebWorker: boolean;
     const isElectronRenderer: boolean;
     const hasPerformanceNow: boolean;
     class Environment {
         static detect(): Environment;
         readonly isWindows: boolean;
+        readonly isNode: boolean;
         constructor(opts: {
             isWindows: boolean;
+            isNode: boolean;
         });
         private static _isWindows();
     }
+    const _env: Environment;
 }
 declare namespace AMDLoader {
     enum LoaderEventType {
@@ -85,7 +87,7 @@ declare namespace AMDLoader {
         /**
          * This method does not take care of / vs \
          */
-        static fileUriToFilePath(env: Environment, uri: string): string;
+        static fileUriToFilePath(isWindows: boolean, uri: string): string;
         static startsWith(haystack: string, needle: string): boolean;
         static endsWith(haystack: string, needle: string): boolean;
         static containsQueryString(url: string): boolean;
@@ -184,6 +186,7 @@ declare namespace AMDLoader {
         static mergeConfigurationOptions(overwrite?: IConfigurationOptions, base?: IConfigurationOptions): IConfigurationOptions;
     }
     class Configuration {
+        private readonly _isNode;
         private options;
         /**
          * Generated from the `ignoreDuplicateModules` configuration option.
@@ -197,7 +200,7 @@ declare namespace AMDLoader {
          * Generated from the `paths` configuration option. These are sorted with the longest `from` first.
          */
         private sortedPathsRules;
-        constructor(options?: IConfigurationOptions);
+        constructor(isNode: boolean, options?: IConfigurationOptions);
         private _createIgnoreDuplicateModulesMap();
         private _createNodeModulesMap();
         private _createSortedPathsRules();
@@ -258,7 +261,6 @@ declare namespace AMDLoader {
     interface IScriptLoader {
         load(moduleManager: IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void): void;
     }
-    const env: Environment;
     const scriptLoader: IScriptLoader;
 }
 declare namespace AMDLoader {
@@ -362,6 +364,7 @@ declare namespace AMDLoader {
     }
     type Dependency = RegularDependency | PluginDependency;
     class ModuleManager {
+        private readonly _env;
         private readonly _moduleIdProvider;
         private _config;
         private readonly _loaderAvailableTimestamp;
@@ -394,7 +397,7 @@ declare namespace AMDLoader {
         private _buildInfoPath;
         private _buildInfoDefineStack;
         private _buildInfoDependencies;
-        constructor(scriptLoader: IScriptLoader, loaderAvailableTimestamp?: number);
+        constructor(env: Environment, scriptLoader: IScriptLoader, loaderAvailableTimestamp?: number);
         private static _findRelevantLocationInStack(needle, stack);
         getBuildInfo(): IBuildModuleInfo[];
         private _recorder;

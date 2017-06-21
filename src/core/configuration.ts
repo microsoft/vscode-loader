@@ -187,6 +187,8 @@ namespace AMDLoader {
 
 	export class Configuration {
 
+		private readonly _isNode: boolean;
+
 		private options: IConfigurationOptions;
 
 		/**
@@ -204,7 +206,8 @@ namespace AMDLoader {
 		 */
 		private sortedPathsRules: { from: string; to: string[]; }[];
 
-		constructor(options?: IConfigurationOptions) {
+		constructor(isNode: boolean, options?: IConfigurationOptions) {
+			this._isNode = isNode;
 			this.options = ConfigurationOptionsUtil.mergeConfigurationOptions(options);
 
 			this._createIgnoreDuplicateModulesMap();
@@ -212,12 +215,12 @@ namespace AMDLoader {
 			this._createSortedPathsRules();
 
 			if (this.options.baseUrl === '') {
-				if (isNode && this.options.nodeRequire && this.options.nodeRequire.main && this.options.nodeRequire.main.filename) {
+				if (this._isNode && this.options.nodeRequire && this.options.nodeRequire.main && this.options.nodeRequire.main.filename) {
 					let nodeMain = this.options.nodeRequire.main.filename;
 					let dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
 					this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
 				}
-				if (isNode && this.options.nodeMain) {
+				if (this._isNode && this.options.nodeMain) {
 					let nodeMain = this.options.nodeMain;
 					let dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
 					this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
@@ -269,7 +272,7 @@ namespace AMDLoader {
 		 * @result A new configuration
 		 */
 		public cloneAndMerge(options?: IConfigurationOptions): Configuration {
-			return new Configuration(ConfigurationOptionsUtil.mergeConfigurationOptions(options, this.options));
+			return new Configuration(this._isNode, ConfigurationOptionsUtil.mergeConfigurationOptions(options, this.options));
 		}
 
 		/**

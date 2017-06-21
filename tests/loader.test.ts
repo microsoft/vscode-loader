@@ -247,7 +247,7 @@ QUnit.test('Overwriting unknown configuration options', () => {
 QUnit.module('Configuration');
 
 QUnit.test('moduleIdToPath', () => {
-	var config = new loader.Configuration({
+	var config = new loader.Configuration(false, {
 		baseUrl: 'prefix',
 		urlArgs: 'suffix',
 		paths: {
@@ -291,7 +291,7 @@ QUnit.test('moduleIdToPath', () => {
 });
 
 QUnit.test('requireToUrl', () => {
-	var config = new loader.Configuration({
+	var config = new loader.Configuration(false, {
 		baseUrl: 'prefix',
 		urlArgs: 'suffix',
 		paths: {
@@ -332,7 +332,7 @@ QUnit.test('requireToUrl', () => {
 });
 
 QUnit.test('ignoreDuplicateModules', () => {
-	var config = new loader.Configuration({
+	var config = new loader.Configuration(false, {
 		ignoreDuplicateModules: ['a1', 'a2', 'a/b/c']
 	});
 
@@ -414,7 +414,7 @@ QUnit.test('Loading 3 simple modules', () => {
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 
 	mm.defineModule('a', ['a1', 'a2'], (a1: string, a2: string) => {
 		QUnit.equal(a1, 'a1');
@@ -449,7 +449,7 @@ QUnit.test('Loading a plugin dependency', () => {
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 
 	mm.defineModule('a/b/c', ['../../plugin!./d', 'require'], (r: any, req: any) => {
 		QUnit.equal(r, 'r');
@@ -493,7 +493,7 @@ QUnit.test('Loading a dependency cycle', () => {
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 	mm.defineModule('a', ['b'], (b: any) => {
 		QUnit.equal(b, 'b');
 		return 'a';
@@ -519,7 +519,7 @@ QUnit.test('Using a local error handler immediate script loading failure', () =>
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 	mm.defineModule('a', ['b'], (b: any) => {
 		QUnit.equal(b, 'b');
 		return 'a';
@@ -550,7 +550,7 @@ QUnit.test('Using a local error handler secondary script loading failure', () =>
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 	mm.defineModule('a', ['b'], (b: any) => {
 		QUnit.ok(false);
 	}, (err) => {
@@ -573,7 +573,7 @@ QUnit.test('No path config', () => {
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 	mm.defineModule('first', ['a'], () => {
 		QUnit.ok(false, 'a should not be found');
 	}, (err) => {
@@ -594,7 +594,7 @@ QUnit.test('With path config', () => {
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 	mm.configure({
 		paths: {
 			a: 'alocation.js'
@@ -625,7 +625,7 @@ QUnit.test('With one fallback', () => {
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 
 	mm.configure({
 		paths: {
@@ -660,7 +660,7 @@ QUnit.test('With two fallbacks', () => {
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 
 	mm.configure({
 		paths: {
@@ -687,7 +687,7 @@ QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dep
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 
 	// Define the resolved plugin value
 	mm.defineModule('plugin!pluginParam', [], () => {
@@ -717,7 +717,7 @@ QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dep
 });
 
 QUnit.test('Bug #12024: [loader] Should not append .js to URLs containing query string', () => {
-	var config = new loader.Configuration({
+	var config = new loader.Configuration(false, {
 		baseUrl: 'prefix',
 		paths: {
 			'searchBoxJss': 'http://services.social.microsoft.com/search/Widgets/SearchBox.jss?boxid=HeaderSearchTextBox&btnid=HeaderSearchButton&brand=Msdn&loc=en-us&Refinement=198,234&focusOnInit=false&iroot=vscom&emptyWatermark=true&searchButtonTooltip=Search here'
@@ -737,7 +737,7 @@ QUnit.test('Bug #12020: [loader] relative (synchronous) require does not normali
 		},
 	};
 
-	var mm = new loader.ModuleManager(scriptLoader);
+	var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
 
 	mm.defineModule('plugin!a/b/c', [], () => {
 		QUnit.ok(true);
@@ -752,23 +752,17 @@ QUnit.test('Bug #12020: [loader] relative (synchronous) require does not normali
 });
 
 QUnit.test('Utilities.fileUriToFilePath', () => {
-	const win = new AMDLoader.Environment({
-		isWindows: true
-	});
-	const other = new AMDLoader.Environment({
-		isWindows: false
-	});
-	var test = (env: AMDLoader.Environment, input: string, expected: string) => {
-		QUnit.equal(loader.Utilities.fileUriToFilePath(env, input), expected, 'Result for ' + input);
+	var test = (isWindows: boolean, input: string, expected: string) => {
+		QUnit.equal(loader.Utilities.fileUriToFilePath(isWindows, input), expected, 'Result for ' + input);
 	};
 
-	test(win, 'file:///c:/alex.txt', 'c:/alex.txt');
-	test(win, 'file://monacotools/isi.txt', '//monacotools/isi.txt');
-	test(win, 'file://monacotools1/certificates/SSL/', '//monacotools1/certificates/SSL/');
+	test(true, 'file:///c:/alex.txt', 'c:/alex.txt');
+	test(true, 'file://monacotools/isi.txt', '//monacotools/isi.txt');
+	test(true, 'file://monacotools1/certificates/SSL/', '//monacotools1/certificates/SSL/');
 
-	test(other, 'file:///c:/alex.txt', '/c:/alex.txt');
-	test(other, 'file://monacotools/isi.txt', 'monacotools/isi.txt');
-	test(other, 'file://monacotools1/certificates/SSL/', 'monacotools1/certificates/SSL/');
+	test(false, 'file:///c:/alex.txt', '/c:/alex.txt');
+	test(false, 'file://monacotools/isi.txt', 'monacotools/isi.txt');
+	test(false, 'file://monacotools1/certificates/SSL/', 'monacotools1/certificates/SSL/');
 });
 
 QUnit.test('Utilities.containsQueryString', () => {

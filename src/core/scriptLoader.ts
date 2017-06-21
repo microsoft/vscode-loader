@@ -290,7 +290,7 @@ namespace AMDLoader {
 
 			} else {
 
-				scriptSrc = Utilities.fileUriToFilePath(this._env, scriptSrc);
+				scriptSrc = Utilities.fileUriToFilePath(this._env.isWindows, scriptSrc);
 
 				this._fs.readFile(scriptSrc, { encoding: 'utf8' }, (err, data: string) => {
 					if (err) {
@@ -416,13 +416,11 @@ namespace AMDLoader {
 		}
 	}
 
-	export const env = Environment.detect();
-
 	export const scriptLoader: IScriptLoader = new OnlyOnceScriptLoader(
 		isWebWorker ?
 			new WorkerScriptLoader()
-			: isNode ?
-				new NodeScriptLoader(env)
+			: _env.isNode ?
+				new NodeScriptLoader(_env)
 				: new BrowserScriptLoader()
 	);
 }

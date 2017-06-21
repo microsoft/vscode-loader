@@ -22,17 +22,18 @@ var _amdLoaderGlobal = this;
 var AMDLoader;
 (function (AMDLoader) {
     AMDLoader.global = _amdLoaderGlobal;
-    AMDLoader.isNode = (typeof module !== 'undefined' && !!module.exports);
     AMDLoader.isWebWorker = (typeof AMDLoader.global.importScripts === 'function');
     AMDLoader.isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
     AMDLoader.hasPerformanceNow = (AMDLoader.global.performance && typeof AMDLoader.global.performance.now === 'function');
     var Environment = (function () {
         function Environment(opts) {
             this.isWindows = opts.isWindows;
+            this.isNode = opts.isNode;
         }
         Environment.detect = function () {
             return new Environment({
-                isWindows: this._isWindows()
+                isWindows: this._isWindows(),
+                isNode: (typeof module !== 'undefined' && !!module.exports)
             });
         };
         Environment._isWindows = function () {
@@ -49,6 +50,7 @@ var AMDLoader;
         return Environment;
     }());
     AMDLoader.Environment = Environment;
+    AMDLoader._env = Environment.detect();
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -121,9 +123,9 @@ var AMDLoader;
         /**
          * This method does not take care of / vs \
          */
-        Utilities.fileUriToFilePath = function (env, uri) {
+        Utilities.fileUriToFilePath = function (isWindows, uri) {
             uri = decodeURI(uri);
-            if (env.isWindows) {
+            if (isWindows) {
                 if (/^file:\/\/\//.test(uri)) {
                     // This is a URI without a hostname => return only the path segment
                     return uri.substr(8);
@@ -313,18 +315,19 @@ var AMDLoader;
     }());
     AMDLoader.ConfigurationOptionsUtil = ConfigurationOptionsUtil;
     var Configuration = (function () {
-        function Configuration(options) {
+        function Configuration(isNode, options) {
+            this._isNode = isNode;
             this.options = ConfigurationOptionsUtil.mergeConfigurationOptions(options);
             this._createIgnoreDuplicateModulesMap();
             this._createNodeModulesMap();
             this._createSortedPathsRules();
             if (this.options.baseUrl === '') {
-                if (AMDLoader.isNode && this.options.nodeRequire && this.options.nodeRequire.main && this.options.nodeRequire.main.filename) {
+                if (this._isNode && this.options.nodeRequire && this.options.nodeRequire.main && this.options.nodeRequire.main.filename) {
                     var nodeMain = this.options.nodeRequire.main.filename;
                     var dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
                     this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
                 }
-                if (AMDLoader.isNode && this.options.nodeMain) {
+                if (this._isNode && this.options.nodeMain) {
                     var nodeMain = this.options.nodeMain;
                     var dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
                     this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
@@ -375,7 +378,7 @@ var AMDLoader;
          * @result A new configuration
          */
         Configuration.prototype.cloneAndMerge = function (options) {
-            return new Configuration(ConfigurationOptionsUtil.mergeConfigurationOptions(options, this.options));
+            return new Configuration(this._isNode, ConfigurationOptionsUtil.mergeConfigurationOptions(options, this.options));
         };
         /**
          * Get current options bag. Useful for passing it forward to plugins.
@@ -701,7 +704,7 @@ var AMDLoader;
                 callback();
             }
             else {
-                scriptSrc = AMDLoader.Utilities.fileUriToFilePath(this._env, scriptSrc);
+                scriptSrc = AMDLoader.Utilities.fileUriToFilePath(this._env.isWindows, scriptSrc);
                 this._fs.readFile(scriptSrc, { encoding: 'utf8' }, function (err, data) {
                     if (err) {
                         errorback(err);
@@ -808,11 +811,10 @@ var AMDLoader;
         return NodeScriptLoader;
     }());
     NodeScriptLoader._BOM = 0xFEFF;
-    AMDLoader.env = AMDLoader.Environment.detect();
     AMDLoader.scriptLoader = new OnlyOnceScriptLoader(AMDLoader.isWebWorker ?
         new WorkerScriptLoader()
-        : AMDLoader.isNode ?
-            new NodeScriptLoader(AMDLoader.env)
+        : AMDLoader._env.isNode ?
+            new NodeScriptLoader(AMDLoader._env)
             : new BrowserScriptLoader());
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
@@ -1009,12 +1011,13 @@ var AMDLoader;
     }());
     AMDLoader.PluginDependency = PluginDependency;
     var ModuleManager = (function () {
-        function ModuleManager(scriptLoader, loaderAvailableTimestamp) {
+        function ModuleManager(env, scriptLoader, loaderAvailableTimestamp) {
             if (loaderAvailableTimestamp === void 0) { loaderAvailableTimestamp = 0; }
             this._recorder = null;
+            this._env = env;
             this._loaderAvailableTimestamp = loaderAvailableTimestamp;
             this._moduleIdProvider = new ModuleIdProvider();
-            this._config = new AMDLoader.Configuration();
+            this._config = new AMDLoader.Configuration(this._env.isNode);
             this._scriptLoader = scriptLoader;
             this._modules2 = [];
             this._knownModules2 = [];
@@ -1190,7 +1193,7 @@ var AMDLoader;
         ModuleManager.prototype.configure = function (params, shouldOverwrite) {
             var oldShouldRecordStats = this._config.shouldRecordStats();
             if (shouldOverwrite) {
-                this._config = new AMDLoader.Configuration(params);
+                this._config = new AMDLoader.Configuration(this._env.isNode, params);
             }
             else {
                 this._config = this._config.cloneAndMerge(params);
@@ -1355,7 +1358,7 @@ var AMDLoader;
             this._knownModules2[moduleId] = true;
             var strModuleId = this._moduleIdProvider.getStrModuleId(moduleId);
             var paths = this._config.moduleIdToPaths(strModuleId);
-            if (AMDLoader.isNode && strModuleId.indexOf('/') === -1) {
+            if (this._env.isNode && strModuleId.indexOf('/') === -1) {
                 paths.push('node|' + strModuleId);
             }
             var lastPathIndex = -1;
@@ -1601,7 +1604,7 @@ var AMDLoader;
          * Non standard extension to reset completely the loader state. This is used for running amdjs tests
          */
         RequireFunc.reset = function () {
-            moduleManager = new AMDLoader.ModuleManager(AMDLoader.scriptLoader, loaderAvailableTimestamp);
+            moduleManager = new AMDLoader.ModuleManager(AMDLoader._env, AMDLoader.scriptLoader, loaderAvailableTimestamp);
         };
         /**
          * Non standard extension to fetch loader state for building purposes.
@@ -1618,9 +1621,9 @@ var AMDLoader;
         return RequireFunc;
     }());
     AMDLoader.RequireFunc = RequireFunc;
-    function init() {
-        moduleManager = new AMDLoader.ModuleManager(AMDLoader.scriptLoader, loaderAvailableTimestamp);
-        if (AMDLoader.isNode) {
+    function init(env) {
+        moduleManager = new AMDLoader.ModuleManager(env, AMDLoader.scriptLoader, loaderAvailableTimestamp);
+        if (env.isNode) {
             var _nodeRequire = (AMDLoader.global.require || require);
             var nodeRequire = function (what) {
                 moduleManager.getRecorder().record(AMDLoader.LoaderEventType.NodeBeginNativeRequire, what);
@@ -1634,7 +1637,7 @@ var AMDLoader;
             AMDLoader.global.nodeRequire = nodeRequire;
             RequireFunc.nodeRequire = nodeRequire;
         }
-        if (AMDLoader.isNode && !AMDLoader.isElectronRenderer) {
+        if (env.isNode && !AMDLoader.isElectronRenderer) {
             module.exports = RequireFunc;
             // These two defs are fore the local closure defined in node in the case that the loader is concatenated
             define = function () {
@@ -1660,7 +1663,7 @@ var AMDLoader;
         }
     }
     if (typeof AMDLoader.global.define !== 'function' || !AMDLoader.global.define.amd) {
-        init();
+        init(AMDLoader._env);
         loaderAvailableTimestamp = AMDLoader.getHighPerformanceTimestamp();
     }
 })(AMDLoader || (AMDLoader = {}));

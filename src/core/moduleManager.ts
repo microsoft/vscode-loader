@@ -315,6 +315,8 @@ namespace AMDLoader {
 
 	export class ModuleManager {
 
+		private readonly _env: Environment;
+
 		private readonly _moduleIdProvider: ModuleIdProvider;
 
 		private _config: Configuration;
@@ -357,10 +359,11 @@ namespace AMDLoader {
 		private _buildInfoDefineStack: string[];
 		private _buildInfoDependencies: string[][];
 
-		constructor(scriptLoader: IScriptLoader, loaderAvailableTimestamp: number = 0) {
+		constructor(env: Environment, scriptLoader: IScriptLoader, loaderAvailableTimestamp: number = 0) {
+			this._env = env;
 			this._loaderAvailableTimestamp = loaderAvailableTimestamp;
 			this._moduleIdProvider = new ModuleIdProvider();
-			this._config = new Configuration();
+			this._config = new Configuration(this._env.isNode);
 			this._scriptLoader = scriptLoader;
 			this._modules2 = [];
 			this._knownModules2 = [];
@@ -563,7 +566,7 @@ namespace AMDLoader {
 		public configure(params: IConfigurationOptions, shouldOverwrite: boolean): void {
 			let oldShouldRecordStats = this._config.shouldRecordStats();
 			if (shouldOverwrite) {
-				this._config = new Configuration(params);
+				this._config = new Configuration(this._env.isNode, params);
 			} else {
 				this._config = this._config.cloneAndMerge(params);
 			}
@@ -749,7 +752,7 @@ namespace AMDLoader {
 			let strModuleId = this._moduleIdProvider.getStrModuleId(moduleId);
 			let paths = this._config.moduleIdToPaths(strModuleId);
 
-			if (isNode && strModuleId.indexOf('/') === -1) {
+			if (this._env.isNode && strModuleId.indexOf('/') === -1) {
 				paths.push('node|' + strModuleId);
 			}
 

@@ -228,7 +228,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
 });
 QUnit.module('Configuration');
 QUnit.test('moduleIdToPath', function () {
-    var config = new loader.Configuration({
+    var config = new loader.Configuration(false, {
         baseUrl: 'prefix',
         urlArgs: 'suffix',
         paths: {
@@ -264,7 +264,7 @@ QUnit.test('moduleIdToPath', function () {
     QUnit.equal(config.moduleIdToPaths('https://a'), 'https://a.js?suffix');
 });
 QUnit.test('requireToUrl', function () {
-    var config = new loader.Configuration({
+    var config = new loader.Configuration(false, {
         baseUrl: 'prefix',
         urlArgs: 'suffix',
         paths: {
@@ -298,7 +298,7 @@ QUnit.test('requireToUrl', function () {
     QUnit.equal(config.requireToUrl('https://a'), 'https://a?suffix');
 });
 QUnit.test('ignoreDuplicateModules', function () {
-    var config = new loader.Configuration({
+    var config = new loader.Configuration(false, {
         ignoreDuplicateModules: ['a1', 'a2', 'a/b/c']
     });
     QUnit.equal(config.isDuplicateMessageIgnoredFor('a1'), true);
@@ -367,7 +367,7 @@ QUnit.test('Loading 3 simple modules', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     mm.defineModule('a', ['a1', 'a2'], function (a1, a2) {
         QUnit.equal(a1, 'a1');
         QUnit.equal(a2, 'a2');
@@ -399,7 +399,7 @@ QUnit.test('Loading a plugin dependency', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     mm.defineModule('a/b/c', ['../../plugin!./d', 'require'], function (r, req) {
         QUnit.equal(r, 'r');
         QUnit.equal(req.toUrl('./d.txt'), 'a/b/d.txt');
@@ -438,7 +438,7 @@ QUnit.test('Loading a dependency cycle', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     mm.defineModule('a', ['b'], function (b) {
         QUnit.equal(b, 'b');
         return 'a';
@@ -460,7 +460,7 @@ QUnit.test('Using a local error handler immediate script loading failure', funct
             }
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     mm.defineModule('a', ['b'], function (b) {
         QUnit.equal(b, 'b');
         return 'a';
@@ -488,7 +488,7 @@ QUnit.test('Using a local error handler secondary script loading failure', funct
             }
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     mm.defineModule('a', ['b'], function (b) {
         QUnit.ok(false);
     }, function (err) {
@@ -508,7 +508,7 @@ QUnit.test('No path config', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     mm.defineModule('first', ['a'], function () {
         QUnit.ok(false, 'a should not be found');
     }, function (err) {
@@ -527,7 +527,7 @@ QUnit.test('With path config', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     mm.configure({
         paths: {
             a: 'alocation.js'
@@ -557,7 +557,7 @@ QUnit.test('With one fallback', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     mm.configure({
         paths: {
             a: ['alocation.js', 'afallback.js']
@@ -590,7 +590,7 @@ QUnit.test('With two fallbacks', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     mm.configure({
         paths: {
             a: ['alocation.js', 'afallback.js', 'anotherfallback.js']
@@ -611,7 +611,7 @@ QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dep
             QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     // Define the resolved plugin value
     mm.defineModule('plugin!pluginParam', [], function () {
         return {
@@ -637,7 +637,7 @@ QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dep
     }, null);
 });
 QUnit.test('Bug #12024: [loader] Should not append .js to URLs containing query string', function () {
-    var config = new loader.Configuration({
+    var config = new loader.Configuration(false, {
         baseUrl: 'prefix',
         paths: {
             'searchBoxJss': 'http://services.social.microsoft.com/search/Widgets/SearchBox.jss?boxid=HeaderSearchTextBox&btnid=HeaderSearchButton&brand=Msdn&loc=en-us&Refinement=198,234&focusOnInit=false&iroot=vscom&emptyWatermark=true&searchButtonTooltip=Search here'
@@ -653,7 +653,7 @@ QUnit.test('Bug #12020: [loader] relative (synchronous) require does not normali
             QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
         },
     };
-    var mm = new loader.ModuleManager(scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
     mm.defineModule('plugin!a/b/c', [], function () {
         QUnit.ok(true);
         return 'plugin!a/b/c';
@@ -665,21 +665,15 @@ QUnit.test('Bug #12020: [loader] relative (synchronous) require does not normali
     }, null, null);
 });
 QUnit.test('Utilities.fileUriToFilePath', function () {
-    var win = new AMDLoader.Environment({
-        isWindows: true
-    });
-    var other = new AMDLoader.Environment({
-        isWindows: false
-    });
-    var test = function (env, input, expected) {
-        QUnit.equal(loader.Utilities.fileUriToFilePath(env, input), expected, 'Result for ' + input);
+    var test = function (isWindows, input, expected) {
+        QUnit.equal(loader.Utilities.fileUriToFilePath(isWindows, input), expected, 'Result for ' + input);
     };
-    test(win, 'file:///c:/alex.txt', 'c:/alex.txt');
-    test(win, 'file://monacotools/isi.txt', '//monacotools/isi.txt');
-    test(win, 'file://monacotools1/certificates/SSL/', '//monacotools1/certificates/SSL/');
-    test(other, 'file:///c:/alex.txt', '/c:/alex.txt');
-    test(other, 'file://monacotools/isi.txt', 'monacotools/isi.txt');
-    test(other, 'file://monacotools1/certificates/SSL/', 'monacotools1/certificates/SSL/');
+    test(true, 'file:///c:/alex.txt', 'c:/alex.txt');
+    test(true, 'file://monacotools/isi.txt', '//monacotools/isi.txt');
+    test(true, 'file://monacotools1/certificates/SSL/', '//monacotools1/certificates/SSL/');
+    test(false, 'file:///c:/alex.txt', '/c:/alex.txt');
+    test(false, 'file://monacotools/isi.txt', 'monacotools/isi.txt');
+    test(false, 'file://monacotools1/certificates/SSL/', 'monacotools1/certificates/SSL/');
 });
 QUnit.test('Utilities.containsQueryString', function () {
     var test = function (input, expected) {

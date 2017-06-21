@@ -75,7 +75,7 @@ namespace AMDLoader {
 		 * Non standard extension to reset completely the loader state. This is used for running amdjs tests
 		 */
 		public static reset(): void {
-			moduleManager = new ModuleManager(scriptLoader, loaderAvailableTimestamp);
+			moduleManager = new ModuleManager(_env, scriptLoader, loaderAvailableTimestamp);
 		}
 
 		/**
@@ -93,10 +93,10 @@ namespace AMDLoader {
 		}
 	}
 
-	function init(): void {
-		moduleManager = new ModuleManager(scriptLoader, loaderAvailableTimestamp);
+	function init(env: Environment): void {
+		moduleManager = new ModuleManager(env, scriptLoader, loaderAvailableTimestamp);
 
-		if (isNode) {
+		if (env.isNode) {
 			var _nodeRequire = (global.require || require);
 			var nodeRequire = function (what) {
 				moduleManager.getRecorder().record(LoaderEventType.NodeBeginNativeRequire, what);
@@ -111,7 +111,7 @@ namespace AMDLoader {
 			(<any>RequireFunc).nodeRequire = nodeRequire;
 		}
 
-		if (isNode && !isElectronRenderer) {
+		if (env.isNode && !isElectronRenderer) {
 			module.exports = RequireFunc;
 			// These two defs are fore the local closure defined in node in the case that the loader is concatenated
 			define = function () {
@@ -136,7 +136,7 @@ namespace AMDLoader {
 	}
 
 	if (typeof global.define !== 'function' || !global.define.amd) {
-		init();
+		init(_env);
 		loaderAvailableTimestamp = getHighPerformanceTimestamp();
 	}
 
