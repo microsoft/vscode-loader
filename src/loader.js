@@ -611,6 +611,17 @@ var AMDLoader;
             this._env = env;
             this._didInitialize = false;
             this._didPatchNodeRequire = false;
+        }
+        NodeScriptLoader.prototype._init = function (nodeRequire) {
+            if (this._didInitialize) {
+                return;
+            }
+            this._didInitialize = true;
+            // capture node modules
+            this._fs = nodeRequire('fs');
+            this._vm = nodeRequire('vm');
+            this._path = nodeRequire('path');
+            this._crypto = nodeRequire('crypto');
             // js-flags have an impact on cached data
             this._jsflags = '';
             for (var _i = 0, _a = process.argv; _i < _a.length; _i++) {
@@ -620,16 +631,6 @@ var AMDLoader;
                     break;
                 }
             }
-        }
-        NodeScriptLoader.prototype._init = function (nodeRequire) {
-            if (this._didInitialize) {
-                return;
-            }
-            this._didInitialize = true;
-            this._fs = nodeRequire('fs');
-            this._vm = nodeRequire('vm');
-            this._path = nodeRequire('path');
-            this._crypto = nodeRequire('crypto');
         };
         // patch require-function of nodejs such that we can manually create a script
         // from cached data. this is done by overriding the `Module._compile` function
