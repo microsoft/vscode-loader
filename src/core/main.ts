@@ -111,7 +111,7 @@ namespace AMDLoader {
 			(<any>RequireFunc).nodeRequire = nodeRequire;
 		}
 
-		if (env.isNode && !isElectronRenderer) {
+		if (env.isNode && !env.isElectronRenderer) {
 			module.exports = RequireFunc;
 			// These two defs are fore the local closure defined in node in the case that the loader is concatenated
 			define = function () {
@@ -123,7 +123,7 @@ namespace AMDLoader {
 			if (typeof global.require !== 'undefined' && typeof global.require !== 'function') {
 				RequireFunc.config(global.require);
 			}
-			if (!isElectronRenderer) {
+			if (!env.isElectronRenderer) {
 				global.define = define = DefineFunc;
 			} else {
 				define = function () {

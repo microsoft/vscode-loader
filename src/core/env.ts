@@ -60,7 +60,6 @@ declare var Map: MapConstructor;
 namespace AMDLoader {
 	export const global: any = _amdLoaderGlobal
 	export const isWebWorker = (typeof global.importScripts === 'function');
-	export const isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
 	export const hasPerformanceNow = (global.performance && typeof global.performance.now === 'function');
 
 	export class Environment {
@@ -68,19 +67,23 @@ namespace AMDLoader {
 		public static detect(): Environment {
 			return new Environment({
 				isWindows: this._isWindows(),
-				isNode: (typeof module !== 'undefined' && !!module.exports)
+				isNode: (typeof module !== 'undefined' && !!module.exports),
+				isElectronRenderer: (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer')
 			});
 		}
 
 		public readonly isWindows: boolean;
 		public readonly isNode: boolean;
+		public readonly isElectronRenderer: boolean;
 
 		constructor(opts: {
 			isWindows: boolean;
 			isNode: boolean;
+			isElectronRenderer: boolean;
 		}) {
 			this.isWindows = opts.isWindows;
 			this.isNode = opts.isNode;
+			this.isElectronRenderer = opts.isElectronRenderer;
 		}
 
 		private static _isWindows(): boolean {

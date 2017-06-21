@@ -32,15 +32,16 @@ declare var Map: MapConstructor;
 declare namespace AMDLoader {
     const global: any;
     const isWebWorker: boolean;
-    const isElectronRenderer: boolean;
     const hasPerformanceNow: boolean;
     class Environment {
         static detect(): Environment;
         readonly isWindows: boolean;
         readonly isNode: boolean;
+        readonly isElectronRenderer: boolean;
         constructor(opts: {
             isWindows: boolean;
             isNode: boolean;
+            isElectronRenderer: boolean;
         });
         private static _isWindows();
     }

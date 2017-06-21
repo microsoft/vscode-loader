@@ -23,17 +23,18 @@ var AMDLoader;
 (function (AMDLoader) {
     AMDLoader.global = _amdLoaderGlobal;
     AMDLoader.isWebWorker = (typeof AMDLoader.global.importScripts === 'function');
-    AMDLoader.isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
     AMDLoader.hasPerformanceNow = (AMDLoader.global.performance && typeof AMDLoader.global.performance.now === 'function');
     var Environment = (function () {
         function Environment(opts) {
             this.isWindows = opts.isWindows;
             this.isNode = opts.isNode;
+            this.isElectronRenderer = opts.isElectronRenderer;
         }
         Environment.detect = function () {
             return new Environment({
                 isWindows: this._isWindows(),
-                isNode: (typeof module !== 'undefined' && !!module.exports)
+                isNode: (typeof module !== 'undefined' && !!module.exports),
+                isElectronRenderer: (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer')
             });
         };
         Environment._isWindows = function () {
@@ -714,7 +715,7 @@ var AMDLoader;
                     var normalizedScriptSrc = _this._path.normalize(scriptSrc);
                     var vmScriptSrc = normalizedScriptSrc;
                     // Make the script src friendly towards electron
-                    if (AMDLoader.isElectronRenderer) {
+                    if (_this._env.isElectronRenderer) {
                         var driveLetterMatch = vmScriptSrc.match(/^([a-z])\:(.*)/i);
                         if (driveLetterMatch) {
                             // windows
@@ -1638,7 +1639,7 @@ var AMDLoader;
             AMDLoader.global.nodeRequire = nodeRequire;
             RequireFunc.nodeRequire = nodeRequire;
         }
-        if (env.isNode && !AMDLoader.isElectronRenderer) {
+        if (env.isNode && !env.isElectronRenderer) {
             module.exports = RequireFunc;
             // These two defs are fore the local closure defined in node in the case that the loader is concatenated
             define = function () {
@@ -1651,7 +1652,7 @@ var AMDLoader;
             if (typeof AMDLoader.global.require !== 'undefined' && typeof AMDLoader.global.require !== 'function') {
                 RequireFunc.config(AMDLoader.global.require);
             }
-            if (!AMDLoader.isElectronRenderer) {
+            if (!env.isElectronRenderer) {
                 AMDLoader.global.define = define = DefineFunc;
             }
             else {

@@ -301,7 +301,7 @@ namespace AMDLoader {
 					let normalizedScriptSrc = this._path.normalize(scriptSrc);
 					let vmScriptSrc = normalizedScriptSrc;
 					// Make the script src friendly towards electron
-					if (isElectronRenderer) {
+					if (this._env.isElectronRenderer) {
 						let driveLetterMatch = vmScriptSrc.match(/^([a-z])\:(.*)/i);
 						if (driveLetterMatch) {
 							// windows
