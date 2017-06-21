@@ -60,7 +60,6 @@ declare var Map: MapConstructor;
 namespace AMDLoader {
 	export const global: any = _amdLoaderGlobal
 	export const isWebWorker = (typeof global.importScripts === 'function');
-	export const hasPerformanceNow = (global.performance && typeof global.performance.now === 'function');
 
 	export class Environment {
 

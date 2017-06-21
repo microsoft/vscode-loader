@@ -23,7 +23,6 @@ var AMDLoader;
 (function (AMDLoader) {
     AMDLoader.global = _amdLoaderGlobal;
     AMDLoader.isWebWorker = (typeof AMDLoader.global.importScripts === 'function');
-    AMDLoader.hasPerformanceNow = (AMDLoader.global.performance && typeof AMDLoader.global.performance.now === 'function');
     var Environment = (function () {
         function Environment(opts) {
             this.isWindows = opts.isWindows;
@@ -72,10 +71,6 @@ var AMDLoader;
         LoaderEventType[LoaderEventType["NodeBeginNativeRequire"] = 33] = "NodeBeginNativeRequire";
         LoaderEventType[LoaderEventType["NodeEndNativeRequire"] = 34] = "NodeEndNativeRequire";
     })(LoaderEventType = AMDLoader.LoaderEventType || (AMDLoader.LoaderEventType = {}));
-    function getHighPerformanceTimestamp() {
-        return (AMDLoader.hasPerformanceNow ? AMDLoader.global.performance.now() : Date.now());
-    }
-    AMDLoader.getHighPerformanceTimestamp = getHighPerformanceTimestamp;
     var LoaderEvent = (function () {
         function LoaderEvent(type, detail, timestamp) {
             this.type = type;
@@ -90,7 +85,7 @@ var AMDLoader;
             this._events = [new LoaderEvent(LoaderEventType.LoaderAvailable, '', loaderAvailableTimestamp)];
         }
         LoaderEventRecorder.prototype.record = function (type, detail) {
-            this._events.push(new LoaderEvent(type, detail, getHighPerformanceTimestamp()));
+            this._events.push(new LoaderEvent(type, detail, AMDLoader.Utilities.getHighPerformanceTimestamp()));
         };
         LoaderEventRecorder.prototype.getEvents = function () {
             return this._events;
@@ -197,9 +192,18 @@ var AMDLoader;
         Utilities.isAnonymousModule = function (id) {
             return /^===anonymous/.test(id);
         };
+        Utilities.getHighPerformanceTimestamp = function () {
+            if (!this.PERFORMANCE_NOW_PROBED) {
+                this.PERFORMANCE_NOW_PROBED = true;
+                this.HAS_PERFORMANCE_NOW = (AMDLoader.global.performance && typeof AMDLoader.global.performance.now === 'function');
+            }
+            return (this.HAS_PERFORMANCE_NOW ? AMDLoader.global.performance.now() : Date.now());
+        };
         return Utilities;
     }());
     Utilities.NEXT_ANONYMOUS_ID = 1;
+    Utilities.PERFORMANCE_NOW_PROBED = false;
+    Utilities.HAS_PERFORMANCE_NOW = false;
     AMDLoader.Utilities = Utilities;
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
@@ -1666,6 +1670,6 @@ var AMDLoader;
     }
     if (typeof AMDLoader.global.define !== 'function' || !AMDLoader.global.define.amd) {
         init(AMDLoader._env);
-        loaderAvailableTimestamp = AMDLoader.getHighPerformanceTimestamp();
+        loaderAvailableTimestamp = AMDLoader.Utilities.getHighPerformanceTimestamp();
     }
 })(AMDLoader || (AMDLoader = {}));

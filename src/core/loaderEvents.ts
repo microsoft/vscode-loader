@@ -22,10 +22,6 @@ namespace AMDLoader {
 		NodeEndNativeRequire = 34
 	}
 
-	export function getHighPerformanceTimestamp(): number {
-		return (hasPerformanceNow ? global.performance.now() : Date.now());
-	}
-
 	export class LoaderEvent {
 		public type: LoaderEventType;
 		public timestamp: number;
@@ -51,7 +47,7 @@ namespace AMDLoader {
 		}
 
 		public record(type: LoaderEventType, detail: string): void {
-			this._events.push(new LoaderEvent(type, detail, getHighPerformanceTimestamp()));
+			this._events.push(new LoaderEvent(type, detail, Utilities.getHighPerformanceTimestamp()));
 		}
 
 		public getEvents(): LoaderEvent[] {

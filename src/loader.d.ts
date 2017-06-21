@@ -32,7 +32,6 @@ declare var Map: MapConstructor;
 declare namespace AMDLoader {
     const global: any;
     const isWebWorker: boolean;
-    const hasPerformanceNow: boolean;
     class Environment {
         static detect(): Environment;
         readonly isWindows: boolean;
@@ -60,7 +59,6 @@ declare namespace AMDLoader {
         NodeBeginNativeRequire = 33,
         NodeEndNativeRequire = 34,
     }
-    function getHighPerformanceTimestamp(): number;
     class LoaderEvent {
         type: LoaderEventType;
         timestamp: number;
@@ -99,9 +97,12 @@ declare namespace AMDLoader {
         static forEachProperty(obj: any, callback: (key: string, value: any) => void): void;
         static isEmpty(obj: any): boolean;
         static recursiveClone(obj: any): any;
-        static NEXT_ANONYMOUS_ID: number;
+        private static NEXT_ANONYMOUS_ID;
         static generateAnonymousModule(): string;
         static isAnonymousModule(id: string): boolean;
+        private static PERFORMANCE_NOW_PROBED;
+        private static HAS_PERFORMANCE_NOW;
+        static getHighPerformanceTimestamp(): number;
     }
 }
 declare namespace AMDLoader {

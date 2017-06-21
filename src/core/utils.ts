@@ -83,7 +83,7 @@ namespace AMDLoader {
 		}
 
 
-		static NEXT_ANONYMOUS_ID = 1;
+		private static NEXT_ANONYMOUS_ID = 1;
 
 		public static generateAnonymousModule(): string {
 			return '===anonymous' + (Utilities.NEXT_ANONYMOUS_ID++) + '===';
@@ -91,6 +91,17 @@ namespace AMDLoader {
 
 		public static isAnonymousModule(id: string): boolean {
 			return /^===anonymous/.test(id);
+		}
+
+		private static PERFORMANCE_NOW_PROBED = false;
+		private static HAS_PERFORMANCE_NOW = false;
+
+		public static getHighPerformanceTimestamp(): number {
+			if (!this.PERFORMANCE_NOW_PROBED) {
+				this.PERFORMANCE_NOW_PROBED = true;
+				this.HAS_PERFORMANCE_NOW = (global.performance && typeof global.performance.now === 'function');
+			}
+			return (this.HAS_PERFORMANCE_NOW ? global.performance.now() : Date.now());
 		}
 	}
 }

@@ -137,7 +137,7 @@ namespace AMDLoader {
 
 	if (typeof global.define !== 'function' || !global.define.amd) {
 		init(_env);
-		loaderAvailableTimestamp = getHighPerformanceTimestamp();
+		loaderAvailableTimestamp = Utilities.getHighPerformanceTimestamp();
 	}
 
 }
