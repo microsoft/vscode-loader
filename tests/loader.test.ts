@@ -19,7 +19,7 @@ function assertConfigurationIs(actual: loader.IConfigurationOptions, expected: l
 }
 
 QUnit.test('Default configuration', () => {
-	var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions();
+	var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false);
 	assertConfigurationIs(result, {
 		baseUrl: '',
 		catchError: false,
@@ -34,7 +34,7 @@ QUnit.test('Default configuration', () => {
 });
 
 function createSimpleKnownConfigurationOptions(): loader.IConfigurationOptions {
-	return loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	return loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
 		baseUrl: 'myBaseUrl',
 		catchError: true,
 		ignoreDuplicateModules: ['a'],
@@ -64,7 +64,7 @@ QUnit.test('Simple known configuration options', () => {
 
 QUnit.test('Overwriting known configuration options', () => {
 	// Overwrite baseUrl 1
-	var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
 		baseUrl: ''
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
@@ -80,7 +80,7 @@ QUnit.test('Overwriting known configuration options', () => {
 	});
 
 	// Overwrite baseUrl 2
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
 		baseUrl: '/'
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
@@ -96,7 +96,7 @@ QUnit.test('Overwriting known configuration options', () => {
 	});
 
 	// Overwrite catchError
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
 		catchError: false
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
@@ -112,7 +112,7 @@ QUnit.test('Overwriting known configuration options', () => {
 	});
 
 	// Contribute additional ignoreDuplicateModules
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
 		ignoreDuplicateModules: ['b']
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
@@ -128,7 +128,7 @@ QUnit.test('Overwriting known configuration options', () => {
 	});
 
 	// Change defined paths
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
 		paths: { 'a': 'c' }
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
@@ -144,7 +144,7 @@ QUnit.test('Overwriting known configuration options', () => {
 	});
 
 	// Contribute additional module configs
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
 		config: { 'e': {} }
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
@@ -160,7 +160,7 @@ QUnit.test('Overwriting known configuration options', () => {
 	});
 
 	// Change defined module configs
-	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+	result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
 		config: { 'd': { 'a': 'a' } }
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
@@ -177,7 +177,7 @@ QUnit.test('Overwriting known configuration options', () => {
 });
 
 QUnit.test('Overwriting unknown configuration options', () => {
-	var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions();
+	var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false);
 	assertConfigurationIs(result, {
 		baseUrl: '',
 		catchError: false,
@@ -247,7 +247,7 @@ QUnit.test('Overwriting unknown configuration options', () => {
 QUnit.module('Configuration');
 
 QUnit.test('moduleIdToPath', () => {
-	var config = new loader.Configuration(false, {
+	var config = new loader.Configuration(loader.Environment.detect(), {
 		baseUrl: 'prefix',
 		urlArgs: 'suffix',
 		paths: {
@@ -291,7 +291,7 @@ QUnit.test('moduleIdToPath', () => {
 });
 
 QUnit.test('requireToUrl', () => {
-	var config = new loader.Configuration(false, {
+	var config = new loader.Configuration(loader.Environment.detect(), {
 		baseUrl: 'prefix',
 		urlArgs: 'suffix',
 		paths: {
@@ -332,7 +332,7 @@ QUnit.test('requireToUrl', () => {
 });
 
 QUnit.test('ignoreDuplicateModules', () => {
-	var config = new loader.Configuration(false, {
+	var config = new loader.Configuration(loader.Environment.detect(), {
 		ignoreDuplicateModules: ['a1', 'a2', 'a/b/c']
 	});
 
@@ -717,7 +717,7 @@ QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dep
 });
 
 QUnit.test('Bug #12024: [loader] Should not append .js to URLs containing query string', () => {
-	var config = new loader.Configuration(false, {
+	var config = new loader.Configuration(loader.Environment.detect(), {
 		baseUrl: 'prefix',
 		paths: {
 			'searchBoxJss': 'http://services.social.microsoft.com/search/Widgets/SearchBox.jss?boxid=HeaderSearchTextBox&btnid=HeaderSearchButton&brand=Msdn&loc=en-us&Refinement=198,234&focusOnInit=false&iroot=vscom&emptyWatermark=true&searchButtonTooltip=Search here'

@@ -83,7 +83,7 @@ namespace AMDLoader {
 		/**
 		 * Ensure configuration options make sense
 		 */
-		private static validateConfigurationOptions(options: IConfigurationOptions): IConfigurationOptions {
+		private static validateConfigurationOptions(isWebWorker: boolean, options: IConfigurationOptions): IConfigurationOptions {
 
 			function defaultOnError(err): void {
 				if (err.errorCode === 'load') {
@@ -165,7 +165,7 @@ namespace AMDLoader {
 			return options;
 		}
 
-		public static mergeConfigurationOptions(overwrite: IConfigurationOptions = null, base: IConfigurationOptions = null): IConfigurationOptions {
+		public static mergeConfigurationOptions(isWebWorker: boolean, overwrite: IConfigurationOptions = null, base: IConfigurationOptions = null): IConfigurationOptions {
 			let result: IConfigurationOptions = Utilities.recursiveClone(base || {});
 
 			// Merge known properties and overwrite the unknown ones
@@ -181,13 +181,13 @@ namespace AMDLoader {
 				}
 			});
 
-			return ConfigurationOptionsUtil.validateConfigurationOptions(result);
+			return ConfigurationOptionsUtil.validateConfigurationOptions(isWebWorker, result);
 		}
 	}
 
 	export class Configuration {
 
-		private readonly _isNode: boolean;
+		private readonly _env: Environment;
 
 		private options: IConfigurationOptions;
 
@@ -206,21 +206,21 @@ namespace AMDLoader {
 		 */
 		private sortedPathsRules: { from: string; to: string[]; }[];
 
-		constructor(isNode: boolean, options?: IConfigurationOptions) {
-			this._isNode = isNode;
-			this.options = ConfigurationOptionsUtil.mergeConfigurationOptions(options);
+		constructor(env: Environment, options?: IConfigurationOptions) {
+			this._env = env;
+			this.options = ConfigurationOptionsUtil.mergeConfigurationOptions(this._env.isWebWorker, options);
 
 			this._createIgnoreDuplicateModulesMap();
 			this._createNodeModulesMap();
 			this._createSortedPathsRules();
 
 			if (this.options.baseUrl === '') {
-				if (this._isNode && this.options.nodeRequire && this.options.nodeRequire.main && this.options.nodeRequire.main.filename) {
+				if (this._env.isNode && this.options.nodeRequire && this.options.nodeRequire.main && this.options.nodeRequire.main.filename) {
 					let nodeMain = this.options.nodeRequire.main.filename;
 					let dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
 					this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
 				}
-				if (this._isNode && this.options.nodeMain) {
+				if (this._env.isNode && this.options.nodeMain) {
 					let nodeMain = this.options.nodeMain;
 					let dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
 					this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
@@ -272,7 +272,7 @@ namespace AMDLoader {
 		 * @result A new configuration
 		 */
 		public cloneAndMerge(options?: IConfigurationOptions): Configuration {
-			return new Configuration(this._isNode, ConfigurationOptionsUtil.mergeConfigurationOptions(options, this.options));
+			return new Configuration(this._env, ConfigurationOptionsUtil.mergeConfigurationOptions(this._env.isWebWorker, options, this.options));
 		}
 
 		/**

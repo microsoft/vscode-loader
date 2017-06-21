@@ -31,16 +31,17 @@ interface MapConstructor {
 declare var Map: MapConstructor;
 declare namespace AMDLoader {
     const global: any;
-    const isWebWorker: boolean;
     class Environment {
         static detect(): Environment;
         readonly isWindows: boolean;
         readonly isNode: boolean;
         readonly isElectronRenderer: boolean;
+        readonly isWebWorker: boolean;
         constructor(opts: {
             isWindows: boolean;
             isNode: boolean;
             isElectronRenderer: boolean;
+            isWebWorker: boolean;
         });
         private static _isWindows();
     }
@@ -184,11 +185,11 @@ declare namespace AMDLoader {
         /**
          * Ensure configuration options make sense
          */
-        private static validateConfigurationOptions(options);
-        static mergeConfigurationOptions(overwrite?: IConfigurationOptions, base?: IConfigurationOptions): IConfigurationOptions;
+        private static validateConfigurationOptions(isWebWorker, options);
+        static mergeConfigurationOptions(isWebWorker: boolean, overwrite?: IConfigurationOptions, base?: IConfigurationOptions): IConfigurationOptions;
     }
     class Configuration {
-        private readonly _isNode;
+        private readonly _env;
         private options;
         /**
          * Generated from the `ignoreDuplicateModules` configuration option.
@@ -202,7 +203,7 @@ declare namespace AMDLoader {
          * Generated from the `paths` configuration option. These are sorted with the longest `from` first.
          */
         private sortedPathsRules;
-        constructor(isNode: boolean, options?: IConfigurationOptions);
+        constructor(env: Environment, options?: IConfigurationOptions);
         private _createIgnoreDuplicateModulesMap();
         private _createNodeModulesMap();
         private _createSortedPathsRules();

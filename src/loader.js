@@ -22,18 +22,19 @@ var _amdLoaderGlobal = this;
 var AMDLoader;
 (function (AMDLoader) {
     AMDLoader.global = _amdLoaderGlobal;
-    AMDLoader.isWebWorker = (typeof AMDLoader.global.importScripts === 'function');
     var Environment = (function () {
         function Environment(opts) {
             this.isWindows = opts.isWindows;
             this.isNode = opts.isNode;
             this.isElectronRenderer = opts.isElectronRenderer;
+            this.isWebWorker = opts.isWebWorker;
         }
         Environment.detect = function () {
             return new Environment({
                 isWindows: this._isWindows(),
                 isNode: (typeof module !== 'undefined' && !!module.exports),
-                isElectronRenderer: (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer')
+                isElectronRenderer: (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer'),
+                isWebWorker: (typeof AMDLoader.global.importScripts === 'function')
             });
         };
         Environment._isWindows = function () {
@@ -218,7 +219,7 @@ var AMDLoader;
         /**
          * Ensure configuration options make sense
          */
-        ConfigurationOptionsUtil.validateConfigurationOptions = function (options) {
+        ConfigurationOptionsUtil.validateConfigurationOptions = function (isWebWorker, options) {
             function defaultOnError(err) {
                 if (err.errorCode === 'load') {
                     console.error('Loading "' + err.moduleId + '" failed');
@@ -254,7 +255,7 @@ var AMDLoader;
             }
             if (typeof options.catchError === 'undefined') {
                 // Catch errors by default in web workers, do not catch errors by default in other contexts
-                options.catchError = AMDLoader.isWebWorker;
+                options.catchError = isWebWorker;
             }
             if (typeof options.urlArgs !== 'string') {
                 options.urlArgs = '';
@@ -295,7 +296,7 @@ var AMDLoader;
             }
             return options;
         };
-        ConfigurationOptionsUtil.mergeConfigurationOptions = function (overwrite, base) {
+        ConfigurationOptionsUtil.mergeConfigurationOptions = function (isWebWorker, overwrite, base) {
             if (overwrite === void 0) { overwrite = null; }
             if (base === void 0) { base = null; }
             var result = AMDLoader.Utilities.recursiveClone(base || {});
@@ -314,25 +315,25 @@ var AMDLoader;
                     result[key] = AMDLoader.Utilities.recursiveClone(value);
                 }
             });
-            return ConfigurationOptionsUtil.validateConfigurationOptions(result);
+            return ConfigurationOptionsUtil.validateConfigurationOptions(isWebWorker, result);
         };
         return ConfigurationOptionsUtil;
     }());
     AMDLoader.ConfigurationOptionsUtil = ConfigurationOptionsUtil;
     var Configuration = (function () {
-        function Configuration(isNode, options) {
-            this._isNode = isNode;
-            this.options = ConfigurationOptionsUtil.mergeConfigurationOptions(options);
+        function Configuration(env, options) {
+            this._env = env;
+            this.options = ConfigurationOptionsUtil.mergeConfigurationOptions(this._env.isWebWorker, options);
             this._createIgnoreDuplicateModulesMap();
             this._createNodeModulesMap();
             this._createSortedPathsRules();
             if (this.options.baseUrl === '') {
-                if (this._isNode && this.options.nodeRequire && this.options.nodeRequire.main && this.options.nodeRequire.main.filename) {
+                if (this._env.isNode && this.options.nodeRequire && this.options.nodeRequire.main && this.options.nodeRequire.main.filename) {
                     var nodeMain = this.options.nodeRequire.main.filename;
                     var dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
                     this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
                 }
-                if (this._isNode && this.options.nodeMain) {
+                if (this._env.isNode && this.options.nodeMain) {
                     var nodeMain = this.options.nodeMain;
                     var dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
                     this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
@@ -383,7 +384,7 @@ var AMDLoader;
          * @result A new configuration
          */
         Configuration.prototype.cloneAndMerge = function (options) {
-            return new Configuration(this._isNode, ConfigurationOptionsUtil.mergeConfigurationOptions(options, this.options));
+            return new Configuration(this._env, ConfigurationOptionsUtil.mergeConfigurationOptions(this._env.isWebWorker, options, this.options));
         };
         /**
          * Get current options bag. Useful for passing it forward to plugins.
@@ -817,7 +818,7 @@ var AMDLoader;
         return NodeScriptLoader;
     }());
     NodeScriptLoader._BOM = 0xFEFF;
-    AMDLoader.scriptLoader = new OnlyOnceScriptLoader(AMDLoader.isWebWorker ?
+    AMDLoader.scriptLoader = new OnlyOnceScriptLoader(AMDLoader._env.isWebWorker ?
         new WorkerScriptLoader()
         : AMDLoader._env.isNode ?
             new NodeScriptLoader(AMDLoader._env)
@@ -1023,7 +1024,7 @@ var AMDLoader;
             this._env = env;
             this._loaderAvailableTimestamp = loaderAvailableTimestamp;
             this._moduleIdProvider = new ModuleIdProvider();
-            this._config = new AMDLoader.Configuration(this._env.isNode);
+            this._config = new AMDLoader.Configuration(this._env);
             this._scriptLoader = scriptLoader;
             this._modules2 = [];
             this._knownModules2 = [];
@@ -1199,7 +1200,7 @@ var AMDLoader;
         ModuleManager.prototype.configure = function (params, shouldOverwrite) {
             var oldShouldRecordStats = this._config.shouldRecordStats();
             if (shouldOverwrite) {
-                this._config = new AMDLoader.Configuration(this._env.isNode, params);
+                this._config = new AMDLoader.Configuration(this._env, params);
             }
             else {
                 this._config = this._config.cloneAndMerge(params);

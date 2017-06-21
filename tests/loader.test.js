@@ -15,7 +15,7 @@ function assertConfigurationIs(actual, expected) {
     QUnit.deepEqual(actual, expected, 'Configuration options are equal');
 }
 QUnit.test('Default configuration', function () {
-    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions();
+    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false);
     assertConfigurationIs(result, {
         baseUrl: '',
         catchError: false,
@@ -29,7 +29,7 @@ QUnit.test('Default configuration', function () {
     });
 });
 function createSimpleKnownConfigurationOptions() {
-    return loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    return loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         baseUrl: 'myBaseUrl',
         catchError: true,
         ignoreDuplicateModules: ['a'],
@@ -57,7 +57,7 @@ QUnit.test('Simple known configuration options', function () {
 });
 QUnit.test('Overwriting known configuration options', function () {
     // Overwrite baseUrl 1
-    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         baseUrl: ''
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -72,7 +72,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Overwrite baseUrl 2
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         baseUrl: '/'
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -87,7 +87,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Overwrite catchError
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         catchError: false
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -102,7 +102,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Contribute additional ignoreDuplicateModules
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         ignoreDuplicateModules: ['b']
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -117,7 +117,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Change defined paths
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         paths: { 'a': 'c' }
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -132,7 +132,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Contribute additional module configs
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         config: { 'e': {} }
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -147,7 +147,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Change defined module configs
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
         config: { 'd': { 'a': 'a' } }
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -163,7 +163,7 @@ QUnit.test('Overwriting known configuration options', function () {
     });
 });
 QUnit.test('Overwriting unknown configuration options', function () {
-    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions();
+    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false);
     assertConfigurationIs(result, {
         baseUrl: '',
         catchError: false,
@@ -228,7 +228,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
 });
 QUnit.module('Configuration');
 QUnit.test('moduleIdToPath', function () {
-    var config = new loader.Configuration(false, {
+    var config = new loader.Configuration(loader.Environment.detect(), {
         baseUrl: 'prefix',
         urlArgs: 'suffix',
         paths: {
@@ -264,7 +264,7 @@ QUnit.test('moduleIdToPath', function () {
     QUnit.equal(config.moduleIdToPaths('https://a'), 'https://a.js?suffix');
 });
 QUnit.test('requireToUrl', function () {
-    var config = new loader.Configuration(false, {
+    var config = new loader.Configuration(loader.Environment.detect(), {
         baseUrl: 'prefix',
         urlArgs: 'suffix',
         paths: {
@@ -298,7 +298,7 @@ QUnit.test('requireToUrl', function () {
     QUnit.equal(config.requireToUrl('https://a'), 'https://a?suffix');
 });
 QUnit.test('ignoreDuplicateModules', function () {
-    var config = new loader.Configuration(false, {
+    var config = new loader.Configuration(loader.Environment.detect(), {
         ignoreDuplicateModules: ['a1', 'a2', 'a/b/c']
     });
     QUnit.equal(config.isDuplicateMessageIgnoredFor('a1'), true);
@@ -637,7 +637,7 @@ QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dep
     }, null);
 });
 QUnit.test('Bug #12024: [loader] Should not append .js to URLs containing query string', function () {
-    var config = new loader.Configuration(false, {
+    var config = new loader.Configuration(loader.Environment.detect(), {
         baseUrl: 'prefix',
         paths: {
             'searchBoxJss': 'http://services.social.microsoft.com/search/Widgets/SearchBox.jss?boxid=HeaderSearchTextBox&btnid=HeaderSearchButton&brand=Msdn&loc=en-us&Refinement=198,234&focusOnInit=false&iroot=vscom&emptyWatermark=true&searchButtonTooltip=Search here'

@@ -363,7 +363,7 @@ namespace AMDLoader {
 			this._env = env;
 			this._loaderAvailableTimestamp = loaderAvailableTimestamp;
 			this._moduleIdProvider = new ModuleIdProvider();
-			this._config = new Configuration(this._env.isNode);
+			this._config = new Configuration(this._env);
 			this._scriptLoader = scriptLoader;
 			this._modules2 = [];
 			this._knownModules2 = [];
@@ -566,7 +566,7 @@ namespace AMDLoader {
 		public configure(params: IConfigurationOptions, shouldOverwrite: boolean): void {
 			let oldShouldRecordStats = this._config.shouldRecordStats();
 			if (shouldOverwrite) {
-				this._config = new Configuration(this._env.isNode, params);
+				this._config = new Configuration(this._env, params);
 			} else {
 				this._config = this._config.cloneAndMerge(params);
 			}

@@ -417,7 +417,7 @@ namespace AMDLoader {
 	}
 
 	export const scriptLoader: IScriptLoader = new OnlyOnceScriptLoader(
-		isWebWorker ?
+		_env.isWebWorker ?
 			new WorkerScriptLoader()
 			: _env.isNode ?
 				new NodeScriptLoader(_env)
