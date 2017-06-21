@@ -60,18 +60,36 @@ declare var Map: MapConstructor;
 namespace AMDLoader {
 	export const global: any = _amdLoaderGlobal
 	export const isNode = (typeof module !== 'undefined' && !!module.exports);
-	export const isWindows = (function _isWindows() {
-		if (typeof navigator !== 'undefined') {
-			if (navigator.userAgent && navigator.userAgent.indexOf('Windows') >= 0) {
-				return true;
-			}
-		}
-		if (typeof process !== 'undefined') {
-			return (process.platform === 'win32');
-		}
-		return false;
-	})();
 	export const isWebWorker = (typeof global.importScripts === 'function');
 	export const isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
 	export const hasPerformanceNow = (global.performance && typeof global.performance.now === 'function');
+
+	export class Environment {
+
+		public static detect(): Environment {
+			return new Environment({
+				isWindows: this._isWindows()
+			});
+		}
+
+		public readonly isWindows: boolean;
+
+		constructor(opts: {
+			isWindows: boolean
+		}) {
+			this.isWindows = opts.isWindows;
+		}
+
+		private static _isWindows(): boolean {
+			if (typeof navigator !== 'undefined') {
+				if (navigator.userAgent && navigator.userAgent.indexOf('Windows') >= 0) {
+					return true;
+				}
+			}
+			if (typeof process !== 'undefined') {
+				return (process.platform === 'win32');
+			}
+			return false;
+		}
+	}
 }

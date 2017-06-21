@@ -169,6 +169,8 @@ namespace AMDLoader {
 
 		private static _BOM = 0xFEFF;
 
+		private readonly _env: Environment;
+
 		private _didPatchNodeRequire: boolean;
 		private _didInitialize: boolean;
 		private _jsflags: string;
@@ -177,7 +179,8 @@ namespace AMDLoader {
 		private _path: INodePath;
 		private _crypto: INodeCrypto;
 
-		constructor() {
+		constructor(env: Environment) {
+			this._env = env;
 			this._didInitialize = false;
 			this._didPatchNodeRequire = false;
 
@@ -285,7 +288,7 @@ namespace AMDLoader {
 
 			} else {
 
-				scriptSrc = Utilities.fileUriToFilePath(scriptSrc);
+				scriptSrc = Utilities.fileUriToFilePath(this._env, scriptSrc);
 
 				this._fs.readFile(scriptSrc, { encoding: 'utf8' }, (err, data: string) => {
 					if (err) {
@@ -411,11 +414,13 @@ namespace AMDLoader {
 		}
 	}
 
+	export const env = Environment.detect();
+
 	export const scriptLoader: IScriptLoader = new OnlyOnceScriptLoader(
 		isWebWorker ?
 			new WorkerScriptLoader()
 			: isNode ?
-				new NodeScriptLoader()
+				new NodeScriptLoader(env)
 				: new BrowserScriptLoader()
 	);
 }

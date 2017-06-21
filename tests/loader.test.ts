@@ -752,18 +752,23 @@ QUnit.test('Bug #12020: [loader] relative (synchronous) require does not normali
 });
 
 QUnit.test('Utilities.fileUriToFilePath', () => {
-	var test = (input: string, expected: string) => {
-		QUnit.equal(loader.Utilities.fileUriToFilePath(input), expected, 'Result for ' + input);
+	const win = new AMDLoader.Environment({
+		isWindows: true
+	});
+	const other = new AMDLoader.Environment({
+		isWindows: false
+	});
+	var test = (env: AMDLoader.Environment, input: string, expected: string) => {
+		QUnit.equal(loader.Utilities.fileUriToFilePath(env, input), expected, 'Result for ' + input);
 	};
-	if (AMDLoader.isWindows) {
-		test('file:///c:/alex.txt', 'c:/alex.txt');
-		test('file://monacotools/isi.txt', '//monacotools/isi.txt');
-		test('file://monacotools1/certificates/SSL/', '//monacotools1/certificates/SSL/');
-	} else {
-		test('file:///c:/alex.txt', '/c:/alex.txt');
-		test('file://monacotools/isi.txt', 'monacotools/isi.txt');
-		test('file://monacotools1/certificates/SSL/', 'monacotools1/certificates/SSL/');
-	}
+
+	test(win, 'file:///c:/alex.txt', 'c:/alex.txt');
+	test(win, 'file://monacotools/isi.txt', '//monacotools/isi.txt');
+	test(win, 'file://monacotools1/certificates/SSL/', '//monacotools1/certificates/SSL/');
+
+	test(other, 'file:///c:/alex.txt', '/c:/alex.txt');
+	test(other, 'file://monacotools/isi.txt', 'monacotools/isi.txt');
+	test(other, 'file://monacotools1/certificates/SSL/', 'monacotools1/certificates/SSL/');
 });
 
 QUnit.test('Utilities.containsQueryString', () => {

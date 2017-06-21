@@ -32,10 +32,17 @@ declare var Map: MapConstructor;
 declare namespace AMDLoader {
     const global: any;
     const isNode: boolean;
-    const isWindows: boolean;
     const isWebWorker: boolean;
     const isElectronRenderer: boolean;
     const hasPerformanceNow: boolean;
+    class Environment {
+        static detect(): Environment;
+        readonly isWindows: boolean;
+        constructor(opts: {
+            isWindows: boolean;
+        });
+        private static _isWindows();
+    }
 }
 declare namespace AMDLoader {
     enum LoaderEventType {
@@ -78,7 +85,7 @@ declare namespace AMDLoader {
         /**
          * This method does not take care of / vs \
          */
-        static fileUriToFilePath(uri: string): string;
+        static fileUriToFilePath(env: Environment, uri: string): string;
         static startsWith(haystack: string, needle: string): boolean;
         static endsWith(haystack: string, needle: string): boolean;
         static containsQueryString(url: string): boolean;
@@ -251,6 +258,7 @@ declare namespace AMDLoader {
     interface IScriptLoader {
         load(moduleManager: IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void): void;
     }
+    const env: Environment;
     const scriptLoader: IScriptLoader;
 }
 declare namespace AMDLoader {

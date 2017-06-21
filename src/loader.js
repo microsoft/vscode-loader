@@ -2,6 +2,11 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+'use strict';
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------------------------
  *---------------------------------------------------------------------------------------------
  *---------------------------------------------------------------------------------------------
@@ -18,20 +23,32 @@ var AMDLoader;
 (function (AMDLoader) {
     AMDLoader.global = _amdLoaderGlobal;
     AMDLoader.isNode = (typeof module !== 'undefined' && !!module.exports);
-    AMDLoader.isWindows = (function _isWindows() {
-        if (typeof navigator !== 'undefined') {
-            if (navigator.userAgent && navigator.userAgent.indexOf('Windows') >= 0) {
-                return true;
-            }
-        }
-        if (typeof process !== 'undefined') {
-            return (process.platform === 'win32');
-        }
-        return false;
-    })();
     AMDLoader.isWebWorker = (typeof AMDLoader.global.importScripts === 'function');
     AMDLoader.isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
     AMDLoader.hasPerformanceNow = (AMDLoader.global.performance && typeof AMDLoader.global.performance.now === 'function');
+    var Environment = (function () {
+        function Environment(opts) {
+            this.isWindows = opts.isWindows;
+        }
+        Environment.detect = function () {
+            return new Environment({
+                isWindows: this._isWindows()
+            });
+        };
+        Environment._isWindows = function () {
+            if (typeof navigator !== 'undefined') {
+                if (navigator.userAgent && navigator.userAgent.indexOf('Windows') >= 0) {
+                    return true;
+                }
+            }
+            if (typeof process !== 'undefined') {
+                return (process.platform === 'win32');
+            }
+            return false;
+        };
+        return Environment;
+    }());
+    AMDLoader.Environment = Environment;
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -39,6 +56,7 @@ var AMDLoader;
  *--------------------------------------------------------------------------------------------*/
 var AMDLoader;
 (function (AMDLoader) {
+    var LoaderEventType;
     (function (LoaderEventType) {
         LoaderEventType[LoaderEventType["LoaderAvailable"] = 1] = "LoaderAvailable";
         LoaderEventType[LoaderEventType["BeginLoadingScript"] = 10] = "BeginLoadingScript";
@@ -50,8 +68,7 @@ var AMDLoader;
         LoaderEventType[LoaderEventType["NodeEndEvaluatingScript"] = 32] = "NodeEndEvaluatingScript";
         LoaderEventType[LoaderEventType["NodeBeginNativeRequire"] = 33] = "NodeBeginNativeRequire";
         LoaderEventType[LoaderEventType["NodeEndNativeRequire"] = 34] = "NodeEndNativeRequire";
-    })(AMDLoader.LoaderEventType || (AMDLoader.LoaderEventType = {}));
-    var LoaderEventType = AMDLoader.LoaderEventType;
+    })(LoaderEventType = AMDLoader.LoaderEventType || (AMDLoader.LoaderEventType = {}));
     function getHighPerformanceTimestamp() {
         return (AMDLoader.hasPerformanceNow ? AMDLoader.global.performance.now() : Date.now());
     }
@@ -87,9 +104,9 @@ var AMDLoader;
         NullLoaderEventRecorder.prototype.getEvents = function () {
             return [];
         };
-        NullLoaderEventRecorder.INSTANCE = new NullLoaderEventRecorder();
         return NullLoaderEventRecorder;
     }());
+    NullLoaderEventRecorder.INSTANCE = new NullLoaderEventRecorder();
     AMDLoader.NullLoaderEventRecorder = NullLoaderEventRecorder;
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
@@ -104,9 +121,9 @@ var AMDLoader;
         /**
          * This method does not take care of / vs \
          */
-        Utilities.fileUriToFilePath = function (uri) {
+        Utilities.fileUriToFilePath = function (env, uri) {
             uri = decodeURI(uri);
-            if (AMDLoader.isWindows) {
+            if (env.isWindows) {
                 if (/^file:\/\/\//.test(uri)) {
                     // This is a URI without a hostname => return only the path segment
                     return uri.substr(8);
@@ -177,9 +194,9 @@ var AMDLoader;
         Utilities.isAnonymousModule = function (id) {
             return /^===anonymous/.test(id);
         };
-        Utilities.NEXT_ANONYMOUS_ID = 1;
         return Utilities;
     }());
+    Utilities.NEXT_ANONYMOUS_ID = 1;
     AMDLoader.Utilities = Utilities;
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
@@ -255,6 +272,7 @@ var AMDLoader;
             if (typeof options.onNodeCachedData !== 'function') {
                 options.onNodeCachedData = function (err, data) {
                     if (!err) {
+                        // ignore
                     }
                     else if (err.errorCode === 'cachedDataRejected') {
                         console.warn('Rejected cached data from file: ' + err.path);
@@ -586,7 +604,8 @@ var AMDLoader;
         return WorkerScriptLoader;
     }());
     var NodeScriptLoader = (function () {
-        function NodeScriptLoader() {
+        function NodeScriptLoader(env) {
+            this._env = env;
             this._didInitialize = false;
             this._didPatchNodeRequire = false;
             // js-flags have an impact on cached data
@@ -626,6 +645,7 @@ var AMDLoader;
                         return mod.require(path);
                     }
                     finally {
+                        // nothing
                     }
                 };
                 require.resolve = function resolve(request) {
@@ -681,7 +701,7 @@ var AMDLoader;
                 callback();
             }
             else {
-                scriptSrc = AMDLoader.Utilities.fileUriToFilePath(scriptSrc);
+                scriptSrc = AMDLoader.Utilities.fileUriToFilePath(this._env, scriptSrc);
                 this._fs.readFile(scriptSrc, { encoding: 'utf8' }, function (err, data) {
                     if (err) {
                         errorback(err);
@@ -785,13 +805,14 @@ var AMDLoader;
             var timeout = minTimeout + Math.ceil(Math.random() * minTimeout);
             setTimeout(callback, timeout);
         };
-        NodeScriptLoader._BOM = 0xFEFF;
         return NodeScriptLoader;
     }());
+    NodeScriptLoader._BOM = 0xFEFF;
+    AMDLoader.env = AMDLoader.Environment.detect();
     AMDLoader.scriptLoader = new OnlyOnceScriptLoader(AMDLoader.isWebWorker ?
         new WorkerScriptLoader()
         : AMDLoader.isNode ?
-            new NodeScriptLoader()
+            new NodeScriptLoader(AMDLoader.env)
             : new BrowserScriptLoader());
 })(AMDLoader || (AMDLoader = {}));
 /*---------------------------------------------------------------------------------------------
@@ -845,9 +866,9 @@ var AMDLoader;
             }
             return result;
         };
-        ModuleIdResolver.ROOT = new ModuleIdResolver('');
         return ModuleIdResolver;
     }());
+    ModuleIdResolver.ROOT = new ModuleIdResolver('');
     AMDLoader.ModuleIdResolver = ModuleIdResolver;
     // ------------------------------------------------------------------------
     // Module
@@ -972,11 +993,11 @@ var AMDLoader;
         function RegularDependency(id) {
             this.id = id;
         }
-        RegularDependency.EXPORTS = new RegularDependency(0 /* EXPORTS */);
-        RegularDependency.MODULE = new RegularDependency(1 /* MODULE */);
-        RegularDependency.REQUIRE = new RegularDependency(2 /* REQUIRE */);
         return RegularDependency;
     }());
+    RegularDependency.EXPORTS = new RegularDependency(0 /* EXPORTS */);
+    RegularDependency.MODULE = new RegularDependency(1 /* MODULE */);
+    RegularDependency.REQUIRE = new RegularDependency(2 /* REQUIRE */);
     AMDLoader.RegularDependency = RegularDependency;
     var PluginDependency = (function () {
         function PluginDependency(id, pluginId, pluginParam) {
@@ -1517,11 +1538,6 @@ var AMDLoader;
     }());
     AMDLoader.ModuleManager = ModuleManager;
 })(AMDLoader || (AMDLoader = {}));
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-'use strict';
 // Limitation: To load jquery through the loader, always require 'jquery' and add a path for it in the loader configuration
 var define;
 var AMDLoader;
@@ -1549,11 +1565,11 @@ var AMDLoader;
                 moduleManager.enqueueDefineAnonymousModule(dependencies, callback);
             }
         }
-        DefineFunc.amd = {
-            jQuery: true
-        };
         return DefineFunc;
     }());
+    DefineFunc.amd = {
+        jQuery: true
+    };
     AMDLoader.DefineFunc = DefineFunc;
     var RequireFunc = (function () {
         function RequireFunc() {
