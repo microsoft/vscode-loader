@@ -739,7 +739,7 @@ var AMDLoader;
                     }
                     contents = nodeInstrumenter(contents, normalizedScriptSrc);
                     if (!opts.nodeCachedDataDir) {
-                        _this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, { filename: vmScriptSrc }, recorder);
+                        _this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, { filename: vmScriptSrc }, recorder);
                         callback();
                     }
                     else {
@@ -751,7 +751,7 @@ var AMDLoader;
                                 produceCachedData: typeof cachedData === 'undefined',
                                 cachedData: cachedData
                             };
-                            var script = _this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, options, recorder);
+                            var script = _this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, options, recorder);
                             callback();
                             _this._processCachedData(moduleManager, script, cachedDataPath_1);
                         });
@@ -759,12 +759,12 @@ var AMDLoader;
                 });
             }
         };
-        NodeScriptLoader.prototype._loadAndEvalScript = function (scriptSrc, vmScriptSrc, contents, options, recorder) {
+        NodeScriptLoader.prototype._loadAndEvalScript = function (moduleManager, scriptSrc, vmScriptSrc, contents, options, recorder) {
             // create script, run script
             recorder.record(AMDLoader.LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
             var script = new this._vm.Script(contents, options);
             var r = script.runInThisContext(options);
-            r.call(AMDLoader.global, AMDLoader.RequireFunc, AMDLoader.DefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
+            r.call(AMDLoader.global, moduleManager.getGlobalAMDRequireFunc(), moduleManager.getGlobalAMDDefineFunc(), vmScriptSrc, this._path.dirname(scriptSrc));
             // signal done
             recorder.record(AMDLoader.LoaderEventType.NodeEndEvaluatingScript, scriptSrc);
             return script;
@@ -1022,21 +1022,33 @@ var AMDLoader;
     var ModuleManager = (function () {
         function ModuleManager(env, scriptLoader, loaderAvailableTimestamp) {
             if (loaderAvailableTimestamp === void 0) { loaderAvailableTimestamp = 0; }
-            this._recorder = null;
             this._env = env;
+            this._scriptLoader = scriptLoader;
             this._loaderAvailableTimestamp = loaderAvailableTimestamp;
+            this._defineFunc = null;
+            this._requireFunc = null;
             this._moduleIdProvider = new ModuleIdProvider();
             this._config = new AMDLoader.Configuration(this._env);
-            this._scriptLoader = scriptLoader;
             this._modules2 = [];
             this._knownModules2 = [];
             this._inverseDependencies2 = [];
             this._inversePluginDependencies2 = new Map();
             this._currentAnnonymousDefineCall = null;
+            this._recorder = null;
             this._buildInfoPath = [];
             this._buildInfoDefineStack = [];
             this._buildInfoDependencies = [];
         }
+        ModuleManager.prototype.setGlobalAMDFuncs = function (defineFunc, requireFunc) {
+            this._defineFunc = defineFunc;
+            this._requireFunc = requireFunc;
+        };
+        ModuleManager.prototype.getGlobalAMDDefineFunc = function () {
+            return this._defineFunc;
+        };
+        ModuleManager.prototype.getGlobalAMDRequireFunc = function () {
+            return this._requireFunc;
+        };
         ModuleManager._findRelevantLocationInStack = function (needle, stack) {
             var normalize = function (str) { return str.replace(/\\/g, '/'); };
             var normalizedPath = normalize(needle);
@@ -1558,8 +1570,10 @@ var AMDLoader;
     var moduleManager;
     var loaderAvailableTimestamp;
     var scriptLoader = AMDLoader.createScriptLoader(_env);
-    var DefineFunc = (function () {
-        function DefineFunc(id, dependencies, callback) {
+    var DefineFunc;
+    var RequireFunc;
+    function createGlobalAMDFuncs() {
+        var _defineFunc = function (id, dependencies, callback) {
             if (typeof id !== 'string') {
                 callback = dependencies;
                 dependencies = id;
@@ -1578,18 +1592,19 @@ var AMDLoader;
             else {
                 moduleManager.enqueueDefineAnonymousModule(dependencies, callback);
             }
-        }
-        return DefineFunc;
-    }());
-    DefineFunc.amd = {
-        jQuery: true
-    };
-    AMDLoader.DefineFunc = DefineFunc;
-    var RequireFunc = (function () {
-        function RequireFunc() {
+        };
+        DefineFunc = _defineFunc;
+        DefineFunc.amd = {
+            jQuery: true
+        };
+        var _requireFunc_config = function (params, shouldOverwrite) {
+            if (shouldOverwrite === void 0) { shouldOverwrite = false; }
+            moduleManager.configure(params, shouldOverwrite);
+        };
+        var _requireFunc = function () {
             if (arguments.length === 1) {
                 if ((arguments[0] instanceof Object) && !Array.isArray(arguments[0])) {
-                    RequireFunc.config(arguments[0]);
+                    _requireFunc_config(arguments[0]);
                     return;
                 }
                 if (typeof arguments[0] === 'string') {
@@ -1603,37 +1618,27 @@ var AMDLoader;
                 }
             }
             throw new Error('Unrecognized require call');
-        }
-        RequireFunc.config = function (params, shouldOverwrite) {
-            if (shouldOverwrite === void 0) { shouldOverwrite = false; }
-            moduleManager.configure(params, shouldOverwrite);
         };
+        RequireFunc = _requireFunc;
+        RequireFunc.config = _requireFunc_config;
         RequireFunc.getConfig = function () {
             return moduleManager.getConfig().getOptionsLiteral();
         };
-        /**
-         * Non standard extension to reset completely the loader state. This is used for running amdjs tests
-         */
         RequireFunc.reset = function () {
             moduleManager = new AMDLoader.ModuleManager(_env, scriptLoader, loaderAvailableTimestamp);
+            moduleManager.setGlobalAMDFuncs(DefineFunc, RequireFunc);
         };
-        /**
-         * Non standard extension to fetch loader state for building purposes.
-         */
         RequireFunc.getBuildInfo = function () {
             return moduleManager.getBuildInfo();
         };
-        /**
-         * Non standard extension to fetch loader events
-         */
         RequireFunc.getStats = function () {
             return moduleManager.getLoaderEvents();
         };
-        return RequireFunc;
-    }());
-    AMDLoader.RequireFunc = RequireFunc;
+    }
     function init(env) {
+        createGlobalAMDFuncs();
         moduleManager = new AMDLoader.ModuleManager(env, scriptLoader, loaderAvailableTimestamp);
+        moduleManager.setGlobalAMDFuncs(DefineFunc, RequireFunc);
         if (env.isNode) {
             var _nodeRequire = (AMDLoader.global.require || require);
             var nodeRequire = function (what) {

@@ -16,9 +16,13 @@ namespace AMDLoader {
 	let loaderAvailableTimestamp: number;
 	const scriptLoader: IScriptLoader = createScriptLoader(_env);
 
-	export class DefineFunc {
+	let DefineFunc: IDefineFunc;
+	let RequireFunc: IRequireFunc;
 
-		constructor(id: any, dependencies: any, callback: any) {
+
+	function createGlobalAMDFuncs(): void {
+
+		const _defineFunc = function (id: any, dependencies: any, callback: any): void {
 			if (typeof id !== 'string') {
 				callback = dependencies;
 				dependencies = id;
@@ -37,19 +41,21 @@ namespace AMDLoader {
 			} else {
 				moduleManager.enqueueDefineAnonymousModule(dependencies, callback);
 			}
-		}
+		};
 
-		public static amd = {
+		DefineFunc = <any>_defineFunc;
+		DefineFunc.amd = {
 			jQuery: true
 		};
-	}
 
-	export class RequireFunc {
+		const _requireFunc_config = function (params: IConfigurationOptions, shouldOverwrite: boolean = false): void {
+			moduleManager.configure(params, shouldOverwrite);
+		};
 
-		constructor() {
+		const _requireFunc = function () {
 			if (arguments.length === 1) {
 				if ((arguments[0] instanceof Object) && !Array.isArray(arguments[0])) {
-					RequireFunc.config(arguments[0]);
+					_requireFunc_config(arguments[0]);
 					return;
 				}
 				if (typeof arguments[0] === 'string') {
@@ -63,40 +69,32 @@ namespace AMDLoader {
 				}
 			}
 			throw new Error('Unrecognized require call');
-		}
+		};
 
-		public static config(params: IConfigurationOptions, shouldOverwrite: boolean = false): void {
-			moduleManager.configure(params, shouldOverwrite);
-		}
-
-		public static getConfig(): IConfigurationOptions {
+		RequireFunc = <any>_requireFunc;
+		RequireFunc.config = _requireFunc_config;
+		RequireFunc.getConfig = function (): IConfigurationOptions {
 			return moduleManager.getConfig().getOptionsLiteral();
-		}
+		};
 
-		/**
-		 * Non standard extension to reset completely the loader state. This is used for running amdjs tests
-		 */
-		public static reset(): void {
+		RequireFunc.reset = function (): void {
 			moduleManager = new ModuleManager(_env, scriptLoader, loaderAvailableTimestamp);
-		}
+			moduleManager.setGlobalAMDFuncs(DefineFunc, RequireFunc);
+		};
 
-		/**
-		 * Non standard extension to fetch loader state for building purposes.
-		 */
-		public static getBuildInfo(): IBuildModuleInfo[] {
+		RequireFunc.getBuildInfo = function (): IBuildModuleInfo[] {
 			return moduleManager.getBuildInfo();
-		}
+		};
 
-		/**
-		 * Non standard extension to fetch loader events
-		 */
-		public static getStats(): LoaderEvent[] {
+		RequireFunc.getStats = function (): LoaderEvent[] {
 			return moduleManager.getLoaderEvents();
-		}
+		};
 	}
 
 	function init(env: Environment): void {
+		createGlobalAMDFuncs();
 		moduleManager = new ModuleManager(env, scriptLoader, loaderAvailableTimestamp);
+		moduleManager.setGlobalAMDFuncs(DefineFunc, RequireFunc);
 
 		if (env.isNode) {
 			var _nodeRequire = (global.require || require);

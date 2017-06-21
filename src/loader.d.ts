@@ -106,6 +106,41 @@ declare namespace AMDLoader {
     }
 }
 declare namespace AMDLoader {
+    /**
+     * The signature for the loader's AMD "define" function.
+     */
+    interface IDefineFunc {
+        (id: 'string', dependencies: string[], callback: any): void;
+        (id: 'string', callback: any): void;
+        (dependencies: string[], callback: any): void;
+        (callback: any): void;
+        amd: {
+            jQuery: boolean;
+        };
+    }
+    /**
+     * The signature for the loader's AMD "require" function.
+     */
+    interface IRequireFunc {
+        (module: string): any;
+        (config: any): void;
+        (modules: string[], callback: Function): void;
+        (modules: string[], callback: Function, errorback: (err: any) => void): void;
+        config(params: IConfigurationOptions, shouldOverwrite?: boolean): void;
+        getConfig(): IConfigurationOptions;
+        /**
+         * Non standard extension to reset completely the loader state. This is used for running amdjs tests
+         */
+        reset(): void;
+        /**
+         * Non standard extension to fetch loader state for building purposes.
+         */
+        getBuildInfo(): IBuildModuleInfo[];
+        /**
+         * Non standard extension to fetch loader events
+         */
+        getStats(): LoaderEvent[];
+    }
     interface IModuleConfiguration {
         [key: string]: any;
     }
@@ -256,6 +291,8 @@ declare namespace AMDLoader {
 }
 declare namespace AMDLoader {
     interface IModuleManager {
+        getGlobalAMDDefineFunc(): IDefineFunc;
+        getGlobalAMDRequireFunc(): IRequireFunc;
         getConfig(): Configuration;
         enqueueDefineAnonymousModule(dependencies: string[], callback: any): void;
         getRecorder(): ILoaderEventRecorder;
@@ -367,10 +404,12 @@ declare namespace AMDLoader {
     type Dependency = RegularDependency | PluginDependency;
     class ModuleManager {
         private readonly _env;
-        private readonly _moduleIdProvider;
-        private _config;
-        private readonly _loaderAvailableTimestamp;
         private readonly _scriptLoader;
+        private readonly _loaderAvailableTimestamp;
+        private _defineFunc;
+        private _requireFunc;
+        private _moduleIdProvider;
+        private _config;
         /**
          * map of module id => module.
          * If a module is found in _modules, its code has been loaded, but
@@ -396,13 +435,16 @@ declare namespace AMDLoader {
          * current annonymous received define call, but not yet processed
          */
         private _currentAnnonymousDefineCall;
+        private _recorder;
         private _buildInfoPath;
         private _buildInfoDefineStack;
         private _buildInfoDependencies;
         constructor(env: Environment, scriptLoader: IScriptLoader, loaderAvailableTimestamp?: number);
+        setGlobalAMDFuncs(defineFunc: IDefineFunc, requireFunc: IRequireFunc): void;
+        getGlobalAMDDefineFunc(): IDefineFunc;
+        getGlobalAMDRequireFunc(): IRequireFunc;
         private static _findRelevantLocationInStack(needle, stack);
         getBuildInfo(): IBuildModuleInfo[];
-        private _recorder;
         getRecorder(): ILoaderEventRecorder;
         getLoaderEvents(): LoaderEvent[];
         /**
@@ -475,27 +517,4 @@ declare namespace AMDLoader {
 }
 declare var define: any;
 declare namespace AMDLoader {
-    class DefineFunc {
-        constructor(id: any, dependencies: any, callback: any);
-        static amd: {
-            jQuery: boolean;
-        };
-    }
-    class RequireFunc {
-        constructor();
-        static config(params: IConfigurationOptions, shouldOverwrite?: boolean): void;
-        static getConfig(): IConfigurationOptions;
-        /**
-         * Non standard extension to reset completely the loader state. This is used for running amdjs tests
-         */
-        static reset(): void;
-        /**
-         * Non standard extension to fetch loader state for building purposes.
-         */
-        static getBuildInfo(): IBuildModuleInfo[];
-        /**
-         * Non standard extension to fetch loader events
-         */
-        static getStats(): LoaderEvent[];
-    }
 }

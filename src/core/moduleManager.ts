@@ -316,14 +316,13 @@ namespace AMDLoader {
 	export class ModuleManager {
 
 		private readonly _env: Environment;
-
-		private readonly _moduleIdProvider: ModuleIdProvider;
-
-		private _config: Configuration;
-
-		private readonly _loaderAvailableTimestamp: number;
-
 		private readonly _scriptLoader: IScriptLoader;
+		private readonly _loaderAvailableTimestamp: number;
+		private _defineFunc: IDefineFunc;
+		private _requireFunc: IRequireFunc;
+
+		private _moduleIdProvider: ModuleIdProvider;
+		private _config: Configuration;
 
 		/**
 		 * map of module id => module.
@@ -355,25 +354,43 @@ namespace AMDLoader {
 		 */
 		private _currentAnnonymousDefineCall: IDefineCall;
 
+		private _recorder: ILoaderEventRecorder;
+
 		private _buildInfoPath: string[];
 		private _buildInfoDefineStack: string[];
 		private _buildInfoDependencies: string[][];
 
 		constructor(env: Environment, scriptLoader: IScriptLoader, loaderAvailableTimestamp: number = 0) {
 			this._env = env;
+			this._scriptLoader = scriptLoader;
 			this._loaderAvailableTimestamp = loaderAvailableTimestamp;
+			this._defineFunc = null;
+			this._requireFunc = null;
 			this._moduleIdProvider = new ModuleIdProvider();
 			this._config = new Configuration(this._env);
-			this._scriptLoader = scriptLoader;
 			this._modules2 = [];
 			this._knownModules2 = [];
 			this._inverseDependencies2 = [];
 			this._inversePluginDependencies2 = new Map<ModuleId, PluginDependency[]>();
 			this._currentAnnonymousDefineCall = null;
 
+			this._recorder = null;
 			this._buildInfoPath = [];
 			this._buildInfoDefineStack = [];
 			this._buildInfoDependencies = [];
+		}
+
+		public setGlobalAMDFuncs(defineFunc: IDefineFunc, requireFunc: IRequireFunc): void {
+			this._defineFunc = defineFunc;
+			this._requireFunc = requireFunc;
+		}
+
+		public getGlobalAMDDefineFunc(): IDefineFunc {
+			return this._defineFunc;
+		}
+
+		public getGlobalAMDRequireFunc(): IRequireFunc {
+			return this._requireFunc;
 		}
 
 		private static _findRelevantLocationInStack(needle: string, stack: string): IPosition {
@@ -439,7 +456,6 @@ namespace AMDLoader {
 			return result;
 		}
 
-		private _recorder: ILoaderEventRecorder = null;
 		public getRecorder(): ILoaderEventRecorder {
 			if (!this._recorder) {
 				if (this._config.shouldRecordStats()) {

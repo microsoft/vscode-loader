@@ -6,6 +6,8 @@
 namespace AMDLoader {
 
 	export interface IModuleManager {
+		getGlobalAMDDefineFunc(): IDefineFunc;
+		getGlobalAMDRequireFunc(): IRequireFunc;
 		getConfig(): Configuration;
 		enqueueDefineAnonymousModule(dependencies: string[], callback: any): void;
 		getRecorder(): ILoaderEventRecorder;
@@ -326,7 +328,7 @@ namespace AMDLoader {
 
 					if (!opts.nodeCachedDataDir) {
 
-						this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, { filename: vmScriptSrc }, recorder);
+						this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, { filename: vmScriptSrc }, recorder);
 						callback();
 
 					} else {
@@ -339,7 +341,7 @@ namespace AMDLoader {
 								produceCachedData: typeof cachedData === 'undefined',
 								cachedData
 							};
-							const script = this._loadAndEvalScript(scriptSrc, vmScriptSrc, contents, options, recorder);
+							const script = this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, options, recorder);
 							callback();
 							this._processCachedData(moduleManager, script, cachedDataPath);
 						});
@@ -348,7 +350,7 @@ namespace AMDLoader {
 			}
 		}
 
-		private _loadAndEvalScript(scriptSrc: string, vmScriptSrc: string, contents: string, options: INodeVMScriptOptions, recorder: ILoaderEventRecorder): INodeVMScript {
+		private _loadAndEvalScript(moduleManager: IModuleManager, scriptSrc: string, vmScriptSrc: string, contents: string, options: INodeVMScriptOptions, recorder: ILoaderEventRecorder): INodeVMScript {
 
 			// create script, run script
 			recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
@@ -356,7 +358,7 @@ namespace AMDLoader {
 			const script = new this._vm.Script(contents, options);
 
 			const r = script.runInThisContext(options);
-			r.call(global, RequireFunc, DefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
+			r.call(global, moduleManager.getGlobalAMDRequireFunc(), moduleManager.getGlobalAMDDefineFunc(), vmScriptSrc, this._path.dirname(scriptSrc));
 
 			// signal done
 			recorder.record(LoaderEventType.NodeEndEvaluatingScript, scriptSrc);

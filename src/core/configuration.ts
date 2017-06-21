@@ -5,6 +5,49 @@
 
 namespace AMDLoader {
 
+	/**
+	 * The signature for the loader's AMD "define" function.
+	 */
+	export interface IDefineFunc {
+		(id: 'string', dependencies: string[], callback: any): void;
+		(id: 'string', callback: any): void;
+		(dependencies: string[], callback: any): void;
+		(callback: any): void;
+
+		amd: {
+			jQuery: boolean;
+		};
+	}
+
+	/**
+	 * The signature for the loader's AMD "require" function.
+	 */
+	export interface IRequireFunc {
+		(module: string): any;
+		(config: any): void;
+		(modules: string[], callback: Function): void;
+		(modules: string[], callback: Function, errorback: (err: any) => void): void;
+
+		config(params: IConfigurationOptions, shouldOverwrite?: boolean): void;
+
+		getConfig(): IConfigurationOptions;
+
+		/**
+		 * Non standard extension to reset completely the loader state. This is used for running amdjs tests
+		 */
+		reset(): void;
+
+		/**
+		 * Non standard extension to fetch loader state for building purposes.
+		 */
+		getBuildInfo(): IBuildModuleInfo[];
+
+		/**
+		 * Non standard extension to fetch loader events
+		 */
+		getStats(): LoaderEvent[];
+	}
+
 	export interface IModuleConfiguration {
 		[key: string]: any;
 	}
