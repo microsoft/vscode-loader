@@ -11,14 +11,9 @@ var define;
 
 namespace AMDLoader {
 
-	const _env = Environment.detect();
-	let moduleManager: ModuleManager;
-	let loaderAvailableTimestamp: number;
-	const scriptLoader: IScriptLoader = createScriptLoader(_env);
-
-	let DefineFunc: IDefineFunc;
-	let RequireFunc: IRequireFunc;
-
+	let moduleManager: ModuleManager = null;
+	let DefineFunc: IDefineFunc = null;
+	let RequireFunc: IRequireFunc = null;
 
 	function createGlobalAMDFuncs(): void {
 
@@ -78,8 +73,7 @@ namespace AMDLoader {
 		};
 
 		RequireFunc.reset = function (): void {
-			moduleManager = new ModuleManager(_env, scriptLoader, loaderAvailableTimestamp);
-			moduleManager.setGlobalAMDFuncs(DefineFunc, RequireFunc);
+			moduleManager = moduleManager.reset();
 		};
 
 		RequireFunc.getBuildInfo = function (): IBuildModuleInfo[] {
@@ -91,10 +85,12 @@ namespace AMDLoader {
 		};
 	}
 
-	function init(env: Environment): void {
+	function init(): void {
 		createGlobalAMDFuncs();
-		moduleManager = new ModuleManager(env, scriptLoader, loaderAvailableTimestamp);
-		moduleManager.setGlobalAMDFuncs(DefineFunc, RequireFunc);
+
+		const env = Environment.detect();
+		const scriptLoader: IScriptLoader = createScriptLoader(env);
+		moduleManager = new ModuleManager(env, scriptLoader, DefineFunc, RequireFunc, Utilities.getHighPerformanceTimestamp());
 
 		if (env.isNode) {
 			var _nodeRequire = (global.require || require);
@@ -136,8 +132,6 @@ namespace AMDLoader {
 	}
 
 	if (typeof global.define !== 'function' || !global.define.amd) {
-		init(_env);
-		loaderAvailableTimestamp = Utilities.getHighPerformanceTimestamp();
+		init();
 	}
-
 }

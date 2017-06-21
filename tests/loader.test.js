@@ -367,7 +367,7 @@ QUnit.test('Loading 3 simple modules', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     mm.defineModule('a', ['a1', 'a2'], function (a1, a2) {
         QUnit.equal(a1, 'a1');
         QUnit.equal(a2, 'a2');
@@ -399,7 +399,7 @@ QUnit.test('Loading a plugin dependency', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     mm.defineModule('a/b/c', ['../../plugin!./d', 'require'], function (r, req) {
         QUnit.equal(r, 'r');
         QUnit.equal(req.toUrl('./d.txt'), 'a/b/d.txt');
@@ -438,7 +438,7 @@ QUnit.test('Loading a dependency cycle', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     mm.defineModule('a', ['b'], function (b) {
         QUnit.equal(b, 'b');
         return 'a';
@@ -460,7 +460,7 @@ QUnit.test('Using a local error handler immediate script loading failure', funct
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     mm.defineModule('a', ['b'], function (b) {
         QUnit.equal(b, 'b');
         return 'a';
@@ -488,7 +488,7 @@ QUnit.test('Using a local error handler secondary script loading failure', funct
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     mm.defineModule('a', ['b'], function (b) {
         QUnit.ok(false);
     }, function (err) {
@@ -508,7 +508,7 @@ QUnit.test('No path config', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     mm.defineModule('first', ['a'], function () {
         QUnit.ok(false, 'a should not be found');
     }, function (err) {
@@ -527,7 +527,7 @@ QUnit.test('With path config', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     mm.configure({
         paths: {
             a: 'alocation.js'
@@ -557,7 +557,7 @@ QUnit.test('With one fallback', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     mm.configure({
         paths: {
             a: ['alocation.js', 'afallback.js']
@@ -590,7 +590,7 @@ QUnit.test('With two fallbacks', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     mm.configure({
         paths: {
             a: ['alocation.js', 'afallback.js', 'anotherfallback.js']
@@ -611,7 +611,7 @@ QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dep
             QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     // Define the resolved plugin value
     mm.defineModule('plugin!pluginParam', [], function () {
         return {
@@ -653,7 +653,7 @@ QUnit.test('Bug #12020: [loader] relative (synchronous) require does not normali
             QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader);
+    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
     mm.defineModule('plugin!a/b/c', [], function () {
         QUnit.ok(true);
         return 'plugin!a/b/c';

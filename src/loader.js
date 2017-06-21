@@ -1020,13 +1020,13 @@ var AMDLoader;
     }());
     AMDLoader.PluginDependency = PluginDependency;
     var ModuleManager = (function () {
-        function ModuleManager(env, scriptLoader, loaderAvailableTimestamp) {
+        function ModuleManager(env, scriptLoader, defineFunc, requireFunc, loaderAvailableTimestamp) {
             if (loaderAvailableTimestamp === void 0) { loaderAvailableTimestamp = 0; }
             this._env = env;
             this._scriptLoader = scriptLoader;
             this._loaderAvailableTimestamp = loaderAvailableTimestamp;
-            this._defineFunc = null;
-            this._requireFunc = null;
+            this._defineFunc = defineFunc;
+            this._requireFunc = requireFunc;
             this._moduleIdProvider = new ModuleIdProvider();
             this._config = new AMDLoader.Configuration(this._env);
             this._modules2 = [];
@@ -1039,9 +1039,8 @@ var AMDLoader;
             this._buildInfoDefineStack = [];
             this._buildInfoDependencies = [];
         }
-        ModuleManager.prototype.setGlobalAMDFuncs = function (defineFunc, requireFunc) {
-            this._defineFunc = defineFunc;
-            this._requireFunc = requireFunc;
+        ModuleManager.prototype.reset = function () {
+            return new ModuleManager(this._env, this._scriptLoader, this._defineFunc, this._requireFunc, this._loaderAvailableTimestamp);
         };
         ModuleManager.prototype.getGlobalAMDDefineFunc = function () {
             return this._defineFunc;
@@ -1566,12 +1565,9 @@ var AMDLoader;
 var define;
 var AMDLoader;
 (function (AMDLoader) {
-    var _env = AMDLoader.Environment.detect();
-    var moduleManager;
-    var loaderAvailableTimestamp;
-    var scriptLoader = AMDLoader.createScriptLoader(_env);
-    var DefineFunc;
-    var RequireFunc;
+    var moduleManager = null;
+    var DefineFunc = null;
+    var RequireFunc = null;
     function createGlobalAMDFuncs() {
         var _defineFunc = function (id, dependencies, callback) {
             if (typeof id !== 'string') {
@@ -1625,8 +1621,7 @@ var AMDLoader;
             return moduleManager.getConfig().getOptionsLiteral();
         };
         RequireFunc.reset = function () {
-            moduleManager = new AMDLoader.ModuleManager(_env, scriptLoader, loaderAvailableTimestamp);
-            moduleManager.setGlobalAMDFuncs(DefineFunc, RequireFunc);
+            moduleManager = moduleManager.reset();
         };
         RequireFunc.getBuildInfo = function () {
             return moduleManager.getBuildInfo();
@@ -1635,10 +1630,11 @@ var AMDLoader;
             return moduleManager.getLoaderEvents();
         };
     }
-    function init(env) {
+    function init() {
         createGlobalAMDFuncs();
-        moduleManager = new AMDLoader.ModuleManager(env, scriptLoader, loaderAvailableTimestamp);
-        moduleManager.setGlobalAMDFuncs(DefineFunc, RequireFunc);
+        var env = AMDLoader.Environment.detect();
+        var scriptLoader = AMDLoader.createScriptLoader(env);
+        moduleManager = new AMDLoader.ModuleManager(env, scriptLoader, DefineFunc, RequireFunc, AMDLoader.Utilities.getHighPerformanceTimestamp());
         if (env.isNode) {
             var _nodeRequire = (AMDLoader.global.require || require);
             var nodeRequire = function (what) {
@@ -1679,7 +1675,6 @@ var AMDLoader;
         }
     }
     if (typeof AMDLoader.global.define !== 'function' || !AMDLoader.global.define.amd) {
-        init(_env);
-        loaderAvailableTimestamp = AMDLoader.Utilities.getHighPerformanceTimestamp();
+        init();
     }
 })(AMDLoader || (AMDLoader = {}));

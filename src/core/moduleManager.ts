@@ -318,8 +318,8 @@ namespace AMDLoader {
 		private readonly _env: Environment;
 		private readonly _scriptLoader: IScriptLoader;
 		private readonly _loaderAvailableTimestamp: number;
-		private _defineFunc: IDefineFunc;
-		private _requireFunc: IRequireFunc;
+		private readonly _defineFunc: IDefineFunc;
+		private readonly _requireFunc: IRequireFunc;
 
 		private _moduleIdProvider: ModuleIdProvider;
 		private _config: Configuration;
@@ -360,12 +360,12 @@ namespace AMDLoader {
 		private _buildInfoDefineStack: string[];
 		private _buildInfoDependencies: string[][];
 
-		constructor(env: Environment, scriptLoader: IScriptLoader, loaderAvailableTimestamp: number = 0) {
+		constructor(env: Environment, scriptLoader: IScriptLoader, defineFunc: IDefineFunc, requireFunc: IRequireFunc, loaderAvailableTimestamp: number = 0) {
 			this._env = env;
 			this._scriptLoader = scriptLoader;
 			this._loaderAvailableTimestamp = loaderAvailableTimestamp;
-			this._defineFunc = null;
-			this._requireFunc = null;
+			this._defineFunc = defineFunc;
+			this._requireFunc = requireFunc;
 			this._moduleIdProvider = new ModuleIdProvider();
 			this._config = new Configuration(this._env);
 			this._modules2 = [];
@@ -380,9 +380,8 @@ namespace AMDLoader {
 			this._buildInfoDependencies = [];
 		}
 
-		public setGlobalAMDFuncs(defineFunc: IDefineFunc, requireFunc: IRequireFunc): void {
-			this._defineFunc = defineFunc;
-			this._requireFunc = requireFunc;
+		public reset(): ModuleManager {
+			return new ModuleManager(this._env, this._scriptLoader, this._defineFunc, this._requireFunc, this._loaderAvailableTimestamp);
 		}
 
 		public getGlobalAMDDefineFunc(): IDefineFunc {

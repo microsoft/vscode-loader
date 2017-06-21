@@ -406,8 +406,8 @@ declare namespace AMDLoader {
         private readonly _env;
         private readonly _scriptLoader;
         private readonly _loaderAvailableTimestamp;
-        private _defineFunc;
-        private _requireFunc;
+        private readonly _defineFunc;
+        private readonly _requireFunc;
         private _moduleIdProvider;
         private _config;
         /**
@@ -439,8 +439,8 @@ declare namespace AMDLoader {
         private _buildInfoPath;
         private _buildInfoDefineStack;
         private _buildInfoDependencies;
-        constructor(env: Environment, scriptLoader: IScriptLoader, loaderAvailableTimestamp?: number);
-        setGlobalAMDFuncs(defineFunc: IDefineFunc, requireFunc: IRequireFunc): void;
+        constructor(env: Environment, scriptLoader: IScriptLoader, defineFunc: IDefineFunc, requireFunc: IRequireFunc, loaderAvailableTimestamp?: number);
+        reset(): ModuleManager;
         getGlobalAMDDefineFunc(): IDefineFunc;
         getGlobalAMDRequireFunc(): IRequireFunc;
         private static _findRelevantLocationInStack(needle, stack);
