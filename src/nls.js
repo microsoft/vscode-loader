@@ -53,10 +53,10 @@ var NLSLoaderPlugin;
             return result;
         return null;
     }
-    function localize(data, message, env) {
+    function localize(env, data, message) {
         var args = [];
-        for (var _i = 0; _i < (arguments.length - 2); _i++) {
-            args[_i] = arguments[_i + 2];
+        for (var _i = 3; _i < arguments.length; _i++) {
+            args[_i - 3] = arguments[_i];
         }
         return _format(message, args, env);
     }
@@ -70,7 +70,13 @@ var NLSLoaderPlugin;
         function NLSPlugin(env) {
             var _this = this;
             this._env = env;
-            this.localize = function (data, message) { return localize(data, message, _this._env); };
+            this.localize = function (data, message) {
+                var args = [];
+                for (var _i = 2; _i < arguments.length; _i++) {
+                    args[_i - 2] = arguments[_i];
+                }
+                return localize.apply(void 0, [_this._env, data, message].concat(args));
+            };
         }
         NLSPlugin.prototype.setPseudoTranslation = function (value) {
             this._env = new Environment(value);
@@ -85,7 +91,7 @@ var NLSLoaderPlugin;
             config = config || {};
             if (!name || name.length === 0) {
                 load({
-                    localize: localize
+                    localize: this.localize
                 });
             }
             else {

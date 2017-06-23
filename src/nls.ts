@@ -81,11 +81,7 @@ module NLSLoaderPlugin {
 		return null;
 	}
 
-	function localize(data, message, env: Environment) {
-		let args = [];
-		for (let _i = 0; _i < (arguments.length - 2); _i++) {
-			args[_i] = arguments[_i + 2];
-		}
+	function localize(env: Environment, data, message, ...args: any[]) {
 		return _format(message, args, env);
 	}
 
@@ -101,11 +97,11 @@ module NLSLoaderPlugin {
 		private static DEFAULT_TAG = 'i-default';
 		private _env: Environment;
 
-		public localize: (data, message) => string;
+		public localize: (data, message, ...args: any[]) => string;
 
 		constructor(env: Environment) {
 			this._env = env;
-			this.localize = (data, message) => localize(data, message, this._env);
+			this.localize = (data, message, ...args: any[]) => localize(this._env, data, message, ...args);
 		}
 
 		public setPseudoTranslation(value: boolean) {
@@ -122,7 +118,7 @@ module NLSLoaderPlugin {
 			config = config || {};
 			if (!name || name.length === 0) {
 				load({
-					localize: localize
+					localize: this.localize
 				});
 			} else {
 				let pluginConfig = config['vs/nls'] || {};
