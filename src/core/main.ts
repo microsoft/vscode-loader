@@ -85,7 +85,7 @@ namespace AMDLoader {
 		};
 	}
 
-	function init(): void {
+	export function init(): void {
 		createGlobalAMDFuncs();
 
 		const env = Environment.detect();
@@ -131,7 +131,10 @@ namespace AMDLoader {
 		}
 	}
 
-	if (typeof global.define !== 'function' || !global.define.amd) {
+	if (
+		typeof global.doNotInitLoader === 'undefined' &&
+		(typeof global.define !== 'function' || !global.define.amd)
+	) {
 		init();
 	}
 }

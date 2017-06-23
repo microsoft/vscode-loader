@@ -1674,7 +1674,9 @@ var AMDLoader;
             AMDLoader.global.require.__$__nodeRequire = nodeRequire;
         }
     }
-    if (typeof AMDLoader.global.define !== 'function' || !AMDLoader.global.define.amd) {
+    AMDLoader.init = init;
+    if (typeof AMDLoader.global.doNotInitLoader === 'undefined' &&
+        (typeof AMDLoader.global.define !== 'function' || !AMDLoader.global.define.amd)) {
         init();
     }
 })(AMDLoader || (AMDLoader = {}));

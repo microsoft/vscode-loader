@@ -517,4 +517,5 @@ declare namespace AMDLoader {
 }
 declare var define: any;
 declare namespace AMDLoader {
+    function init(): void;
 }
