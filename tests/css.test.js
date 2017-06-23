@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-var cssPlugin = CSSLoaderPlugin;
+var cssPlugin = CSSBuildLoaderPlugin;
 QUnit.module('CSSPlugin');
 QUnit.test('Utilities.pathOf', function () {
     QUnit.equal(cssPlugin.Utilities.pathOf(''), '');

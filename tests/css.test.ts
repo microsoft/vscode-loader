@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import cssPlugin = CSSLoaderPlugin;
+import cssPlugin = CSSBuildLoaderPlugin;
 
 QUnit.module('CSSPlugin');
 
@@ -22,7 +22,7 @@ QUnit.test('Utilities.pathOf', () => {
 });
 
 QUnit.test('Utilities.joinPaths', () => {
-	function mytest(a:string, b:string, expected:string) {
+	function mytest(a: string, b: string, expected: string) {
 		QUnit.equal(cssPlugin.Utilities.joinPaths(a, b), expected, '<' + a + '> + <' + b + '> = <' + expected + '>');
 	}
 	mytest('', 'a.css', 'a.css');
@@ -85,7 +85,7 @@ QUnit.test('Utilities.joinPaths', () => {
 });
 
 QUnit.test('Utilities.commonPrefix', () => {
-	function mytest(a:string, b:string, expected:string) {
+	function mytest(a: string, b: string, expected: string) {
 		QUnit.equal(cssPlugin.Utilities.commonPrefix(a, b), expected, 'prefix(<' + a + '>, <' + b + '>) = <' + expected + '>');
 		QUnit.equal(cssPlugin.Utilities.commonPrefix(b, a), expected, 'prefix(<' + b + '>, <' + a + '>) = <' + expected + '>');
 	}
@@ -98,7 +98,7 @@ QUnit.test('Utilities.commonPrefix', () => {
 });
 
 QUnit.test('Utilities.commonFolderPrefix', () => {
-	function mytest(a:string, b:string, expected:string) {
+	function mytest(a: string, b: string, expected: string) {
 		QUnit.equal(cssPlugin.Utilities.commonFolderPrefix(a, b), expected, 'folderPrefix(<' + a + '>, <' + b + '>) = <' + expected + '>');
 		QUnit.equal(cssPlugin.Utilities.commonFolderPrefix(b, a), expected, 'folderPrefix(<' + b + '>, <' + a + '>) = <' + expected + '>');
 	}
@@ -117,7 +117,7 @@ QUnit.test('Utilities.commonFolderPrefix', () => {
 });
 
 QUnit.test('Utilities.relativePath', () => {
-	function mytest(a:string, b:string, expected:string) {
+	function mytest(a: string, b: string, expected: string) {
 		QUnit.equal(cssPlugin.Utilities.relativePath(a, b), expected, 'relativePath(<' + a + '>, <' + b + '>) = <' + expected + '>');
 	}
 	mytest('', '', '');
@@ -154,7 +154,7 @@ QUnit.test('Utilities.relativePath', () => {
 });
 
 QUnit.test('Utilities.rewriteUrls', () => {
-	function mytest(originalFile:string, newFile:string, url:string, expected:string) {
+	function mytest(originalFile: string, newFile: string, url: string, expected: string) {
 		QUnit.equal(cssPlugin.Utilities.rewriteUrls(originalFile, newFile, 'sel { background:url(\'' + url + '\'); }'), 'sel { background:url(' + expected + '); }');
 		QUnit.equal(cssPlugin.Utilities.rewriteUrls(originalFile, newFile, 'sel { background:url(\"' + url + '\"); }'), 'sel { background:url(' + expected + '); }');
 		QUnit.equal(cssPlugin.Utilities.rewriteUrls(originalFile, newFile, 'sel { background:url(' + url + '); }'), 'sel { background:url(' + expected + '); }');
@@ -279,7 +279,7 @@ QUnit.test('Utilities.rewriteUrls - quotes and spaces', () => {
 QUnit.test('Bug 9601 - css should ignore data urls', () => {
 	var dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAACHmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNC40LjAiPgogICA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iPgogICAgICAgICA8ZGM6c3ViamVjdD4KICAgICAgICAgICAgPHJkZjpCYWcvPgogICAgICAgICA8L2RjOnN1YmplY3Q+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICAgICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgICAgICAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iPgogICAgICAgICA8eG1wOkNyZWF0b3JUb29sPkFkb2JlIEltYWdlUmVhZHk8L3htcDpDcmVhdG9yVG9vbD4KICAgICAgPC9yZGY6RGVzY3JpcHRpb24+CiAgIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+ClC8oVQAAAGnSURBVDiNrZMxTxNxGMZ///9dZWns9a4dTHSABFiuCU5dGt2d9BsQls6GD2LCd2AiQQfixKIJE0ObdKIUSvDa5uLZihP0Sh+HOw3ipOUZ3zzvL2+e932NJBaRe7/Q8Uw5eMRrzXllDU8A5mJkLB+/TflQ+67JXb+5O0FUNS9deLckns/tn2A7hxtDawZvn37Vp78AX8rmxZLDewf89HGJ+fgKCrkrBeuXKPy44hbGN7e8eTbRZwALcFE2nuOy48j6zmaTYP8Qtxaia9A1uLWQYP8QZ7OJI+s7LjsXZeMBIIlLn61xgEbLnqadtiQp7Z0orq8rrq8r7Z1IkqadtkbLnsYBuvTZkpQBhgF7SRVFJRQ3QqW9bgY5P1V6fpoDu4oboaISSqpoGLD3GzAIOEqqaFBBURHF9TWlZxlEktKzruL6mqJi5kmqaBBwJIl7Wf+7LICBIYBSKGyE+LsHuCurzPo9Zv0e7soq/u4BhY0Qpfn68p6HCbHv4Q0qtBPfarLd1LR1nAVWzDNphJq2jjXZbirxrQYV2n0PT9Lih/Rwp/xLCz3T/+gnd2VVRJs/vngAAAAASUVORK5CYII=';
 
-	function mytest(originalFile:string, newFile:string) {
+	function mytest(originalFile: string, newFile: string) {
 		QUnit.equal(cssPlugin.Utilities.rewriteUrls(originalFile, newFile, 'sel { background:url(' + dataUrl + '); }'), 'sel { background:url(' + dataUrl + '); }');
 		QUnit.equal(cssPlugin.Utilities.rewriteUrls(originalFile, newFile, 'sel { background:url( \t' + dataUrl + '\t ); }'), 'sel { background:url(' + dataUrl + '); }');
 	}

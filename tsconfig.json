@@ -8,6 +8,8 @@
 		"src/loader.d.ts",
 		"src/css.ts",
 		"src/nls.ts",
+		"src/css.build.ts",
+		"src/nls.build.ts",
 		"tests/qunit/qunit.d.ts",
 		"tests/loader.test.ts",
 		"tests/css.test.ts"

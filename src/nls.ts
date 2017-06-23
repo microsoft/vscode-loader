@@ -17,15 +17,21 @@
 
 'use strict';
 
-let _nlsPluginGlobal = this;
-
 module NLSLoaderPlugin {
 
-	let global = _nlsPluginGlobal || {};
-	let Resources = global.Plugin && global.Plugin.Resources ? global.Plugin.Resources : undefined;
-	let DEFAULT_TAG = 'i-default';
-	let IS_PSEUDO = (global && global.document && global.document.location && global.document.location.hash.indexOf('pseudo=true') >= 0);
-	let slice = Array.prototype.slice;
+	class Environment {
+
+		static detect(): Environment {
+			let isPseudo = (typeof document !== 'undefined' && document.location && document.location.hash.indexOf('pseudo=true') >= 0);
+			return new Environment(isPseudo);
+		}
+
+		constructor(
+			readonly isPseudo: boolean
+		) {
+			//
+		}
+	}
 
 	export interface IBundledStrings {
 		[moduleId: string]: string[];
@@ -45,7 +51,7 @@ module NLSLoaderPlugin {
 		localize: ILocalizeFunc;
 	}
 
-	function _format(message: string, args: string[]): string {
+	function _format(message: string, args: string[], env: Environment): string {
 		let result: string;
 
 		if (args.length === 0) {
@@ -57,7 +63,7 @@ module NLSLoaderPlugin {
 			});
 		}
 
-		if (IS_PSEUDO) {
+		if (env.isPseudo) {
 			// FF3B and FF3D is the Unicode zenkaku representation for [ and ]
 			result = '\uFF3B' + result.replace(/[aouei]/g, '$&$&') + '\uFF3D';
 		}
@@ -75,38 +81,40 @@ module NLSLoaderPlugin {
 		return null;
 	}
 
-	function localize(data, message) {
+	function localize(data, message, env: Environment) {
 		let args = [];
 		for (let _i = 0; _i < (arguments.length - 2); _i++) {
 			args[_i] = arguments[_i + 2];
 		}
-		return _format(message, args);
+		return _format(message, args, env);
 	}
 
-	function createScopedLocalize(scope: string[]): ILocalizeFunc {
+	function createScopedLocalize(scope: string[], env: Environment): ILocalizeFunc {
 		return function (idx, defaultValue) {
-			let restArgs = slice.call(arguments, 2);
-			return _format(scope[idx], restArgs);
+			let restArgs = Array.prototype.slice.call(arguments, 2);
+			return _format(scope[idx], restArgs, env);
 		}
 	}
 
 	export class NLSPlugin implements AMDLoader.ILoaderPlugin {
-		static BUILD_MAP: { [name: string]: string[]; } = {};
-		static BUILD_MAP_KEYS: { [name: string]: string[]; } = {};
 
-		public localize;
+		private static DEFAULT_TAG = 'i-default';
+		private _env: Environment;
 
-		constructor() {
-			this.localize = localize;
+		public localize: (data, message) => string;
+
+		constructor(env: Environment) {
+			this._env = env;
+			this.localize = (data, message) => localize(data, message, this._env);
 		}
 
 		public setPseudoTranslation(value: boolean) {
-			IS_PSEUDO = value;
+			this._env = new Environment(value);
 		}
 
 		public create(key: string, data: IBundledStrings): IConsumerAPI {
 			return {
-				localize: createScopedLocalize(data[key])
+				localize: createScopedLocalize(data[key], this._env)
 			}
 		}
 
@@ -117,106 +125,31 @@ module NLSLoaderPlugin {
 					localize: localize
 				});
 			} else {
-				let suffix;
-				if (Resources && Resources.getString) {
-					suffix = '.nls.keys';
-					req([name + suffix], function (keyMap) {
-						load({
-							localize: function (moduleKey, index) {
-								if (!keyMap[moduleKey])
-									return 'NLS error: unknown key ' + moduleKey;
-								let mk = keyMap[moduleKey].keys;
-								if (index >= mk.length)
-									return 'NLS error unknow index ' + index;
-								let subKey = mk[index];
-								let args = [];
-								args[0] = moduleKey + '_' + subKey;
-								for (let _i = 0; _i < (arguments.length - 2); _i++) {
-									args[_i + 1] = arguments[_i + 2];
-								}
-								return Resources.getString.apply(Resources, args);
-							}
-						});
-					});
-				} else {
-					if (config.isBuild) {
-						req([name + '.nls', name + '.nls.keys'], function (messages: string[], keys: string[]) {
-							NLSPlugin.BUILD_MAP[name] = messages;
-							NLSPlugin.BUILD_MAP_KEYS[name] = keys;
-							load(messages);
-						});
+				let pluginConfig = config['vs/nls'] || {};
+				let language = pluginConfig.availableLanguages ? findLanguageForModule(pluginConfig.availableLanguages, name) : null;
+				let suffix = '.nls';
+				if (language !== null && language !== NLSPlugin.DEFAULT_TAG) {
+					suffix = suffix + '.' + language;
+				}
+
+				req([name + suffix], (messages) => {
+					if (Array.isArray(messages)) {
+						(<any>messages).localize = createScopedLocalize(messages, this._env);
 					} else {
-						let pluginConfig = config['vs/nls'] || {};
-						let language = pluginConfig.availableLanguages ? findLanguageForModule(pluginConfig.availableLanguages, name) : null;
-						suffix = '.nls';
-						if (language !== null && language !== DEFAULT_TAG) {
-							suffix = suffix + '.' + language;
-						}
-
-						req([name + suffix], function (messages) {
-							if (Array.isArray(messages)) {
-								(<any>messages).localize = createScopedLocalize(messages);
-							} else {
-								messages.localize = createScopedLocalize(messages[name]);
-							}
-							load(messages);
-						});
+						messages.localize = createScopedLocalize(messages[name], this._env);
 					}
-				}
+					load(messages);
+				});
+
 			}
 		}
-
-		private _getEntryPointsMap(): { [entryPoint: string]: string[] } {
-			global.nlsPluginEntryPoints = global.nlsPluginEntryPoints || {};
-			return global.nlsPluginEntryPoints;
-		}
-
-		public write(pluginName: string, moduleName: string, write: AMDLoader.IPluginWriteCallback): void {
-			// getEntryPoint is a Monaco extension to r.js
-			let entryPoint = write.getEntryPoint();
-
-			// r.js destroys the context of this plugin between calling 'write' and 'writeFile'
-			// so the only option at this point is to leak the data to a global
-			let entryPointsMap = this._getEntryPointsMap();
-			entryPointsMap[entryPoint] = entryPointsMap[entryPoint] || [];
-			entryPointsMap[entryPoint].push(moduleName);
-
-			if (moduleName !== entryPoint) {
-				write.asModule(pluginName + '!' + moduleName, 'define([\'vs/nls\', \'vs/nls!' + entryPoint + '\'], function(nls, data) { return nls.create("' + moduleName + '", data); });');
-			}
-		}
-
-		public writeFile(pluginName: string, moduleName: string, req: AMDLoader.IRelativeRequire, write: AMDLoader.IPluginWriteFileCallback, config: AMDLoader.IConfigurationOptions): void {
-			let entryPointsMap = this._getEntryPointsMap();
-			if (entryPointsMap.hasOwnProperty(moduleName)) {
-				let fileName = req.toUrl(moduleName + '.nls.js');
-				let contents = [
-					'/*---------------------------------------------------------',
-					' * Copyright (c) Microsoft Corporation. All rights reserved.',
-					' *--------------------------------------------------------*/'
-				],
-					entries = entryPointsMap[moduleName];
-
-				let data: { [moduleName: string]: string[]; } = {};
-				for (let i = 0; i < entries.length; i++) {
-					data[entries[i]] = NLSPlugin.BUILD_MAP[entries[i]];
-				}
-
-				contents.push('define("' + moduleName + '.nls", ' + JSON.stringify(data, null, '\t') + ');');
-				write(fileName, contents.join('\r\n'));
-			}
-		}
-
-		public finishBuild(write: AMDLoader.IPluginWriteFileCallback): void {
-			write('nls.metadata.json', JSON.stringify({
-				keys: NLSPlugin.BUILD_MAP_KEYS,
-				messages: NLSPlugin.BUILD_MAP,
-				bundles: this._getEntryPointsMap()
-			}, null, '\t'));
-		};
 	}
 
-	(function () {
-		define('vs/nls', new NLSPlugin());
-	})();
+	export function init() {
+		define('vs/nls', new NLSPlugin(Environment.detect()));
+	}
+
+	if (typeof doNotInitLoader === 'undefined') {
+		init();
+	}
 }

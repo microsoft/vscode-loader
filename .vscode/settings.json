@@ -7,7 +7,7 @@
 	"files.exclude": {
 		".git": true,
 		"**/*.js": {
-			"when": "$(basename).ts"
+			"when": "**/core/$(basename).ts"
 		}
 	},
 	"typescript.tsdk": "./node_modules/typescript/lib"
