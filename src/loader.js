@@ -1561,7 +1561,6 @@ var AMDLoader;
     }());
     AMDLoader.ModuleManager = ModuleManager;
 })(AMDLoader || (AMDLoader = {}));
-// Limitation: To load jquery through the loader, always require 'jquery' and add a path for it in the loader configuration
 var define;
 var AMDLoader;
 (function (AMDLoader) {
@@ -1675,7 +1674,7 @@ var AMDLoader;
         }
     }
     AMDLoader.init = init;
-    if (typeof AMDLoader.global.doNotInitLoader === 'undefined' &&
+    if (typeof doNotInitLoader === 'undefined' &&
         (typeof AMDLoader.global.define !== 'function' || !AMDLoader.global.define.amd)) {
         init();
     }

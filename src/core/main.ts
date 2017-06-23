@@ -7,6 +7,7 @@
 
 // Limitation: To load jquery through the loader, always require 'jquery' and add a path for it in the loader configuration
 
+declare var doNotInitLoader;
 var define;
 
 namespace AMDLoader {
@@ -132,7 +133,7 @@ namespace AMDLoader {
 	}
 
 	if (
-		typeof global.doNotInitLoader === 'undefined' &&
+		typeof doNotInitLoader === 'undefined' &&
 		(typeof global.define !== 'function' || !global.define.amd)
 	) {
 		init();

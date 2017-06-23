@@ -515,6 +515,7 @@ declare namespace AMDLoader {
         private _onModuleComplete(module);
     }
 }
+declare var doNotInitLoader: any;
 declare var define: any;
 declare namespace AMDLoader {
     function init(): void;
