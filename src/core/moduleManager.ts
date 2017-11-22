@@ -767,7 +767,8 @@ namespace AMDLoader {
 			let strModuleId = this._moduleIdProvider.getStrModuleId(moduleId);
 			let paths = this._config.moduleIdToPaths(strModuleId);
 
-			if (this._env.isNode && strModuleId.indexOf('/') === -1) {
+			let scopedPackageRegex = /^@[^\/]+\/[^\/]+$/ // matches @scope/package-name
+			if (this._env.isNode && (strModuleId.indexOf('/') === -1 || scopedPackageRegex.test(strModuleId))) {
 				paths.push('node|' + strModuleId);
 			}
 
