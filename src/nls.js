@@ -16,7 +16,7 @@
 'use strict';
 var NLSLoaderPlugin;
 (function (NLSLoaderPlugin) {
-    var Environment = (function () {
+    var Environment = /** @class */ (function () {
         function Environment(isPseudo) {
             this.isPseudo = isPseudo;
             //
@@ -66,7 +66,7 @@ var NLSLoaderPlugin;
             return _format(scope[idx], restArgs, env);
         };
     }
-    var NLSPlugin = (function () {
+    var NLSPlugin = /** @class */ (function () {
         function NLSPlugin(env) {
             var _this = this;
             this._env = env;
@@ -101,7 +101,7 @@ var NLSLoaderPlugin;
                 if (language !== null && language !== NLSPlugin.DEFAULT_TAG) {
                     suffix = suffix + '.' + language;
                 }
-                req([name + suffix], function (messages) {
+                var messagesLoaded_1 = function (messages) {
                     if (Array.isArray(messages)) {
                         messages.localize = createScopedLocalize(messages, _this._env);
                     }
@@ -109,12 +109,26 @@ var NLSLoaderPlugin;
                         messages.localize = createScopedLocalize(messages[name], _this._env);
                     }
                     load(messages);
-                });
+                };
+                if (typeof pluginConfig.loadBundle === 'function') {
+                    pluginConfig.loadBundle(name, language, function (err, messages) {
+                        // We have an error. Load the English default strings to not fail
+                        if (err) {
+                            req([name + '.nls'], messagesLoaded_1);
+                        }
+                        else {
+                            messagesLoaded_1(messages);
+                        }
+                    });
+                }
+                else {
+                    req([name + suffix], messagesLoaded_1);
+                }
             }
         };
+        NLSPlugin.DEFAULT_TAG = 'i-default';
         return NLSPlugin;
     }());
-    NLSPlugin.DEFAULT_TAG = 'i-default';
     NLSLoaderPlugin.NLSPlugin = NLSPlugin;
     function init() {
         define('vs/nls', new NLSPlugin(Environment.detect()));

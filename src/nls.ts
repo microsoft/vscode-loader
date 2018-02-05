@@ -47,8 +47,16 @@ module NLSLoaderPlugin {
 		(key: string, message: string, ...args: any[]): string;
 	}
 
+	interface IBoundLocalizeFunc {
+		(idx: number, defaultValue: null);
+	}
+
 	export interface IConsumerAPI {
-		localize: ILocalizeFunc;
+		localize: ILocalizeFunc | IBoundLocalizeFunc;
+	}
+
+	export interface BundleLoader {
+		(bundle: string, locale: string, cb: (err: Error, messages: string[] | IBundledStrings) => void): void;
 	}
 
 	function _format(message: string, args: string[], env: Environment): string {
@@ -85,8 +93,8 @@ module NLSLoaderPlugin {
 		return _format(message, args, env);
 	}
 
-	function createScopedLocalize(scope: string[], env: Environment): ILocalizeFunc {
-		return function (idx, defaultValue) {
+	function createScopedLocalize(scope: string[], env: Environment): IBoundLocalizeFunc {
+		return function (idx: number, defaultValue: null) {
 			let restArgs = Array.prototype.slice.call(arguments, 2);
 			return _format(scope[idx], restArgs, env);
 		}
@@ -127,16 +135,26 @@ module NLSLoaderPlugin {
 				if (language !== null && language !== NLSPlugin.DEFAULT_TAG) {
 					suffix = suffix + '.' + language;
 				}
-
-				req([name + suffix], (messages) => {
+				let messagesLoaded = (messages: string[] | IBundledStrings) => {
 					if (Array.isArray(messages)) {
-						(<any>messages).localize = createScopedLocalize(messages, this._env);
+						(messages as any as IConsumerAPI).localize = createScopedLocalize(messages, this._env);
 					} else {
-						messages.localize = createScopedLocalize(messages[name], this._env);
+						(messages as any as IConsumerAPI).localize = createScopedLocalize(messages[name], this._env);
 					}
 					load(messages);
-				});
-
+				};
+				if (typeof pluginConfig.loadBundle === 'function') {
+					(pluginConfig.loadBundle as BundleLoader)(name, language, (err: Error, messages) => {
+						// We have an error. Load the English default strings to not fail
+						if (err) {
+							req([name + '.nls'], messagesLoaded);
+						} else {
+							messagesLoaded(messages);
+						}
+					});
+				} else {
+					req([name + suffix], messagesLoaded);
+				}
 			}
 		}
 	}
