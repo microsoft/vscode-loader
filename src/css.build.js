@@ -22,7 +22,7 @@ var CSSBuildLoaderPlugin;
      * Known issue:
      * - In IE there is no way to know if the CSS file loaded successfully or not.
      */
-    var BrowserCSSLoader = (function () {
+    var BrowserCSSLoader = /** @class */ (function () {
         function BrowserCSSLoader() {
             this._pendingLoads = 0;
         }
@@ -94,7 +94,7 @@ var CSSBuildLoaderPlugin;
         };
         return BrowserCSSLoader;
     }());
-    var NodeCSSLoader = (function () {
+    var NodeCSSLoader = /** @class */ (function () {
         function NodeCSSLoader() {
             this.fs = require.nodeRequire('fs');
         }
@@ -106,11 +106,11 @@ var CSSBuildLoaderPlugin;
             }
             externalCallback(contents);
         };
+        NodeCSSLoader.BOM_CHAR_CODE = 65279;
         return NodeCSSLoader;
     }());
-    NodeCSSLoader.BOM_CHAR_CODE = 65279;
     // ------------------------------ Finally, the plugin
-    var CSSPlugin = (function () {
+    var CSSPlugin = /** @class */ (function () {
         function CSSPlugin(cssLoader) {
             this.cssLoader = cssLoader;
         }
@@ -169,12 +169,12 @@ var CSSBuildLoaderPlugin;
         CSSPlugin.prototype.getInlinedResources = function () {
             return global.cssInlinedResources || [];
         };
+        CSSPlugin.BUILD_MAP = {};
+        CSSPlugin.BUILD_PATH_MAP = {};
         return CSSPlugin;
     }());
-    CSSPlugin.BUILD_MAP = {};
-    CSSPlugin.BUILD_PATH_MAP = {};
     CSSBuildLoaderPlugin.CSSPlugin = CSSPlugin;
-    var Utilities = (function () {
+    var Utilities = /** @class */ (function () {
         function Utilities() {
         }
         Utilities.startsWith = function (haystack, needle) {

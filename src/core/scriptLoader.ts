@@ -30,30 +30,41 @@ namespace AMDLoader {
 	 */
 	class OnlyOnceScriptLoader implements IScriptLoader {
 
-		private actualScriptLoader: IScriptLoader;
-		private callbackMap: { [scriptSrc: string]: IScriptCallbacks[]; };
+		private readonly _env: Environment;
+		private _scriptLoader: IScriptLoader;
+		private readonly _callbackMap: { [scriptSrc: string]: IScriptCallbacks[]; };
 
-		constructor(actualScriptLoader: IScriptLoader) {
-			this.actualScriptLoader = actualScriptLoader;
-			this.callbackMap = {};
+		constructor(env: Environment) {
+			this._env = env;
+			this._scriptLoader = null;
+			this._callbackMap = {};
 		}
 
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
+			if (!this._scriptLoader) {
+				this._scriptLoader = (
+					this._env.isWebWorker
+						? new WorkerScriptLoader()
+						: this._env.isNode
+							? new NodeScriptLoader(this._env)
+							: new BrowserScriptLoader()
+				);
+			}
 			let scriptCallbacks: IScriptCallbacks = {
 				callback: callback,
 				errorback: errorback
 			};
-			if (this.callbackMap.hasOwnProperty(scriptSrc)) {
-				this.callbackMap[scriptSrc].push(scriptCallbacks);
+			if (this._callbackMap.hasOwnProperty(scriptSrc)) {
+				this._callbackMap[scriptSrc].push(scriptCallbacks);
 				return;
 			}
-			this.callbackMap[scriptSrc] = [scriptCallbacks];
-			this.actualScriptLoader.load(moduleManager, scriptSrc, () => this.triggerCallback(scriptSrc), (err: any) => this.triggerErrorback(scriptSrc, err));
+			this._callbackMap[scriptSrc] = [scriptCallbacks];
+			this._scriptLoader.load(moduleManager, scriptSrc, () => this.triggerCallback(scriptSrc), (err: any) => this.triggerErrorback(scriptSrc, err));
 		}
 
 		private triggerCallback(scriptSrc: string): void {
-			let scriptCallbacks = this.callbackMap[scriptSrc];
-			delete this.callbackMap[scriptSrc];
+			let scriptCallbacks = this._callbackMap[scriptSrc];
+			delete this._callbackMap[scriptSrc];
 
 			for (let i = 0; i < scriptCallbacks.length; i++) {
 				scriptCallbacks[i].callback();
@@ -61,8 +72,8 @@ namespace AMDLoader {
 		}
 
 		private triggerErrorback(scriptSrc: string, err: any): void {
-			let scriptCallbacks = this.callbackMap[scriptSrc];
-			delete this.callbackMap[scriptSrc];
+			let scriptCallbacks = this._callbackMap[scriptSrc];
+			delete this._callbackMap[scriptSrc];
 
 			for (let i = 0; i < scriptCallbacks.length; i++) {
 				scriptCallbacks[i].errorback(err);
@@ -419,12 +430,6 @@ namespace AMDLoader {
 	}
 
 	export function createScriptLoader(env: Environment): IScriptLoader {
-		return new OnlyOnceScriptLoader(
-			env.isWebWorker ?
-				new WorkerScriptLoader()
-				: env.isNode ?
-					new NodeScriptLoader(env)
-					: new BrowserScriptLoader()
-		);
+		return new OnlyOnceScriptLoader(env);
 	}
 }

@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"target": "es5",
 		"newLine": "LF",
-		"noUnusedLocals": true
+		"noUnusedLocals": false
 	},
 	"files": [
 		"src/loader.d.ts",

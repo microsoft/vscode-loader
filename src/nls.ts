@@ -21,15 +21,25 @@ module NLSLoaderPlugin {
 
 	class Environment {
 
-		static detect(): Environment {
-			let isPseudo = (typeof document !== 'undefined' && document.location && document.location.hash.indexOf('pseudo=true') >= 0);
-			return new Environment(isPseudo);
+		private _detected: boolean;
+		_isPseudo: boolean;
+
+		public get isPseudo(): boolean {
+			this._detect();
+			return this._isPseudo;
 		}
 
-		constructor(
-			readonly isPseudo: boolean
-		) {
-			//
+		constructor() {
+			this._detected = false;
+			this._isPseudo = false;
+		}
+
+		private _detect(): void {
+			if (this._detected) {
+				return;
+			}
+			this._detected = true;
+			this._isPseudo = (typeof document !== 'undefined' && document.location && document.location.hash.indexOf('pseudo=true') >= 0);
 		}
 	}
 
@@ -113,7 +123,7 @@ module NLSLoaderPlugin {
 		}
 
 		public setPseudoTranslation(value: boolean) {
-			this._env = new Environment(value);
+			this._env._isPseudo = value;
 		}
 
 		public create(key: string, data: IBundledStrings): IConsumerAPI {
@@ -159,11 +169,5 @@ module NLSLoaderPlugin {
 		}
 	}
 
-	export function init() {
-		define('vs/nls', new NLSPlugin(Environment.detect()));
-	}
-
-	if (typeof doNotInitLoader === 'undefined') {
-		init();
-	}
+	define('vs/nls', new NLSPlugin(new Environment()));
 }
