@@ -1403,7 +1403,8 @@ var AMDLoader;
             this._knownModules2[moduleId] = true;
             var strModuleId = this._moduleIdProvider.getStrModuleId(moduleId);
             var paths = this._config.moduleIdToPaths(strModuleId);
-            if (this._env.isNode && strModuleId.indexOf('/') === -1) {
+            var scopedPackageRegex = /^@[^\/]+\/[^\/]+$/; // matches @scope/package-name
+            if (this._env.isNode && (strModuleId.indexOf('/') === -1 || scopedPackageRegex.test(strModuleId))) {
                 paths.push('node|' + strModuleId);
             }
             var lastPathIndex = -1;
