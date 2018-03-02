@@ -62,30 +62,46 @@ namespace AMDLoader {
 
 	export class Environment {
 
-		public static detect(): Environment {
-			return new Environment({
-				isWindows: this._isWindows(),
-				isNode: (typeof module !== 'undefined' && !!module.exports),
-				isElectronRenderer: (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer'),
-				isWebWorker: (typeof global.importScripts === 'function')
-			});
+		private _detected: boolean;
+		private _isWindows: boolean;
+		private _isNode: boolean;
+		private _isElectronRenderer: boolean;
+		private _isWebWorker: boolean;
+
+		public get isWindows(): boolean {
+			this._detect();
+			return this._isWindows;
+		}
+		public get isNode(): boolean {
+			this._detect();
+			return this._isNode;
+		}
+		public get isElectronRenderer(): boolean {
+			this._detect();
+			return this._isElectronRenderer;
+		}
+		public get isWebWorker(): boolean {
+			this._detect();
+			return this._isWebWorker;
 		}
 
-		public readonly isWindows: boolean;
-		public readonly isNode: boolean;
-		public readonly isElectronRenderer: boolean;
-		public readonly isWebWorker: boolean;
+		constructor() {
+			this._detected = false;
+			this._isWindows = false;
+			this._isNode = false;
+			this._isElectronRenderer = false;
+			this._isWebWorker = false;
+		}
 
-		constructor(opts: {
-			isWindows: boolean;
-			isNode: boolean;
-			isElectronRenderer: boolean;
-			isWebWorker: boolean;
-		}) {
-			this.isWindows = opts.isWindows;
-			this.isNode = opts.isNode;
-			this.isElectronRenderer = opts.isElectronRenderer;
-			this.isWebWorker = opts.isWebWorker;
+		private _detect(): void {
+			if (this._detected) {
+				return;
+			}
+			this._detected = true;
+			this._isWindows = Environment._isWindows();
+			this._isNode = (typeof module !== 'undefined' && !!module.exports);
+			this._isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
+			this._isWebWorker = (typeof global.importScripts === 'function');
 		}
 
 		private static _isWindows(): boolean {

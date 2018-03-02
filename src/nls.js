@@ -16,14 +16,25 @@
 'use strict';
 var NLSLoaderPlugin;
 (function (NLSLoaderPlugin) {
-    var Environment = (function () {
-        function Environment(isPseudo) {
-            this.isPseudo = isPseudo;
-            //
+    var Environment = /** @class */ (function () {
+        function Environment() {
+            this._detected = false;
+            this._isPseudo = false;
         }
-        Environment.detect = function () {
-            var isPseudo = (typeof document !== 'undefined' && document.location && document.location.hash.indexOf('pseudo=true') >= 0);
-            return new Environment(isPseudo);
+        Object.defineProperty(Environment.prototype, "isPseudo", {
+            get: function () {
+                this._detect();
+                return this._isPseudo;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Environment.prototype._detect = function () {
+            if (this._detected) {
+                return;
+            }
+            this._detected = true;
+            this._isPseudo = (typeof document !== 'undefined' && document.location && document.location.hash.indexOf('pseudo=true') >= 0);
         };
         return Environment;
     }());
@@ -66,7 +77,7 @@ var NLSLoaderPlugin;
             return _format(scope[idx], restArgs, env);
         };
     }
-    var NLSPlugin = (function () {
+    var NLSPlugin = /** @class */ (function () {
         function NLSPlugin(env) {
             var _this = this;
             this._env = env;
@@ -79,7 +90,7 @@ var NLSLoaderPlugin;
             };
         }
         NLSPlugin.prototype.setPseudoTranslation = function (value) {
-            this._env = new Environment(value);
+            this._env._isPseudo = value;
         };
         NLSPlugin.prototype.create = function (key, data) {
             return {
@@ -101,7 +112,7 @@ var NLSLoaderPlugin;
                 if (language !== null && language !== NLSPlugin.DEFAULT_TAG) {
                     suffix = suffix + '.' + language;
                 }
-                req([name + suffix], function (messages) {
+                var messagesLoaded_1 = function (messages) {
                     if (Array.isArray(messages)) {
                         messages.localize = createScopedLocalize(messages, _this._env);
                     }
@@ -109,18 +120,26 @@ var NLSLoaderPlugin;
                         messages.localize = createScopedLocalize(messages[name], _this._env);
                     }
                     load(messages);
-                });
+                };
+                if (typeof pluginConfig.loadBundle === 'function') {
+                    pluginConfig.loadBundle(name, language, function (err, messages) {
+                        // We have an error. Load the English default strings to not fail
+                        if (err) {
+                            req([name + '.nls'], messagesLoaded_1);
+                        }
+                        else {
+                            messagesLoaded_1(messages);
+                        }
+                    });
+                }
+                else {
+                    req([name + suffix], messagesLoaded_1);
+                }
             }
         };
+        NLSPlugin.DEFAULT_TAG = 'i-default';
         return NLSPlugin;
     }());
-    NLSPlugin.DEFAULT_TAG = 'i-default';
     NLSLoaderPlugin.NLSPlugin = NLSPlugin;
-    function init() {
-        define('vs/nls', new NLSPlugin(Environment.detect()));
-    }
-    NLSLoaderPlugin.init = init;
-    if (typeof doNotInitLoader === 'undefined') {
-        init();
-    }
+    define('vs/nls', new NLSPlugin(new Environment()));
 })(NLSLoaderPlugin || (NLSLoaderPlugin = {}));

@@ -5,7 +5,7 @@
 
 namespace AMDLoader {
 
-	export enum LoaderEventType {
+	export const enum LoaderEventType {
 		LoaderAvailable = 1,
 
 		BeginLoadingScript = 10,

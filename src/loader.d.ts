@@ -32,22 +32,22 @@ declare var Map: MapConstructor;
 declare namespace AMDLoader {
     const global: any;
     class Environment {
-        static detect(): Environment;
+        private _detected;
+        private _isWindows;
+        private _isNode;
+        private _isElectronRenderer;
+        private _isWebWorker;
         readonly isWindows: boolean;
         readonly isNode: boolean;
         readonly isElectronRenderer: boolean;
         readonly isWebWorker: boolean;
-        constructor(opts: {
-            isWindows: boolean;
-            isNode: boolean;
-            isElectronRenderer: boolean;
-            isWebWorker: boolean;
-        });
+        constructor();
+        private _detect();
         private static _isWindows();
     }
 }
 declare namespace AMDLoader {
-    enum LoaderEventType {
+    const enum LoaderEventType {
         LoaderAvailable = 1,
         BeginLoadingScript = 10,
         EndLoadingScriptOK = 11,
@@ -219,8 +219,8 @@ declare namespace AMDLoader {
         /**
          * Ensure configuration options make sense
          */
-        private static validateConfigurationOptions(isWebWorker, options);
-        static mergeConfigurationOptions(isWebWorker: boolean, overwrite?: IConfigurationOptions, base?: IConfigurationOptions): IConfigurationOptions;
+        private static validateConfigurationOptions(options);
+        static mergeConfigurationOptions(overwrite?: IConfigurationOptions, base?: IConfigurationOptions): IConfigurationOptions;
     }
     class Configuration {
         private readonly _env;

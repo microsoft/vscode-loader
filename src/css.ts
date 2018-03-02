@@ -133,11 +133,5 @@ module CSSLoaderPlugin {
 		}
 	}
 
-	export function init() {
-		define('vs/css', new CSSPlugin());
-	};
-
-	if (typeof doNotInitLoader === 'undefined') {
-		init();
-	}
+	define('vs/css', new CSSPlugin());
 }

@@ -15,7 +15,7 @@ function assertConfigurationIs(actual, expected) {
     QUnit.deepEqual(actual, expected, 'Configuration options are equal');
 }
 QUnit.test('Default configuration', function () {
-    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false);
+    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions();
     assertConfigurationIs(result, {
         baseUrl: '',
         catchError: false,
@@ -29,7 +29,7 @@ QUnit.test('Default configuration', function () {
     });
 });
 function createSimpleKnownConfigurationOptions() {
-    return loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    return loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         baseUrl: 'myBaseUrl',
         catchError: true,
         ignoreDuplicateModules: ['a'],
@@ -57,7 +57,7 @@ QUnit.test('Simple known configuration options', function () {
 });
 QUnit.test('Overwriting known configuration options', function () {
     // Overwrite baseUrl 1
-    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         baseUrl: ''
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -72,7 +72,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Overwrite baseUrl 2
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         baseUrl: '/'
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -87,7 +87,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Overwrite catchError
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         catchError: false
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -102,7 +102,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Contribute additional ignoreDuplicateModules
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         ignoreDuplicateModules: ['b']
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -117,7 +117,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Change defined paths
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         paths: { 'a': 'c' }
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -132,7 +132,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Contribute additional module configs
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         config: { 'e': {} }
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -147,7 +147,7 @@ QUnit.test('Overwriting known configuration options', function () {
         nodeModules: []
     });
     // Change defined module configs
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         config: { 'd': { 'a': 'a' } }
     }, createSimpleKnownConfigurationOptions());
     assertConfigurationIs(result, {
@@ -163,7 +163,7 @@ QUnit.test('Overwriting known configuration options', function () {
     });
 });
 QUnit.test('Overwriting unknown configuration options', function () {
-    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false);
+    var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions();
     assertConfigurationIs(result, {
         baseUrl: '',
         catchError: false,
@@ -176,7 +176,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         nodeModules: []
     });
     // Adding unknown key
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         unknownKey1: 'value1'
     }, result);
     assertConfigurationIs(result, {
@@ -192,7 +192,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         nodeModules: []
     });
     // Adding another unknown key
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         unknownKey2: 'value2'
     }, result);
     assertConfigurationIs(result, {
@@ -209,7 +209,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         nodeModules: []
     });
     // Overwriting unknown key
-    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions(false, {
+    result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         unknownKey2: 'new-value2'
     }, result);
     assertConfigurationIs(result, {
@@ -228,7 +228,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
 });
 QUnit.module('Configuration');
 QUnit.test('moduleIdToPath', function () {
-    var config = new loader.Configuration(loader.Environment.detect(), {
+    var config = new loader.Configuration(new loader.Environment(), {
         baseUrl: 'prefix',
         urlArgs: 'suffix',
         paths: {
@@ -264,7 +264,7 @@ QUnit.test('moduleIdToPath', function () {
     QUnit.equal(config.moduleIdToPaths('https://a'), 'https://a.js?suffix');
 });
 QUnit.test('requireToUrl', function () {
-    var config = new loader.Configuration(loader.Environment.detect(), {
+    var config = new loader.Configuration(new loader.Environment(), {
         baseUrl: 'prefix',
         urlArgs: 'suffix',
         paths: {
@@ -298,7 +298,7 @@ QUnit.test('requireToUrl', function () {
     QUnit.equal(config.requireToUrl('https://a'), 'https://a?suffix');
 });
 QUnit.test('ignoreDuplicateModules', function () {
-    var config = new loader.Configuration(loader.Environment.detect(), {
+    var config = new loader.Configuration(new loader.Environment(), {
         ignoreDuplicateModules: ['a1', 'a2', 'a/b/c']
     });
     QUnit.equal(config.isDuplicateMessageIgnoredFor('a1'), true);
@@ -367,7 +367,7 @@ QUnit.test('Loading 3 simple modules', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     mm.defineModule('a', ['a1', 'a2'], function (a1, a2) {
         QUnit.equal(a1, 'a1');
         QUnit.equal(a2, 'a2');
@@ -399,7 +399,7 @@ QUnit.test('Loading a plugin dependency', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     mm.defineModule('a/b/c', ['../../plugin!./d', 'require'], function (r, req) {
         QUnit.equal(r, 'r');
         QUnit.equal(req.toUrl('./d.txt'), 'a/b/d.txt');
@@ -438,7 +438,7 @@ QUnit.test('Loading a dependency cycle', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     mm.defineModule('a', ['b'], function (b) {
         QUnit.equal(b, 'b');
         return 'a';
@@ -460,7 +460,7 @@ QUnit.test('Using a local error handler immediate script loading failure', funct
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     mm.defineModule('a', ['b'], function (b) {
         QUnit.equal(b, 'b');
         return 'a';
@@ -488,7 +488,7 @@ QUnit.test('Using a local error handler secondary script loading failure', funct
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     mm.defineModule('a', ['b'], function (b) {
         QUnit.ok(false);
     }, function (err) {
@@ -508,7 +508,7 @@ QUnit.test('No path config', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     mm.defineModule('first', ['a'], function () {
         QUnit.ok(false, 'a should not be found');
     }, function (err) {
@@ -527,7 +527,7 @@ QUnit.test('With path config', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     mm.configure({
         paths: {
             a: 'alocation.js'
@@ -557,7 +557,7 @@ QUnit.test('With one fallback', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     mm.configure({
         paths: {
             a: ['alocation.js', 'afallback.js']
@@ -590,7 +590,7 @@ QUnit.test('With two fallbacks', function () {
             }
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     mm.configure({
         paths: {
             a: ['alocation.js', 'afallback.js', 'anotherfallback.js']
@@ -611,7 +611,7 @@ QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dep
             QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     // Define the resolved plugin value
     mm.defineModule('plugin!pluginParam', [], function () {
         return {
@@ -637,7 +637,7 @@ QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dep
     }, null);
 });
 QUnit.test('Bug #12024: [loader] Should not append .js to URLs containing query string', function () {
-    var config = new loader.Configuration(loader.Environment.detect(), {
+    var config = new loader.Configuration(new loader.Environment(), {
         baseUrl: 'prefix',
         paths: {
             'searchBoxJss': 'http://services.social.microsoft.com/search/Widgets/SearchBox.jss?boxid=HeaderSearchTextBox&btnid=HeaderSearchButton&brand=Msdn&loc=en-us&Refinement=198,234&focusOnInit=false&iroot=vscom&emptyWatermark=true&searchButtonTooltip=Search here'
@@ -653,7 +653,7 @@ QUnit.test('Bug #12020: [loader] relative (synchronous) require does not normali
             QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
         },
     };
-    var mm = new loader.ModuleManager(loader.Environment.detect(), scriptLoader, null, null);
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     mm.defineModule('plugin!a/b/c', [], function () {
         QUnit.ok(true);
         return 'plugin!a/b/c';
