@@ -90,7 +90,7 @@ namespace AMDLoader {
 		}
 
 		public static isAnonymousModule(id: string): boolean {
-			return /^===anonymous/.test(id);
+			return Utilities.startsWith(id, '===anonymous');
 		}
 
 		private static PERFORMANCE_NOW_PROBED = false;
