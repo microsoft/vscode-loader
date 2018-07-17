@@ -74,6 +74,9 @@ namespace AMDLoader {
 	RequireFunc.getStats = function (): LoaderEvent[] {
 		return moduleManager.getLoaderEvents();
 	};
+	RequireFunc.define = function () {
+		return DefineFunc.apply(null, arguments);
+	}
 
 	export function init(): void {
 		if (typeof global.require !== 'undefined' || typeof require !== 'undefined') {

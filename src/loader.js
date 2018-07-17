@@ -1650,6 +1650,9 @@ var AMDLoader;
     RequireFunc.getStats = function () {
         return moduleManager.getLoaderEvents();
     };
+    RequireFunc.define = function () {
+        return DefineFunc.apply(null, arguments);
+    };
     function init() {
         if (typeof AMDLoader.global.require !== 'undefined' || typeof require !== 'undefined') {
             var _nodeRequire_1 = (AMDLoader.global.require || require);

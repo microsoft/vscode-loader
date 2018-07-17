@@ -46,6 +46,14 @@ namespace AMDLoader {
 		 * Non standard extension to fetch loader events
 		 */
 		getStats(): LoaderEvent[];
+
+		/**
+		 * The define function
+		 */
+		define(id: 'string', dependencies: string[], callback: any): void;
+		define(id: 'string', callback: any): void;
+		define(dependencies: string[], callback: any): void;
+		define(callback: any): void;
 	}
 
 	export interface IModuleConfiguration {
