@@ -10,7 +10,7 @@ namespace AMDLoader {
 		 * This method does not take care of / vs \
 		 */
 		public static fileUriToFilePath(isWindows: boolean, uri: string): string {
-			uri = decodeURI(uri);
+			uri = decodeURI(uri).replace(/%23/g, '#');
 			if (isWindows) {
 				if (/^file:\/\/\//.test(uri)) {
 					// This is a URI without a hostname => return only the path segment
