@@ -339,8 +339,7 @@ namespace AMDLoader {
 
 					if (!opts.nodeCachedDataDir) {
 
-						this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, { filename: vmScriptSrc }, recorder);
-						callback();
+						this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, { filename: vmScriptSrc }, recorder, callback, errorback);
 
 					} else {
 
@@ -352,8 +351,7 @@ namespace AMDLoader {
 								produceCachedData: typeof cachedData === 'undefined',
 								cachedData
 							};
-							const script = this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, options, recorder);
-							callback();
+							const script = this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, options, recorder, callback, errorback);
 							this._processCachedData(moduleManager, script, cachedDataPath);
 						});
 					}
@@ -361,7 +359,7 @@ namespace AMDLoader {
 			}
 		}
 
-		private _loadAndEvalScript(moduleManager: IModuleManager, scriptSrc: string, vmScriptSrc: string, contents: string, options: INodeVMScriptOptions, recorder: ILoaderEventRecorder): INodeVMScript {
+		private _loadAndEvalScript(moduleManager: IModuleManager, scriptSrc: string, vmScriptSrc: string, contents: string, options: INodeVMScriptOptions, recorder: ILoaderEventRecorder, callback: () => void, errorback: (err: any) => void): INodeVMScript {
 
 			// create script, run script
 			recorder.record(LoaderEventType.NodeBeginEvaluatingScript, scriptSrc);
@@ -369,10 +367,24 @@ namespace AMDLoader {
 			const script = new this._vm.Script(contents, options);
 
 			const r = script.runInThisContext(options);
-			r.call(global, moduleManager.getGlobalAMDRequireFunc(), moduleManager.getGlobalAMDDefineFunc(), vmScriptSrc, this._path.dirname(scriptSrc));
+
+			const globalDefineFunc = moduleManager.getGlobalAMDDefineFunc();
+			let receivedDefineCall = false;
+			const localDefineFunc = function () {
+				receivedDefineCall = true;
+				return globalDefineFunc.apply(null, arguments);
+			};
+
+			r.call(global, moduleManager.getGlobalAMDRequireFunc(), localDefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
 
 			// signal done
 			recorder.record(LoaderEventType.NodeEndEvaluatingScript, scriptSrc);
+
+			if (receivedDefineCall) {
+				callback();
+			} else {
+				errorback(new Error(`Didn't receive define call in ${scriptSrc}!`));
+			}
 
 			return script;
 		}
