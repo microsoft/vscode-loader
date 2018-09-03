@@ -370,10 +370,11 @@ namespace AMDLoader {
 
 			const globalDefineFunc = moduleManager.getGlobalAMDDefineFunc();
 			let receivedDefineCall = false;
-			const localDefineFunc = function () {
+			const localDefineFunc: IDefineFunc = <any>function () {
 				receivedDefineCall = true;
 				return globalDefineFunc.apply(null, arguments);
 			};
+			localDefineFunc.amd = globalDefineFunc.amd;
 
 			r.call(global, moduleManager.getGlobalAMDRequireFunc(), localDefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
 

@@ -797,6 +797,7 @@ var AMDLoader;
                 receivedDefineCall = true;
                 return globalDefineFunc.apply(null, arguments);
             };
+            localDefineFunc.amd = globalDefineFunc.amd;
             r.call(AMDLoader.global, moduleManager.getGlobalAMDRequireFunc(), localDefineFunc, vmScriptSrc, this._path.dirname(scriptSrc));
             // signal done
             recorder.record(32 /* NodeEndEvaluatingScript */, scriptSrc);
