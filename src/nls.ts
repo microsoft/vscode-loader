@@ -53,8 +53,8 @@ module NLSLoaderPlugin {
 	}
 
 	export interface ILocalizeFunc {
-		(info: ILocalizeInfo, message: string, ...args: any[]): string;
-		(key: string, message: string, ...args: any[]): string;
+		(info: ILocalizeInfo, message: string, ...args: (string | number | boolean | undefined | null)[]): string;
+		(key: string, message: string, ...args: (string | number | boolean | undefined | null)[]): string;
 	}
 
 	interface IBoundLocalizeFunc {
@@ -69,7 +69,7 @@ module NLSLoaderPlugin {
 		(bundle: string, locale: string, cb: (err: Error, messages: string[] | IBundledStrings) => void): void;
 	}
 
-	function _format(message: string, args: string[], env: Environment): string {
+	function _format(message: string, args: (string | number | boolean | undefined | null)[], env: Environment): string {
 		let result: string;
 
 		if (args.length === 0) {
@@ -77,7 +77,14 @@ module NLSLoaderPlugin {
 		} else {
 			result = message.replace(/\{(\d+)\}/g, (match, rest) => {
 				let index = rest[0];
-				return typeof args[index] !== 'undefined' ? args[index] : match;
+				let arg = args[index];
+				let result = match;
+				if (typeof arg === 'string') {
+					result = arg;
+				} else if (typeof arg === 'number' || typeof arg === 'boolean' || arg === void 0 || arg === null) {
+					result = String(arg);
+				}
+				return result;
 			});
 		}
 
@@ -99,7 +106,7 @@ module NLSLoaderPlugin {
 		return null;
 	}
 
-	function localize(env: Environment, data, message, ...args: any[]) {
+	function localize(env: Environment, data, message, ...args: (string | number | boolean | undefined | null)[]) {
 		return _format(message, args, env);
 	}
 
@@ -115,11 +122,11 @@ module NLSLoaderPlugin {
 		private static DEFAULT_TAG = 'i-default';
 		private _env: Environment;
 
-		public localize: (data, message, ...args: any[]) => string;
+		public localize: (data, message, ...args: (string | number | boolean | undefined | null)[]) => string;
 
 		constructor(env: Environment) {
 			this._env = env;
-			this.localize = (data, message, ...args: any[]) => localize(this._env, data, message, ...args);
+			this.localize = (data, message, ...args: (string | number | boolean | undefined | null)[]) => localize(this._env, data, message, ...args);
 		}
 
 		public setPseudoTranslation(value: boolean) {
