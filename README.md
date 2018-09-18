@@ -101,7 +101,7 @@ The project uses as a submodule the [AMD compliance tests](https://github.com/am
 * Run `git submodule init`
 * Run `git submodule update`
 * Run `npm install`
-* Compile in the background with `npm run watch`
+* Compile in the background with `npm run watch1` and `npm run watch2`
 
 ## Code of Conduct
 
