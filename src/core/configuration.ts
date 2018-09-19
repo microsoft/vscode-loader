@@ -106,6 +106,10 @@ namespace AMDLoader {
 		 */
 		isBuild?: boolean;
 		/**
+		 * Optional Content Security Policy nonce value used to load child scripts.
+		 */
+		cspNonce?: string;
+		/**
 		 * The main entry point node's require
 		 */
 		nodeRequire?: INodeRequire;
@@ -187,6 +191,9 @@ namespace AMDLoader {
 				if (!Utilities.endsWith(options.baseUrl, '/')) {
 					options.baseUrl += '/';
 				}
+			}
+			if (typeof options.cspNonce !== 'string') {
+				options.cspNonce = '';
 			}
 			if (!Array.isArray(options.nodeModules)) {
 				options.nodeModules = [];

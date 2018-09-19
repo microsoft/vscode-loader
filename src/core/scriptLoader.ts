@@ -116,6 +116,12 @@ namespace AMDLoader {
 
 			script.setAttribute('src', scriptSrc);
 
+			// Propagate CSP nonce to dynamically created script tag.
+			const { cspNonce } = moduleManager.getConfig().getOptionsLiteral();
+			if (cspNonce) {
+			  script.setAttribute('nonce', cspNonce);
+			}
+
 			document.getElementsByTagName('head')[0].appendChild(script);
 		}
 	}

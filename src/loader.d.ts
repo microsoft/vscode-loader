@@ -200,6 +200,10 @@ declare namespace AMDLoader {
          */
         isBuild?: boolean;
         /**
+         * Optional Content Security Policy nonce value used to load child scripts.
+         */
+        cspNonce?: string;
+        /**
          * The main entry point node's require
          */
         nodeRequire?: INodeRequire;

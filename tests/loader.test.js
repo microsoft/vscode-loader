@@ -24,6 +24,7 @@ QUnit.test('Default configuration', function () {
         paths: {},
         config: {},
         urlArgs: '',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -37,6 +38,7 @@ function createSimpleKnownConfigurationOptions() {
         paths: { 'a': 'b' },
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -51,6 +53,7 @@ QUnit.test('Simple known configuration options', function () {
         paths: { 'a': 'b' },
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -68,6 +71,7 @@ QUnit.test('Overwriting known configuration options', function () {
         paths: { 'a': 'b' },
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -83,6 +87,7 @@ QUnit.test('Overwriting known configuration options', function () {
         paths: { 'a': 'b' },
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -98,6 +103,7 @@ QUnit.test('Overwriting known configuration options', function () {
         paths: { 'a': 'b' },
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -113,6 +119,7 @@ QUnit.test('Overwriting known configuration options', function () {
         paths: { 'a': 'b' },
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -128,6 +135,7 @@ QUnit.test('Overwriting known configuration options', function () {
         paths: { 'a': 'c' },
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -143,6 +151,7 @@ QUnit.test('Overwriting known configuration options', function () {
         paths: { 'a': 'b' },
         config: { 'd': {}, 'e': {} },
         urlArgs: 'myUrlArgs',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -158,6 +167,7 @@ QUnit.test('Overwriting known configuration options', function () {
         paths: { 'a': 'b' },
         config: { 'd': { 'a': 'a' } },
         urlArgs: 'myUrlArgs',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -172,6 +182,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         paths: {},
         config: {},
         urlArgs: '',
+        cspNonce: '',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
@@ -187,6 +198,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         paths: {},
         config: {},
         urlArgs: '',
+        cspNonce: '',
         unknownKey1: 'value1',
         nodeCachedDataWriteDelay: 7000,
         nodeModules: []
@@ -203,6 +215,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         paths: {},
         config: {},
         urlArgs: '',
+        cspNonce: '',
         unknownKey1: 'value1',
         unknownKey2: 'value2',
         nodeCachedDataWriteDelay: 7000,
@@ -220,6 +233,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         paths: {},
         config: {},
         urlArgs: '',
+        cspNonce: '',
         unknownKey1: 'value1',
         unknownKey2: 'new-value2',
         nodeCachedDataWriteDelay: 7000,

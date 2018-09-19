@@ -48,6 +48,7 @@ loader(['an/amd/module'], function(value) {
  * `onError` - Callback that will be called when errors are encountered
  * `ignoreDuplicateModules` - The loader will issue warnings when duplicate modules are encountered. This list will inhibit those warnings if duplicate modules are expected.
  * `isBuild` - Flag to indicate if current execution is as part of a build.
+ * `cspNonce` - Allows setting a Content Security Policy nonce value on script tags created by the loader.
  * `nodeRequire` - The main entry point node's require
  * `nodeInstrumenter` - An optional transformation applied to the source before it is loaded in node's vm
 
@@ -109,4 +110,3 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ## License
 [MIT](https://github.com/Microsoft/vscode-loader/blob/master/License.txt)
-
