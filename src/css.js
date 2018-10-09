@@ -20,7 +20,7 @@ var CSSLoaderPlugin;
      * Known issue:
      * - In IE there is no way to know if the CSS file loaded successfully or not.
      */
-    var BrowserCSSLoader = /** @class */ (function () {
+    var BrowserCSSLoader = (function () {
         function BrowserCSSLoader() {
             this._pendingLoads = 0;
         }
@@ -93,7 +93,7 @@ var CSSLoaderPlugin;
         return BrowserCSSLoader;
     }());
     // ------------------------------ Finally, the plugin
-    var CSSPlugin = /** @class */ (function () {
+    var CSSPlugin = (function () {
         function CSSPlugin() {
             this._cssLoader = new BrowserCSSLoader();
         }

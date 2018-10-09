@@ -119,7 +119,7 @@ namespace AMDLoader {
 			// Propagate CSP nonce to dynamically created script tag.
 			const { cspNonce } = moduleManager.getConfig().getOptionsLiteral();
 			if (cspNonce) {
-			  script.setAttribute('nonce', cspNonce);
+				script.setAttribute('nonce', cspNonce);
 			}
 
 			document.getElementsByTagName('head')[0].appendChild(script);
@@ -276,7 +276,7 @@ namespace AMDLoader {
 
 				const dirname = that._path.dirname(filename);
 				const require = makeRequireFunction(this);
-				const args = [this.exports, require, this, filename, dirname, process, global, Buffer];
+				const args = [this.exports, require, this, filename, dirname, process, _commonjsGlobal, Buffer];
 				const result = compileWrapper.apply(this.exports, args);
 
 				that._processCachedData(moduleManager, script, cachedDataPath);

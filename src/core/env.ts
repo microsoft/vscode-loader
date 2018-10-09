@@ -33,7 +33,8 @@ declare var process: {
 declare var require: {
 	nodeRequire(module: string): any;
 };
-
+declare var global: object;
+const _commonjsGlobal = typeof global === 'object' ? global : {};
 interface Map<K, V> {
 	clear(): void;
 	delete(key: K): boolean;

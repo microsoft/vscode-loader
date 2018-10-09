@@ -15,6 +15,8 @@ declare var process: {
 declare var require: {
     nodeRequire(module: string): any;
 };
+declare var global: object;
+declare const _commonjsGlobal: object;
 interface Map<K, V> {
     clear(): void;
     delete(key: K): boolean;
@@ -42,8 +44,8 @@ declare namespace AMDLoader {
         readonly isElectronRenderer: boolean;
         readonly isWebWorker: boolean;
         constructor();
-        private _detect;
-        private static _isWindows;
+        private _detect();
+        private static _isWindows();
     }
 }
 declare namespace AMDLoader {
@@ -57,7 +59,7 @@ declare namespace AMDLoader {
         NodeBeginEvaluatingScript = 31,
         NodeEndEvaluatingScript = 32,
         NodeBeginNativeRequire = 33,
-        NodeEndNativeRequire = 34
+        NodeEndNativeRequire = 34,
     }
     class LoaderEvent {
         type: LoaderEventType;
@@ -230,7 +232,7 @@ declare namespace AMDLoader {
         /**
          * Ensure configuration options make sense
          */
-        private static validateConfigurationOptions;
+        private static validateConfigurationOptions(options);
         static mergeConfigurationOptions(overwrite?: IConfigurationOptions, base?: IConfigurationOptions): IConfigurationOptions;
     }
     class Configuration {
@@ -249,9 +251,9 @@ declare namespace AMDLoader {
          */
         private sortedPathsRules;
         constructor(env: Environment, options?: IConfigurationOptions);
-        private _createIgnoreDuplicateModulesMap;
-        private _createNodeModulesMap;
-        private _createSortedPathsRules;
+        private _createIgnoreDuplicateModulesMap();
+        private _createNodeModulesMap();
+        private _createSortedPathsRules();
         /**
          * Clone current configuration and overwrite options selectively.
          * @param options The selective options to overwrite with.
@@ -262,10 +264,10 @@ declare namespace AMDLoader {
          * Get current options bag. Useful for passing it forward to plugins.
          */
         getOptionsLiteral(): IConfigurationOptions;
-        private _applyPaths;
-        private _addUrlArgsToUrl;
-        private _addUrlArgsIfNecessaryToUrl;
-        private _addUrlArgsIfNecessaryToUrls;
+        private _applyPaths(moduleId);
+        private _addUrlArgsToUrl(url);
+        private _addUrlArgsIfNecessaryToUrl(url);
+        private _addUrlArgsIfNecessaryToUrls(urls);
         /**
          * Transform a module id to a location. Appends .js to module ids
          */
@@ -370,8 +372,8 @@ declare namespace AMDLoader {
         unresolvedDependenciesCount: number;
         private _isComplete;
         constructor(id: ModuleId, strId: string, dependencies: Dependency[], callback: any, errorback: Function, moduleIdResolver: ModuleIdResolver);
-        private static _safeInvokeFunction;
-        private static _invokeFactory;
+        private static _safeInvokeFunction(callback, args);
+        private static _invokeFactory(config, strModuleId, callback, dependenciesValues);
         complete(recorder: ILoaderEventRecorder, config: Configuration, dependenciesValues: any[]): void;
         /**
          * One of the direct dependencies or a transitive dependency has failed to load.
@@ -397,7 +399,7 @@ declare namespace AMDLoader {
     const enum ModuleId {
         EXPORTS = 0,
         MODULE = 1,
-        REQUIRE = 2
+        REQUIRE = 2,
     }
     class RegularDependency {
         static EXPORTS: RegularDependency;
@@ -454,7 +456,7 @@ declare namespace AMDLoader {
         reset(): ModuleManager;
         getGlobalAMDDefineFunc(): IDefineFunc;
         getGlobalAMDRequireFunc(): IRequireFunc;
-        private static _findRelevantLocationInStack;
+        private static _findRelevantLocationInStack(needle, stack);
         getBuildInfo(): IBuildModuleInfo[];
         getRecorder(): ILoaderEventRecorder;
         getLoaderEvents(): LoaderEvent[];
@@ -471,9 +473,9 @@ declare namespace AMDLoader {
          * @param callback if callback is a function, it will be called with the resolved dependencies. if callback is an object, it will be considered as the exports of the module.
          */
         defineModule(strModuleId: string, dependencies: string[], callback: any, errorback: Function, stack: string, moduleIdResolver?: ModuleIdResolver): void;
-        private _normalizeDependency;
-        private _normalizeDependencies;
-        private _relativeRequire;
+        private _normalizeDependency(dependency, moduleIdResolver);
+        private _normalizeDependencies(dependencies, moduleIdResolver);
+        private _relativeRequire(moduleIdResolver, dependencies, callback?, errorback?);
         /**
          * Require synchronously a module by its absolute id. If the module is not loaded, an exception will be thrown.
          * @param id The unique and absolute id of the required module
@@ -486,44 +488,44 @@ declare namespace AMDLoader {
          * Callback from the scriptLoader when a module has been loaded.
          * This means its code is available and has been executed.
          */
-        private _onLoad;
-        private _createLoadError;
+        private _onLoad(moduleId);
+        private _createLoadError(moduleId, err);
         /**
          * Callback from the scriptLoader when a module hasn't been loaded.
          * This means that the script was not found (e.g. 404) or there was an error in the script.
          */
-        private _onLoadError;
+        private _onLoadError(moduleId, err);
         /**
          * Walks (recursively) the dependencies of 'from' in search of 'to'.
          * Returns true if there is such a path or false otherwise.
          * @param from Module id to start at
          * @param to Module id to look for
          */
-        private _hasDependencyPath;
+        private _hasDependencyPath(fromId, toId);
         /**
          * Walks (recursively) the dependencies of 'from' in search of 'to'.
          * Returns cycle as array.
          * @param from Module id to start at
          * @param to Module id to look for
          */
-        private _findCyclePath;
+        private _findCyclePath(fromId, toId, depth);
         /**
          * Create the local 'require' that is passed into modules
          */
-        private _createRequire;
-        private _loadModule;
+        private _createRequire(moduleIdResolver);
+        private _loadModule(moduleId);
         /**
          * Resolve a plugin dependency with the plugin loaded & complete
          * @param module The module that has this dependency
          * @param pluginDependency The semi-normalized dependency that appears in the module. e.g. 'vs/css!./mycssfile'. Only the plugin part (before !) is normalized
          * @param plugin The plugin (what the plugin exports)
          */
-        private _loadPluginDependency;
+        private _loadPluginDependency(plugin, pluginDependency);
         /**
          * Examine the dependencies of module 'module' and resolve them as needed.
          */
-        private _resolve;
-        private _onModuleComplete;
+        private _resolve(module);
+        private _onModuleComplete(module);
     }
 }
 declare var doNotInitLoader: any;
