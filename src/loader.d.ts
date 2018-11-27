@@ -216,17 +216,26 @@ declare namespace AMDLoader {
         nodeMain?: string;
         nodeModules?: string[];
         /**
-         * Optional data directory for reading/writing v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
-         */
-        nodeCachedDataDir?: string;
-        /**
-         * Optional delay for filesystem write/delete operations
-         */
-        nodeCachedDataWriteDelay?: number;
-        /**
-         * Optional callback that will be invoked when cached data has been created
-         */
-        onNodeCachedData?: (err: any, data?: any) => void;
+        * Support v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
+        */
+        nodeCachedData?: {
+            /**
+             * Directory path in which cached is stored.
+             */
+            path: string;
+            /**
+             * Seed when generating names of cache files.
+             */
+            seed?: string;
+            /**
+             * Optional delay for filesystem write/delete operations
+             */
+            writeDelay?: number;
+            /**
+             * Optional callback that will be invoked when cached data has been created
+             */
+            onData?: (err: any, data?: any) => void;
+        };
     }
     class ConfigurationOptionsUtil {
         /**

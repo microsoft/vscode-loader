@@ -12,9 +12,9 @@ QUnit.module('ConfigurationOptionsUtil');
  */
 function assertConfigurationIs(actual: loader.IConfigurationOptions, expected: loader.IConfigurationOptions): void {
 	actual.onError = null;
-	actual.onNodeCachedData = null;
+	actual.nodeCachedData = null;
 	expected.onError = null;
-	expected.onNodeCachedData = null;
+	expected.nodeCachedData = null;
 	QUnit.deepEqual(actual, expected, 'Configuration options are equal');
 }
 
@@ -29,7 +29,6 @@ QUnit.test('Default configuration', () => {
 		config: {},
 		urlArgs: '',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 });
@@ -44,7 +43,6 @@ function createSimpleKnownConfigurationOptions(): loader.IConfigurationOptions {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 }
@@ -60,7 +58,6 @@ QUnit.test('Simple known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 });
@@ -79,7 +76,6 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -96,7 +92,6 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -113,7 +108,6 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -130,7 +124,6 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -147,8 +140,6 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
-		nodeModules: []
 	});
 
 	// Contribute additional module configs
@@ -164,7 +155,6 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {}, 'e': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 
@@ -181,7 +171,6 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': { 'a': 'a' } },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 });
@@ -197,7 +186,6 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		config: {},
 		urlArgs: '',
 		cspNonce: '',
-		nodeCachedDataWriteDelay: 7000,
 		nodeModules: []
 	});
 

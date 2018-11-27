@@ -119,18 +119,28 @@ namespace AMDLoader {
 		nodeInstrumenter?: (source: string, vmScriptSrc: string) => string;
 		nodeMain?: string;
 		nodeModules?: string[];
+
 		/**
-		 * Optional data directory for reading/writing v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
-		 */
-		nodeCachedDataDir?: string;
-		/**
-		 * Optional delay for filesystem write/delete operations
-		 */
-		nodeCachedDataWriteDelay?: number;
-		/**
-		 * Optional callback that will be invoked when cached data has been created
-		 */
-		onNodeCachedData?: (err: any, data?: any) => void;
+		* Support v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
+		*/
+		nodeCachedData?: {
+			/**
+			 * Directory path in which cached is stored.
+			 */
+			path: string;
+			/**
+			 * Seed when generating names of cache files.
+			 */
+			seed?: string;
+			/**
+			 * Optional delay for filesystem write/delete operations
+			 */
+			writeDelay?: number;
+			/**
+			 * Optional callback that will be invoked when cached data has been created
+			 */
+			onData?: (err: any, data?: any) => void;
+		}
 	}
 
 	export class ConfigurationOptionsUtil {
@@ -198,25 +208,29 @@ namespace AMDLoader {
 			if (!Array.isArray(options.nodeModules)) {
 				options.nodeModules = [];
 			}
-			if (typeof options.nodeCachedDataWriteDelay !== 'number' || options.nodeCachedDataWriteDelay < 0) {
-				options.nodeCachedDataWriteDelay = 1000 * 7;
-			}
-			if (typeof options.onNodeCachedData !== 'function') {
-				options.onNodeCachedData = (err, data?) => {
-					if (!err) {
-						// ignore
-
-					} else if (err.errorCode === 'cachedDataRejected') {
-						console.warn('Rejected cached data from file: ' + err.path);
-
-					} else if (err.errorCode === 'unlink' || err.errorCode === 'writeFile') {
-						console.error('Problems writing cached data file: ' + err.path);
-						console.error(err.detail);
-
-					} else {
-						console.error(err);
-					}
-				};
+			if (typeof options.nodeCachedData === 'object') {
+				if (typeof options.nodeCachedData.seed !== 'string') {
+					options.nodeCachedData.seed = 'seed';
+				}
+				if (typeof options.nodeCachedData.writeDelay !== 'number' || options.nodeCachedData.writeDelay < 0) {
+					options.nodeCachedData.writeDelay = 1000 * 7;
+				}
+				if (typeof options.nodeCachedData.onData !== 'function') {
+					options.nodeCachedData.onData = (err) => {
+						if (err && err.errorCode === 'cachedDataRejected') {
+							console.warn('Rejected cached data from file: ' + err.path);
+						} else if (err && err.errorCode) {
+							console.error('Problems handling cached data file: ' + err.path);
+							console.error(err.detail);
+						} else if (err) {
+							console.error(err);
+						}
+					};
+				}
+				if (!options.nodeCachedData.path || typeof options.nodeCachedData.path !== 'string') {
+					options.nodeCachedData.onData('INVALID cached data configuration, \'path\' MUST be set');
+					options.nodeCachedData = undefined;
+				}
 			}
 
 			return options;

@@ -192,7 +192,6 @@ namespace AMDLoader {
 
 		private _didPatchNodeRequire: boolean;
 		private _didInitialize: boolean;
-		private _jsflags: string;
 		private _fs: INodeFS;
 		private _vm: INodeVM;
 		private _path: INodePath;
@@ -215,23 +214,14 @@ namespace AMDLoader {
 			this._vm = nodeRequire('vm');
 			this._path = nodeRequire('path');
 			this._crypto = nodeRequire('crypto');
-
-			// js-flags have an impact on cached data
-			this._jsflags = '';
-			for (const arg of process.argv) {
-				if (arg.indexOf('--js-flags=') === 0) {
-					this._jsflags = arg;
-					break;
-				}
-			}
 		}
 
 		// patch require-function of nodejs such that we can manually create a script
 		// from cached data. this is done by overriding the `Module._compile` function
 		private _initNodeRequire(nodeRequire: INodeRequire, moduleManager: IModuleManager): void {
 
-			const { nodeCachedDataDir } = moduleManager.getConfig().getOptionsLiteral();
-			if (!nodeCachedDataDir || this._didPatchNodeRequire) {
+			const { nodeCachedData } = moduleManager.getConfig().getOptionsLiteral();
+			if (!nodeCachedData || this._didPatchNodeRequire) {
 				return;
 			}
 			this._didPatchNodeRequire = true;
@@ -264,7 +254,7 @@ namespace AMDLoader {
 				// create wrapper function
 				const wrapper = Module.wrap(content);
 
-				const cachedDataPath = that._getCachedDataPath(nodeCachedDataDir, filename);
+				const cachedDataPath = that._getCachedDataPath(nodeCachedData.seed, nodeCachedData.path, filename);
 				const options: INodeVMScriptOptions = { filename };
 				try {
 					options.cachedData = that._fs.readFileSync(cachedDataPath)
@@ -343,13 +333,13 @@ namespace AMDLoader {
 
 					contents = nodeInstrumenter(contents, normalizedScriptSrc);
 
-					if (!opts.nodeCachedDataDir) {
+					if (!opts.nodeCachedData) {
 
 						this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, { filename: vmScriptSrc }, recorder, callback, errorback);
 
 					} else {
 
-						const cachedDataPath = this._getCachedDataPath(opts.nodeCachedDataDir, scriptSrc);
+						const cachedDataPath = this._getCachedDataPath(opts.nodeCachedData.seed, opts.nodeCachedData.path, scriptSrc);
 						this._fs.readFile(cachedDataPath, (err, cachedData) => {
 							// create script options
 							const options: INodeVMScriptOptions = {
@@ -396,8 +386,8 @@ namespace AMDLoader {
 			return script;
 		}
 
-		private _getCachedDataPath(basedir: string, filename: string): string {
-			const hash = this._crypto.createHash('md5').update(filename, 'utf8').update(this._jsflags, 'utf8').digest('hex');
+		private _getCachedDataPath(seed: string, basedir: string, filename: string): string {
+			const hash = this._crypto.createHash('md5').update(filename, 'utf8').update(seed, 'utf8').digest('hex');
 			const basename = this._path.basename(filename).replace(/\.js$/, '');
 			return this._path.join(basedir, `${basename}-${hash}.code`);
 		}
@@ -406,25 +396,25 @@ namespace AMDLoader {
 
 			if (script.cachedDataRejected) {
 				// data rejected => delete cache file
-				moduleManager.getConfig().getOptionsLiteral().onNodeCachedData({
+				moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData({
 					errorCode: 'cachedDataRejected',
 					path: cachedDataPath
 				});
 
 				NodeScriptLoader._runSoon(() => this._fs.unlink(cachedDataPath, err => {
 					if (err) {
-						moduleManager.getConfig().getOptionsLiteral().onNodeCachedData({
+						moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData({
 							errorCode: 'unlink',
 							path: cachedDataPath,
 							detail: err
 						});
 					}
-				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedDataWriteDelay);
+				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay);
 
 			} else if (script.cachedDataProduced) {
 
 				// data produced => tell outside world
-				moduleManager.getConfig().getOptionsLiteral().onNodeCachedData(undefined, {
+				moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData(undefined, {
 					path: cachedDataPath,
 					length: script.cachedData.length
 				});
@@ -432,13 +422,13 @@ namespace AMDLoader {
 				// data produced => write cache file
 				NodeScriptLoader._runSoon(() => this._fs.writeFile(cachedDataPath, script.cachedData, err => {
 					if (err) {
-						moduleManager.getConfig().getOptionsLiteral().onNodeCachedData({
+						moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData({
 							errorCode: 'writeFile',
 							path: cachedDataPath,
 							detail: err
 						});
 					}
-				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedDataWriteDelay);
+				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay);
 			}
 		}
 
