@@ -161,10 +161,11 @@ namespace AMDLoader {
 		cachedDataProduced: boolean;
 		cachedDataRejected: boolean;
 		runInThisContext(options: INodeVMScriptOptions);
+		createCachedData(contents: string);
 	}
 
 	interface INodeVM {
-		Script: { new(contents: string, options: INodeVMScriptOptions): INodeVMScript }
+		Script: { new(contents: string, options?: INodeVMScriptOptions): INodeVMScript }
 		runInThisContext(contents: string, { filename: string });
 		runInThisContext(contents: string, filename: string);
 	}
@@ -192,6 +193,7 @@ namespace AMDLoader {
 
 		private _didPatchNodeRequire: boolean;
 		private _didInitialize: boolean;
+		private _hasCreateCachedData: boolean;
 		private _fs: INodeFS;
 		private _vm: INodeVM;
 		private _path: INodePath;
@@ -201,6 +203,7 @@ namespace AMDLoader {
 			this._env = env;
 			this._didInitialize = false;
 			this._didPatchNodeRequire = false;
+			this._hasCreateCachedData = false;
 		}
 
 		private _init(nodeRequire: INodeRequire): void {
@@ -214,6 +217,9 @@ namespace AMDLoader {
 			this._vm = nodeRequire('vm');
 			this._path = nodeRequire('path');
 			this._crypto = nodeRequire('crypto');
+
+			// check for `createCachedData`-api
+			this._hasCreateCachedData = typeof (new this._vm.Script('').createCachedData) === 'function';
 		}
 
 		// patch require-function of nodejs such that we can manually create a script
@@ -259,7 +265,7 @@ namespace AMDLoader {
 				try {
 					options.cachedData = that._fs.readFileSync(cachedDataPath)
 				} catch (e) {
-					options.produceCachedData = true;
+					options.produceCachedData = !that._hasCreateCachedData;
 				}
 				const script = new that._vm.Script(wrapper, options);
 				const compileWrapper = script.runInThisContext(options);
@@ -269,7 +275,7 @@ namespace AMDLoader {
 				const args = [this.exports, require, this, filename, dirname, process, _commonjsGlobal, Buffer];
 				const result = compileWrapper.apply(this.exports, args);
 
-				that._processCachedData(moduleManager, script, cachedDataPath);
+				that._processCachedData(moduleManager, script, wrapper, cachedDataPath, !options.cachedData);
 				return result;
 			}
 		}
@@ -340,15 +346,15 @@ namespace AMDLoader {
 					} else {
 
 						const cachedDataPath = this._getCachedDataPath(opts.nodeCachedData.seed, opts.nodeCachedData.path, scriptSrc);
-						this._fs.readFile(cachedDataPath, (err, cachedData) => {
+						this._fs.readFile(cachedDataPath, (_err, cachedData) => {
 							// create script options
 							const options: INodeVMScriptOptions = {
 								filename: vmScriptSrc,
-								produceCachedData: typeof cachedData === 'undefined',
+								produceCachedData: !this._hasCreateCachedData && typeof cachedData === 'undefined',
 								cachedData
 							};
 							const script = this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, options, recorder, callback, errorback);
-							this._processCachedData(moduleManager, script, cachedDataPath);
+							this._processCachedData(moduleManager, script, contents, cachedDataPath, !options.cachedData);
 						});
 					}
 				});
@@ -392,7 +398,7 @@ namespace AMDLoader {
 			return this._path.join(basedir, `${basename}-${hash}.code`);
 		}
 
-		private _processCachedData(moduleManager: IModuleManager, script: INodeVMScript, cachedDataPath: string): void {
+		private _processCachedData(moduleManager: IModuleManager, script: INodeVMScript, contents: string, cachedDataPath: string, createCachedData: boolean): void {
 
 			if (script.cachedDataRejected) {
 				// data rejected => delete cache file
@@ -409,14 +415,13 @@ namespace AMDLoader {
 							detail: err
 						});
 					}
-				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay);
+				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay / 2);
 
 			} else if (script.cachedDataProduced) {
 
 				// data produced => tell outside world
 				moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData(undefined, {
-					path: cachedDataPath,
-					length: script.cachedData.length
+					path: cachedDataPath
 				});
 
 				// data produced => write cache file
@@ -429,6 +434,28 @@ namespace AMDLoader {
 						});
 					}
 				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay);
+
+			} else if (this._hasCreateCachedData && createCachedData) {
+				// NEW world
+				// data produced => tell outside world
+				moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData(undefined, {
+					path: cachedDataPath
+				});
+
+				// soon'ish create and save cached data
+				NodeScriptLoader._runSoon(() => {
+					const data = script.createCachedData(contents);
+					this._fs.writeFile(cachedDataPath, data, err => {
+						if (!err) {
+							return;
+						}
+						moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData({
+							errorCode: 'writeFile',
+							path: cachedDataPath,
+							detail: err
+						});
+					});
+				}, moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay);
 			}
 		}
 
