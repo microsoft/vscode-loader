@@ -67,6 +67,21 @@ namespace AMDLoader {
 		};
 	}
 
+	export interface INodeCachedDataConfiguration {
+		/**
+		 * Directory path in which cached is stored.
+		 */
+		path: string;
+		/**
+		 * Seed when generating names of cache files.
+		 */
+		seed?: string;
+		/**
+		 * Optional delay for filesystem write/delete operations
+		 */
+		writeDelay?: number;
+	};
+
 	export interface IConfigurationOptions {
 		/**
 		 * The prefix that will be aplied to all modules when they are resolved to a location
@@ -123,24 +138,7 @@ namespace AMDLoader {
 		/**
 		* Support v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
 		*/
-		nodeCachedData?: {
-			/**
-			 * Directory path in which cached is stored.
-			 */
-			path: string;
-			/**
-			 * Seed when generating names of cache files.
-			 */
-			seed?: string;
-			/**
-			 * Optional delay for filesystem write/delete operations
-			 */
-			writeDelay?: number;
-			/**
-			 * Optional callback that will be invoked when cached data has been created
-			 */
-			onData?: (err: any, data?: any) => void;
-		}
+		nodeCachedData?: INodeCachedDataConfiguration
 	}
 
 	export class ConfigurationOptionsUtil {
@@ -215,20 +213,8 @@ namespace AMDLoader {
 				if (typeof options.nodeCachedData.writeDelay !== 'number' || options.nodeCachedData.writeDelay < 0) {
 					options.nodeCachedData.writeDelay = 1000 * 7;
 				}
-				if (typeof options.nodeCachedData.onData !== 'function') {
-					options.nodeCachedData.onData = (err) => {
-						if (err && err.errorCode === 'cachedDataRejected') {
-							console.warn('Rejected cached data from file: ' + err.path);
-						} else if (err && err.errorCode) {
-							console.error('Problems handling cached data file: ' + err.path);
-							console.error(err.detail);
-						} else if (err) {
-							console.error(err);
-						}
-					};
-				}
 				if (!options.nodeCachedData.path || typeof options.nodeCachedData.path !== 'string') {
-					options.nodeCachedData.onData('INVALID cached data configuration, \'path\' MUST be set');
+					options.onError('INVALID cached data configuration, \'path\' MUST be set');
 					options.nodeCachedData = undefined;
 				}
 			}

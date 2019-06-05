@@ -152,7 +152,6 @@ namespace AMDLoader {
 
 	interface INodeVMScriptOptions {
 		filename: string;
-		produceCachedData?: boolean;
 		cachedData?: Buffer;
 	}
 
@@ -161,7 +160,7 @@ namespace AMDLoader {
 		cachedDataProduced: boolean;
 		cachedDataRejected: boolean;
 		runInThisContext(options: INodeVMScriptOptions);
-		createCachedData(contents: string);
+		createCachedData(): Buffer;
 	}
 
 	interface INodeVM {
@@ -193,7 +192,6 @@ namespace AMDLoader {
 
 		private _didPatchNodeRequire: boolean;
 		private _didInitialize: boolean;
-		private _hasCreateCachedData: boolean;
 		private _fs: INodeFS;
 		private _vm: INodeVM;
 		private _path: INodePath;
@@ -203,7 +201,6 @@ namespace AMDLoader {
 			this._env = env;
 			this._didInitialize = false;
 			this._didPatchNodeRequire = false;
-			this._hasCreateCachedData = false;
 		}
 
 		private _init(nodeRequire: INodeRequire): void {
@@ -217,17 +214,18 @@ namespace AMDLoader {
 			this._vm = nodeRequire('vm');
 			this._path = nodeRequire('path');
 			this._crypto = nodeRequire('crypto');
-
-			// check for `createCachedData`-api
-			this._hasCreateCachedData = typeof (new this._vm.Script('').createCachedData) === 'function';
 		}
 
 		// patch require-function of nodejs such that we can manually create a script
 		// from cached data. this is done by overriding the `Module._compile` function
 		private _initNodeRequire(nodeRequire: INodeRequire, moduleManager: IModuleManager): void {
-
+			// It is important to check for `nodeCachedData` first and then set `_didPatchNodeRequire`.
+			// That's because `nodeCachedData` is set _after_ calling this for the first time...
 			const { nodeCachedData } = moduleManager.getConfig().getOptionsLiteral();
-			if (!nodeCachedData || this._didPatchNodeRequire) {
+			if (!nodeCachedData) {
+				return;
+			}
+			if (this._didPatchNodeRequire) {
 				return;
 			}
 			this._didPatchNodeRequire = true;
@@ -260,12 +258,12 @@ namespace AMDLoader {
 				// create wrapper function
 				const wrapper = Module.wrap(content);
 
-				const cachedDataPath = that._getCachedDataPath(nodeCachedData.seed, nodeCachedData.path, filename);
+				const cachedDataPath = that._getCachedDataPath(nodeCachedData, filename);
 				const options: INodeVMScriptOptions = { filename };
 				try {
 					options.cachedData = that._fs.readFileSync(cachedDataPath)
 				} catch (e) {
-					options.produceCachedData = !that._hasCreateCachedData;
+					// ignore
 				}
 				const script = new that._vm.Script(wrapper, options);
 				const compileWrapper = script.runInThisContext(options);
@@ -275,7 +273,7 @@ namespace AMDLoader {
 				const args = [this.exports, require, this, filename, dirname, process, _commonjsGlobal, Buffer];
 				const result = compileWrapper.apply(this.exports, args);
 
-				that._processCachedData(moduleManager, script, wrapper, cachedDataPath, !options.cachedData);
+				that._processCachedData(script, cachedDataPath, Boolean(options.cachedData), moduleManager.getConfig(), moduleManager.getRecorder());
 				return result;
 			}
 		}
@@ -345,16 +343,16 @@ namespace AMDLoader {
 
 					} else {
 
-						const cachedDataPath = this._getCachedDataPath(opts.nodeCachedData.seed, opts.nodeCachedData.path, scriptSrc);
+						const cachedDataPath = this._getCachedDataPath(opts.nodeCachedData, scriptSrc);
 						this._fs.readFile(cachedDataPath, (_err, cachedData) => {
 							// create script options
 							const options: INodeVMScriptOptions = {
 								filename: vmScriptSrc,
-								produceCachedData: !this._hasCreateCachedData && typeof cachedData === 'undefined',
 								cachedData
 							};
+							recorder.record(cachedData ? LoaderEventType.CachedDataFound : LoaderEventType.CachedDataMissed, scriptSrc);
 							const script = this._loadAndEvalScript(moduleManager, scriptSrc, vmScriptSrc, contents, options, recorder, callback, errorback);
-							this._processCachedData(moduleManager, script, contents, cachedDataPath, !options.cachedData);
+							this._processCachedData(script, cachedDataPath, Boolean(cachedData), moduleManager.getConfig(), recorder);
 						});
 					}
 				});
@@ -392,76 +390,60 @@ namespace AMDLoader {
 			return script;
 		}
 
-		private _getCachedDataPath(seed: string, basedir: string, filename: string): string {
-			const hash = this._crypto.createHash('md5').update(filename, 'utf8').update(seed, 'utf8').digest('hex');
+		private _getCachedDataPath(config: INodeCachedDataConfiguration, filename: string): string {
+			const hash = this._crypto.createHash('md5').update(filename, 'utf8').update(config.seed, 'utf8').digest('hex');
 			const basename = this._path.basename(filename).replace(/\.js$/, '');
-			return this._path.join(basedir, `${basename}-${hash}.code`);
+			return this._path.join(config.path, `${basename}-${hash}.code`);
 		}
 
-		private _processCachedData(moduleManager: IModuleManager, script: INodeVMScript, contents: string, cachedDataPath: string, createCachedData: boolean): void {
-
+		private _processCachedData(script: INodeVMScript, cachedDataPath: string, hadCachedData: boolean, config: Configuration, recorder: ILoaderEventRecorder): void {
 			if (script.cachedDataRejected) {
-				// data rejected => delete cache file
-				moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData({
-					errorCode: 'cachedDataRejected',
-					path: cachedDataPath
-				});
-
-				NodeScriptLoader._runSoon(() => this._fs.unlink(cachedDataPath, err => {
+				// rejected cached data
+				// (1) delete data
+				// (2) create new data
+				recorder.record(LoaderEventType.CachedDataRejected, cachedDataPath);
+				this._fs.unlink(cachedDataPath, err => {
 					if (err) {
-						moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData({
-							errorCode: 'unlink',
-							path: cachedDataPath,
-							detail: err
-						});
+						config.onError(err);
 					}
-				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay / 2);
-
-			} else if (script.cachedDataProduced) {
-
-				// data produced => tell outside world
-				moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData(undefined, {
-					path: cachedDataPath
+					this._createCachedData(script, cachedDataPath, config, recorder);
 				});
 
-				// data produced => write cache file
-				NodeScriptLoader._runSoon(() => this._fs.writeFile(cachedDataPath, script.cachedData, err => {
-					if (err) {
-						moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData({
-							errorCode: 'writeFile',
-							path: cachedDataPath,
-							detail: err
-						});
-					}
-				}), moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay);
-
-			} else if (this._hasCreateCachedData && createCachedData) {
-				// NEW world
-				// data produced => tell outside world
-				moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData(undefined, {
-					path: cachedDataPath
-				});
-
-				// soon'ish create and save cached data
-				NodeScriptLoader._runSoon(() => {
-					const data = script.createCachedData(contents);
-					this._fs.writeFile(cachedDataPath, data, err => {
-						if (!err) {
-							return;
-						}
-						moduleManager.getConfig().getOptionsLiteral().nodeCachedData.onData({
-							errorCode: 'writeFile',
-							path: cachedDataPath,
-							detail: err
-						});
-					});
-				}, moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay);
+			} else if (!hadCachedData) {
+				// create cached data unless we already had
+				// and accepted cached data
+				this._createCachedData(script, cachedDataPath, config, recorder);
 			}
 		}
 
-		private static _runSoon(callback: Function, minTimeout: number): void {
-			const timeout = minTimeout + Math.ceil(Math.random() * minTimeout);
-			setTimeout(callback, timeout);
+		private _createCachedData(script: INodeVMScript, cachedDataPath: string, config: Configuration, recorder: ILoaderEventRecorder): void {
+
+			let timeout = Math.ceil(config.getOptionsLiteral().nodeCachedData.writeDelay * (1 + Math.random()));
+			let lastSize: number = -1;
+			let iteration = 0;
+
+			const createLoop = () => {
+				setTimeout(() => {
+					const data = script.createCachedData();
+					if (data.length === lastSize) {
+						return;
+					}
+					lastSize = data.length;
+					this._fs.writeFile(cachedDataPath, data, err => {
+						if (err) {
+							config.onError(err);
+						}
+						recorder.record(LoaderEventType.CachedDataCreated, cachedDataPath);
+						createLoop();
+					});
+
+				}, timeout * (4 ** iteration++));
+			};
+
+			// with some delay (`timeout`) create cached data
+			// and repeat that (with backoff delay) until the
+			// data seems to be not changing anymore
+			createLoop();
 		}
 	}
 

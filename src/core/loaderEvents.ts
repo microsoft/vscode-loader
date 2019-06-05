@@ -19,7 +19,12 @@ namespace AMDLoader {
 		NodeEndEvaluatingScript = 32,
 
 		NodeBeginNativeRequire = 33,
-		NodeEndNativeRequire = 34
+		NodeEndNativeRequire = 34,
+
+		CachedDataFound = 60,
+		CachedDataMissed = 61,
+		CachedDataRejected = 62,
+		CachedDataCreated = 63,
 	}
 
 	export class LoaderEvent {
