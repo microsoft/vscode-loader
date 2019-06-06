@@ -194,6 +194,8 @@ namespace AMDLoader {
 	class NodeScriptLoader implements IScriptLoader {
 
 		private static _BOM = 0xFEFF;
+		private static _PREFIX = '(function (require, define, __filename, __dirname) { ';
+		private static _SUFFIX = '\n});';
 
 		private readonly _env: Environment;
 
@@ -263,12 +265,14 @@ namespace AMDLoader {
 				const scriptSource = Module.wrap(content.replace(/^#!.*/, ''));
 
 				// create script
+				const recorder = moduleManager.getRecorder();
 				const cachedDataPath = that._getCachedDataPath(nodeCachedData, filename);
 				const options: INodeVMScriptOptions = { filename };
 				try {
-					options.cachedData = that._readCachedDataBlobSync(cachedDataPath).cachedData
-				} catch (e) {
-					// ignore
+					options.cachedData = that._fs.readFileSync(cachedDataPath);
+					recorder.record(LoaderEventType.CachedDataFound, cachedDataPath);
+				} catch (_e) {
+					recorder.record(LoaderEventType.CachedDataMissed, cachedDataPath);
 				}
 				const script = new that._vm.Script(scriptSource, options);
 				const compileWrapper = script.runInThisContext(options);
@@ -279,21 +283,11 @@ namespace AMDLoader {
 				const args = [this.exports, require, this, filename, dirname, process, _commonjsGlobal, Buffer];
 				const result = compileWrapper.apply(this.exports, args);
 
-				setTimeout(() => {
-					// deal with cached data after returning:
-					// either delete and re-create or create
-					if (script.cachedDataRejected) {
-						that._fs.unlink(cachedDataPath, err => {
-							moduleManager.getRecorder().record(LoaderEventType.CachedDataRejected, cachedDataPath);
-							that._createAndWriteCachedData(script, ''/*nodejs-module->source already loaded*/, cachedDataPath, moduleManager);
-							if (err) {
-								moduleManager.getConfig().onError(err);
-							}
-						});
-					} else if (!options.cachedData) {
-						that._createAndWriteCachedData(script, ''/*nodejs-module->source already loaded*/, cachedDataPath, moduleManager);
-					}
-				}, Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay * Math.random()));
+				// cached data aftermath
+				setTimeout(
+					() => that._handleCachedData(script, cachedDataPath, !options.cachedData, moduleManager),
+					Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay * Math.random())
+				);
 
 				return result;
 			}
@@ -326,67 +320,29 @@ namespace AMDLoader {
 
 				scriptSrc = Utilities.fileUriToFilePath(this._env.isWindows, scriptSrc);
 				const normalizedScriptSrc = this._path.normalize(scriptSrc);
-				const vmScriptSrc = this._getElectronRendererScriptPath(normalizedScriptSrc);
+				const vmScriptPathOrUri = this._getElectronRendererScriptPathOrUri(normalizedScriptSrc);
 				const wantsCachedData = Boolean(opts.nodeCachedData);
-				const cachedDataPath = wantsCachedData ? this._getCachedDataPath(opts.nodeCachedData, scriptSrc) : '';
+				const cachedDataPath = wantsCachedData ? this._getCachedDataPath(opts.nodeCachedData, scriptSrc) : undefined;
 
-				const readFileAndCreateScript = () => {
+				this._readSourceAndCachedData(normalizedScriptSrc, cachedDataPath, recorder, (err: any, data: string, cachedData: Buffer) => {
+					if (err) {
+						errorback(err);
+						return;
+					}
 
-					this._fs.readFile(scriptSrc, { encoding: 'utf8' }, (err, data: string) => {
-						if (err) {
-							errorback(err);
-							return;
-						}
+					let scriptSource: string;
+					if (data.charCodeAt(0) === NodeScriptLoader._BOM) {
+						scriptSource = NodeScriptLoader._PREFIX + data.substring(1) + NodeScriptLoader._SUFFIX;
+					} else {
+						scriptSource = NodeScriptLoader._PREFIX + data + NodeScriptLoader._SUFFIX;
+					}
 
-						const prefix = '(function (require, define, __filename, __dirname) { ';
-						const suffix = '\n});';
+					scriptSource = nodeInstrumenter(scriptSource, normalizedScriptSrc);
+					const scriptOpts: INodeVMScriptOptions = { filename: vmScriptPathOrUri, cachedData };
+					const script = this._createAndEvalScript(moduleManager, scriptSource, scriptOpts, callback, errorback);
 
-						let scriptSource: string;
-						if (data.charCodeAt(0) === NodeScriptLoader._BOM) {
-							scriptSource = prefix + data.substring(1) + suffix;
-						} else {
-							scriptSource = prefix + data + suffix;
-						}
-
-						scriptSource = nodeInstrumenter(scriptSource, normalizedScriptSrc);
-
-						const script = this._createAndEvalScript(moduleManager, scriptSource, { filename: vmScriptSrc }, callback, errorback);
-
-						if (wantsCachedData) {
-							this._createAndWriteCachedData(script, scriptSource, cachedDataPath, moduleManager);
-						}
-					});
-				}
-
-				if (!wantsCachedData) {
-					// defaut
-					readFileAndCreateScript();
-
-				} else {
-					//
-					this._readCachedDataBlob(cachedDataPath, (err, source, cachedData) => {
-						if (err) {
-							// fallback to normal loading...
-							recorder.record(LoaderEventType.CachedDataMissed, cachedDataPath);
-							readFileAndCreateScript();
-							return;
-						}
-
-						recorder.record(LoaderEventType.CachedDataFound, cachedDataPath);
-						const script = this._createAndEvalScript(moduleManager, source, { cachedData, filename: vmScriptSrc }, callback, errorback);
-
-						if (script.cachedDataRejected) {
-							// cached data got rejected -> delete and re-create
-							this._fs.unlink(cachedDataPath, err => {
-								recorder.record(LoaderEventType.CachedDataRejected, cachedDataPath);
-								this._createAndWriteCachedData(script, source, cachedDataPath, moduleManager);
-								if (err) {
-									moduleManager.getConfig().onError(err)
-								}
-							});
-						}
-					})
-				}
+					this._handleCachedData(script, cachedDataPath, wantsCachedData && !cachedData, moduleManager);
+				});
 			}
 		}
 
@@ -418,7 +374,7 @@ namespace AMDLoader {
 			return script;
 		}
 
-		private _getElectronRendererScriptPath(path: string) {
+		private _getElectronRendererScriptPathOrUri(path: string) {
 			if (!this._env.isElectronRenderer) {
 				return path;
 			}
@@ -438,7 +394,23 @@ namespace AMDLoader {
 			return this._path.join(config.path, `${basename}-${hash}.code`);
 		}
 
-		private _createAndWriteCachedData(script: INodeVMScript, scriptSource: string, cachedDataPath: string, moduleManager: IModuleManager): void {
+		private _handleCachedData(script: INodeVMScript, cachedDataPath: string, createCachedData: boolean, moduleManager: IModuleManager): void {
+			if (script.cachedDataRejected) {
+				// cached data got rejected -> delete and re-create
+				this._fs.unlink(cachedDataPath, err => {
+					moduleManager.getRecorder().record(LoaderEventType.CachedDataRejected, cachedDataPath);
+					this._createAndWriteCachedData(script, cachedDataPath, moduleManager);
+					if (err) {
+						moduleManager.getConfig().onError(err)
+					}
+				});
+			} else if (createCachedData) {
+				// no cached data, but wanted
+				this._createAndWriteCachedData(script, cachedDataPath, moduleManager);
+			}
+		}
+
+		private _createAndWriteCachedData(script: INodeVMScript, cachedDataPath: string, moduleManager: IModuleManager): void {
 
 			let timeout = Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay * (1 + Math.random()));
 			let lastSize: number = -1;
@@ -447,11 +419,11 @@ namespace AMDLoader {
 			const createLoop = () => {
 				setTimeout(() => {
 					const cachedData = script.createCachedData();
-					if (cachedData.length === 0 || cachedData.length === lastSize || iteration >= 10) {
+					if (cachedData.length === 0 || cachedData.length === lastSize || iteration >= 5) {
 						return;
 					}
 					lastSize = cachedData.length;
-					this._writeCachedDataBlob(cachedDataPath, scriptSource, cachedData, err => {
+					this._fs.writeFile(cachedDataPath, cachedData, err => {
 						if (err) {
 							moduleManager.getConfig().onError(err);
 						}
@@ -467,47 +439,37 @@ namespace AMDLoader {
 			createLoop();
 		}
 
-		private _readCachedDataBlob(path: string, callback: (err?: any, source?: string, data?: Buffer) => any): void {
-			this._fs.readFile(path, (err, data: Buffer) => {
-				if (err) {
-					return callback(err);
-				}
-				// [header|source_bytes|cacheddata_bytes]
-				//  ^ 4b
-				//  ^ length of header
-				const sourceLen = data.readInt32BE(0);
-				const source = data.slice(4, 4 + sourceLen).toString();
-				const cachedData = data.slice(4 + sourceLen);
-				if (cachedData.length === 0) {
-					return callback(new Error('bad cached data'));
-				}
-				callback(undefined, source, cachedData);
-			});
-		}
+		private _readSourceAndCachedData(sourcePath: string, cachedDataPath: string | undefined, recorder: ILoaderEventRecorder, callback: (err?: any, source?: string, data?: Buffer) => any): void {
 
-		private _readCachedDataBlobSync(path: string): { source: string, cachedData: Buffer } {
-			const data = this._fs.readFileSync(path);
-			// [header|source_bytes|cacheddata_bytes]
-			//  ^ 4b
-			//  ^ length of header
-			const sourceLen = data.readInt32BE(0);
-			const source = data.slice(4, 4 + sourceLen).toString();
-			const cachedData = data.slice(4 + sourceLen);
-			if (cachedData.length === 0) {
-				new Error('bad cached data');
+			if (!cachedDataPath) {
+				// no cached data case
+				this._fs.readFile(sourcePath, { encoding: 'utf8' }, callback);
+
+			} else {
+				// cached data case: read both files in parallel
+				let source: string | undefined;
+				let cachedData: Buffer | undefined;
+				let steps = 2;
+
+				const step = (err?: any) => {
+					if (err) {
+						callback(err);
+					} else if (--steps === 0) {
+						callback(undefined, source, cachedData);
+					}
+				}
+
+				this._fs.readFile(sourcePath, { encoding: 'utf8' }, (err: any, data: string) => {
+					source = data;
+					step(err);
+				});
+
+				this._fs.readFile(cachedDataPath, (err: any, data: Buffer) => {
+					cachedData = data && data.length > 0 ? data : undefined;
+					step(); // ignored: cached data is optional
+					recorder.record(err ? LoaderEventType.CachedDataMissed : LoaderEventType.CachedDataFound, cachedDataPath);
+				});
 			}
-			return { source, cachedData };
-		}
-
-		private _writeCachedDataBlob(path: string, source: string, cachedData: Buffer, callback: (err?: any) => any): void {
-			// [header|source_bytes|cacheddata_bytes]
-			//  ^ 4b
-			//  ^ length of header
-			const sourceData = Buffer.from(source);
-			const headData = Buffer.allocUnsafe(4);
-			headData.writeInt32BE(sourceData.length, 0)
-			const data = Buffer.concat([headData, sourceData, cachedData], 4 + sourceData.length + cachedData.length);
-			this._fs.writeFile(path, data, callback);
 		}
 	}
 

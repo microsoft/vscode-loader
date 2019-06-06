@@ -696,13 +696,15 @@ var AMDLoader;
                 // remove shebang and create wrapper function
                 var scriptSource = Module.wrap(content.replace(/^#!.*/, ''));
                 // create script
+                var recorder = moduleManager.getRecorder();
                 var cachedDataPath = that._getCachedDataPath(nodeCachedData, filename);
                 var options = { filename: filename };
                 try {
-                    options.cachedData = that._readCachedDataBlobSync(cachedDataPath).cachedData;
+                    options.cachedData = that._fs.readFileSync(cachedDataPath);
+                    recorder.record(60 /* CachedDataFound */, cachedDataPath);
                 }
-                catch (e) {
-                    // ignore
+                catch (_e) {
+                    recorder.record(61 /* CachedDataMissed */, cachedDataPath);
                 }
                 var script = new that._vm.Script(scriptSource, options);
                 var compileWrapper = script.runInThisContext(options);
@@ -711,22 +713,8 @@ var AMDLoader;
                 var require = makeRequireFunction(this);
                 var args = [this.exports, require, this, filename, dirname, process, _commonjsGlobal, Buffer];
                 var result = compileWrapper.apply(this.exports, args);
-                setTimeout(function () {
-                    // deal with cached data after returning:
-                    // either delete and re-create or create
-                    if (script.cachedDataRejected) {
-                        that._fs.unlink(cachedDataPath, function (err) {
-                            moduleManager.getRecorder().record(62 /* CachedDataRejected */, cachedDataPath);
-                            that._createAndWriteCachedData(script, '' /*nodejs-module->source already loaded*/, cachedDataPath, moduleManager);
-                            if (err) {
-                                moduleManager.getConfig().onError(err);
-                            }
-                        });
-                    }
-                    else if (!options.cachedData) {
-                        that._createAndWriteCachedData(script, '' /*nodejs-module->source already loaded*/, cachedDataPath, moduleManager);
-                    }
-                }, Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay * Math.random()));
+                // cached data aftermath
+                setTimeout(function () { return that._handleCachedData(script, cachedDataPath, !options.cachedData, moduleManager); }, Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay * Math.random()));
                 return result;
             };
         };
@@ -754,58 +742,26 @@ var AMDLoader;
             else {
                 scriptSrc = AMDLoader.Utilities.fileUriToFilePath(this._env.isWindows, scriptSrc);
                 var normalizedScriptSrc_1 = this._path.normalize(scriptSrc);
-                var vmScriptSrc_1 = this._getElectronRendererScriptPath(normalizedScriptSrc_1);
+                var vmScriptPathOrUri_1 = this._getElectronRendererScriptPathOrUri(normalizedScriptSrc_1);
                 var wantsCachedData_1 = Boolean(opts.nodeCachedData);
-                var cachedDataPath_1 = wantsCachedData_1 ? this._getCachedDataPath(opts.nodeCachedData, scriptSrc) : '';
-                var readFileAndCreateScript_1 = function () {
-                    _this._fs.readFile(scriptSrc, { encoding: 'utf8' }, function (err, data) {
-                        if (err) {
-                            errorback(err);
-                            return;
-                        }
-                        var prefix = '(function (require, define, __filename, __dirname) { ';
-                        var suffix = '\n});';
-                        var scriptSource;
-                        if (data.charCodeAt(0) === NodeScriptLoader._BOM) {
-                            scriptSource = prefix + data.substring(1) + suffix;
-                        }
-                        else {
-                            scriptSource = prefix + data + suffix;
-                        }
-                        scriptSource = nodeInstrumenter(scriptSource, normalizedScriptSrc_1);
-                        var script = _this._createAndEvalScript(moduleManager, scriptSource, { filename: vmScriptSrc_1 }, callback, errorback);
-                        if (wantsCachedData_1) {
-                            _this._createAndWriteCachedData(script, scriptSource, cachedDataPath_1, moduleManager);
-                        }
-                    });
-                };
-                if (!wantsCachedData_1) {
-                    // defaut
-                    readFileAndCreateScript_1();
-                }
-                else {
-                    //
-                    this._readCachedDataBlob(cachedDataPath_1, function (err, source, cachedData) {
-                        if (err) {
-                            // fallback to normal loading...
-                            recorder.record(61 /* CachedDataMissed */, cachedDataPath_1);
-                            readFileAndCreateScript_1();
-                            return;
-                        }
-                        recorder.record(60 /* CachedDataFound */, cachedDataPath_1);
-                        var script = _this._createAndEvalScript(moduleManager, source, { cachedData: cachedData, filename: vmScriptSrc_1 }, callback, errorback);
-                        if (script.cachedDataRejected) {
-                            // cached data got rejected -> delete and re-create
-                            _this._fs.unlink(cachedDataPath_1, function (err) {
-                                recorder.record(62 /* CachedDataRejected */, cachedDataPath_1);
-                                _this._createAndWriteCachedData(script, source, cachedDataPath_1, moduleManager);
-                                if (err) {
-                                    moduleManager.getConfig().onError(err);
-                                }
-                            });
-                        }
-                    });
-                }
+                var cachedDataPath_1 = wantsCachedData_1 ? this._getCachedDataPath(opts.nodeCachedData, scriptSrc) : undefined;
+                this._readSourceAndCachedData(normalizedScriptSrc_1, cachedDataPath_1, recorder, function (err, data, cachedData) {
+                    if (err) {
+                        errorback(err);
+                        return;
+                    }
+                    var scriptSource;
+                    if (data.charCodeAt(0) === NodeScriptLoader._BOM) {
+                        scriptSource = NodeScriptLoader._PREFIX + data.substring(1) + NodeScriptLoader._SUFFIX;
+                    }
+                    else {
+                        scriptSource = NodeScriptLoader._PREFIX + data + NodeScriptLoader._SUFFIX;
+                    }
+                    scriptSource = nodeInstrumenter(scriptSource, normalizedScriptSrc_1);
+                    var scriptOpts = { filename: vmScriptPathOrUri_1, cachedData: cachedData };
+                    var script = _this._createAndEvalScript(moduleManager, scriptSource, scriptOpts, callback, errorback);
+                    _this._handleCachedData(script, cachedDataPath_1, wantsCachedData_1 && !cachedData, moduleManager);
+                });
             }
         };
         NodeScriptLoader.prototype._createAndEvalScript = function (moduleManager, contents, options, callback, errorback) {
@@ -830,7 +786,7 @@ var AMDLoader;
             }
             return script;
         };
-        NodeScriptLoader.prototype._getElectronRendererScriptPath = function (path) {
+        NodeScriptLoader.prototype._getElectronRendererScriptPathOrUri = function (path) {
             if (!this._env.isElectronRenderer) {
                 return path;
             }
@@ -849,7 +805,24 @@ var AMDLoader;
             var basename = this._path.basename(filename).replace(/\.js$/, '');
             return this._path.join(config.path, basename + "-" + hash + ".code");
         };
-        NodeScriptLoader.prototype._createAndWriteCachedData = function (script, scriptSource, cachedDataPath, moduleManager) {
+        NodeScriptLoader.prototype._handleCachedData = function (script, cachedDataPath, createCachedData, moduleManager) {
+            var _this = this;
+            if (script.cachedDataRejected) {
+                // cached data got rejected -> delete and re-create
+                this._fs.unlink(cachedDataPath, function (err) {
+                    moduleManager.getRecorder().record(62 /* CachedDataRejected */, cachedDataPath);
+                    _this._createAndWriteCachedData(script, cachedDataPath, moduleManager);
+                    if (err) {
+                        moduleManager.getConfig().onError(err);
+                    }
+                });
+            }
+            else if (createCachedData) {
+                // no cached data, but wanted
+                this._createAndWriteCachedData(script, cachedDataPath, moduleManager);
+            }
+        };
+        NodeScriptLoader.prototype._createAndWriteCachedData = function (script, cachedDataPath, moduleManager) {
             var _this = this;
             var timeout = Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay * (1 + Math.random()));
             var lastSize = -1;
@@ -857,11 +830,11 @@ var AMDLoader;
             var createLoop = function () {
                 setTimeout(function () {
                     var cachedData = script.createCachedData();
-                    if (cachedData.length === 0 || cachedData.length === lastSize || iteration >= 10) {
+                    if (cachedData.length === 0 || cachedData.length === lastSize || iteration >= 5) {
                         return;
                     }
                     lastSize = cachedData.length;
-                    _this._writeCachedDataBlob(cachedDataPath, scriptSource, cachedData, function (err) {
+                    _this._fs.writeFile(cachedDataPath, cachedData, function (err) {
                         if (err) {
                             moduleManager.getConfig().onError(err);
                         }
@@ -875,49 +848,40 @@ var AMDLoader;
             // data seems to be not changing anymore
             createLoop();
         };
-        NodeScriptLoader.prototype._readCachedDataBlob = function (path, callback) {
-            this._fs.readFile(path, function (err, data) {
-                if (err) {
-                    return callback(err);
-                }
-                // [header|source_bytes|cacheddata_bytes]
-                //  ^ 4b
-                //  ^ length of header
-                var sourceLen = data.readInt32BE(0);
-                var source = data.slice(4, 4 + sourceLen).toString();
-                var cachedData = data.slice(4 + sourceLen);
-                if (cachedData.length === 0) {
-                    return callback(new Error('bad cached data'));
-                }
-                callback(undefined, source, cachedData);
-            });
-        };
-        NodeScriptLoader.prototype._readCachedDataBlobSync = function (path) {
-            var data = this._fs.readFileSync(path);
-            // [header|source_bytes|cacheddata_bytes]
-            //  ^ 4b
-            //  ^ length of header
-            var sourceLen = data.readInt32BE(0);
-            var source = data.slice(4, 4 + sourceLen).toString();
-            var cachedData = data.slice(4 + sourceLen);
-            if (cachedData.length === 0) {
-                new Error('bad cached data');
+        NodeScriptLoader.prototype._readSourceAndCachedData = function (sourcePath, cachedDataPath, recorder, callback) {
+            if (!cachedDataPath) {
+                // no cached data case
+                this._fs.readFile(sourcePath, { encoding: 'utf8' }, callback);
             }
-            return { source: source, cachedData: cachedData };
-        };
-        NodeScriptLoader.prototype._writeCachedDataBlob = function (path, source, cachedData, callback) {
-            // [header|source_bytes|cacheddata_bytes]
-            //  ^ 4b
-            //  ^ length of header
-            var sourceData = Buffer.from(source);
-            var headData = Buffer.allocUnsafe(4);
-            headData.writeInt32BE(sourceData.length, 0);
-            var data = Buffer.concat([headData, sourceData, cachedData], 4 + sourceData.length + cachedData.length);
-            this._fs.writeFile(path, data, callback);
+            else {
+                // cached data case: read both files in parallel
+                var source_1;
+                var cachedData_1;
+                var steps_1 = 2;
+                var step_1 = function (err) {
+                    if (err) {
+                        callback(err);
+                    }
+                    else if (--steps_1 === 0) {
+                        callback(undefined, source_1, cachedData_1);
+                    }
+                };
+                this._fs.readFile(sourcePath, { encoding: 'utf8' }, function (err, data) {
+                    source_1 = data;
+                    step_1(err);
+                });
+                this._fs.readFile(cachedDataPath, function (err, data) {
+                    cachedData_1 = data && data.length > 0 ? data : undefined;
+                    step_1(); // ignored: cached data is optional
+                    recorder.record(err ? 61 /* CachedDataMissed */ : 60 /* CachedDataFound */, cachedDataPath);
+                });
+            }
         };
         return NodeScriptLoader;
     }());
     NodeScriptLoader._BOM = 0xFEFF;
+    NodeScriptLoader._PREFIX = '(function (require, define, __filename, __dirname) { ';
+    NodeScriptLoader._SUFFIX = '\n});';
     function createScriptLoader(env) {
         return new OnlyOnceScriptLoader(env);
     }
