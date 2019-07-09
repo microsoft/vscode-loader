@@ -14,7 +14,7 @@ namespace AMDLoader {
 
 	const env = new Environment();
 
-	let moduleManager: ModuleManager = null;
+	let moduleManager: ModuleManager = null!;
 
 	const DefineFunc: IDefineFunc = <any>function (id: any, dependencies: any, callback: any): void {
 		if (typeof id !== 'string') {
@@ -68,7 +68,7 @@ namespace AMDLoader {
 	RequireFunc.reset = function (): void {
 		moduleManager = moduleManager.reset();
 	};
-	RequireFunc.getBuildInfo = function (): IBuildModuleInfo[] {
+	RequireFunc.getBuildInfo = function (): IBuildModuleInfo[] | null {
 		return moduleManager.getBuildInfo();
 	};
 	RequireFunc.getStats = function (): LoaderEvent[] {

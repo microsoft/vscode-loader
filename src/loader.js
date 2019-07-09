@@ -279,13 +279,16 @@ var AMDLoader;
             if (typeof options.catchError === 'undefined') {
                 options.catchError = false;
             }
+            if (typeof options.recordStats === 'undefined') {
+                options.recordStats = false;
+            }
             if (typeof options.urlArgs !== 'string') {
                 options.urlArgs = '';
             }
             if (typeof options.onError !== 'function') {
                 options.onError = defaultOnError;
             }
-            if (typeof options.ignoreDuplicateModules !== 'object' || !Array.isArray(options.ignoreDuplicateModules)) {
+            if (!Array.isArray(options.ignoreDuplicateModules)) {
                 options.ignoreDuplicateModules = [];
             }
             if (options.baseUrl.length > 0) {
@@ -1185,7 +1188,7 @@ var AMDLoader;
             }
             var stack = null;
             if (this._config.isBuild()) {
-                stack = new Error('StackLocation').stack;
+                stack = new Error('StackLocation').stack || null;
             }
             this._currentAnnonymousDefineCall = {
                 stack: stack,
@@ -1214,7 +1217,7 @@ var AMDLoader;
             this._modules2[moduleId] = m;
             if (this._config.isBuild()) {
                 this._buildInfoDefineStack[moduleId] = stack;
-                this._buildInfoDependencies[moduleId] = m.dependencies.map(function (dep) { return _this._moduleIdProvider.getStrModuleId(dep.id); });
+                this._buildInfoDependencies[moduleId] = (m.dependencies || []).map(function (dep) { return _this._moduleIdProvider.getStrModuleId(dep.id); });
             }
             // Resolving of dependencies is immediate (not in a timeout). If there's a need to support a packer that concatenates in an
             // unordered manner, in order to finish processing the file, execute the following method in a timeout
@@ -1404,11 +1407,13 @@ var AMDLoader;
             }
             // Walk the element's dependencies
             var dependencies = from.dependencies;
-            for (var i = 0, len = dependencies.length; i < len; i++) {
-                var path = this._findCyclePath(dependencies[i].id, toId, depth + 1);
-                if (path !== null) {
-                    path.push(fromId);
-                    return path;
+            if (dependencies) {
+                for (var i = 0, len = dependencies.length; i < len; i++) {
+                    var path = this._findCyclePath(dependencies[i].id, toId, depth + 1);
+                    if (path !== null) {
+                        path.push(fromId);
+                        return path;
+                    }
                 }
             }
             return null;
@@ -1502,56 +1507,58 @@ var AMDLoader;
         ModuleManager.prototype._resolve = function (module) {
             var _this = this;
             var dependencies = module.dependencies;
-            for (var i = 0, len = dependencies.length; i < len; i++) {
-                var dependency = dependencies[i];
-                if (dependency === RegularDependency.EXPORTS) {
-                    module.exportsPassedIn = true;
-                    module.unresolvedDependenciesCount--;
-                    continue;
-                }
-                if (dependency === RegularDependency.MODULE) {
-                    module.unresolvedDependenciesCount--;
-                    continue;
-                }
-                if (dependency === RegularDependency.REQUIRE) {
-                    module.unresolvedDependenciesCount--;
-                    continue;
-                }
-                var dependencyModule = this._modules2[dependency.id];
-                if (dependencyModule && dependencyModule.isComplete()) {
-                    module.unresolvedDependenciesCount--;
-                    continue;
-                }
-                if (this._hasDependencyPath(dependency.id, module.id)) {
-                    console.warn('There is a dependency cycle between \'' + this._moduleIdProvider.getStrModuleId(dependency.id) + '\' and \'' + this._moduleIdProvider.getStrModuleId(module.id) + '\'. The cyclic path follows:');
-                    var cyclePath = this._findCyclePath(dependency.id, module.id, 0);
-                    cyclePath.reverse();
-                    cyclePath.push(dependency.id);
-                    console.warn(cyclePath.map(function (id) { return _this._moduleIdProvider.getStrModuleId(id); }).join(' => \n'));
-                    // Break the cycle
-                    module.unresolvedDependenciesCount--;
-                    continue;
-                }
-                // record inverse dependency
-                this._inverseDependencies2[dependency.id] = this._inverseDependencies2[dependency.id] || [];
-                this._inverseDependencies2[dependency.id].push(module.id);
-                if (dependency instanceof PluginDependency) {
-                    var plugin = this._modules2[dependency.pluginId];
-                    if (plugin && plugin.isComplete()) {
-                        this._loadPluginDependency(plugin.exports, dependency);
+            if (dependencies) {
+                for (var i = 0, len = dependencies.length; i < len; i++) {
+                    var dependency = dependencies[i];
+                    if (dependency === RegularDependency.EXPORTS) {
+                        module.exportsPassedIn = true;
+                        module.unresolvedDependenciesCount--;
                         continue;
                     }
-                    // Record dependency for when the plugin gets loaded
-                    var inversePluginDeps = this._inversePluginDependencies2.get(dependency.pluginId);
-                    if (!inversePluginDeps) {
-                        inversePluginDeps = [];
-                        this._inversePluginDependencies2.set(dependency.pluginId, inversePluginDeps);
+                    if (dependency === RegularDependency.MODULE) {
+                        module.unresolvedDependenciesCount--;
+                        continue;
                     }
-                    inversePluginDeps.push(dependency);
-                    this._loadModule(dependency.pluginId);
-                    continue;
+                    if (dependency === RegularDependency.REQUIRE) {
+                        module.unresolvedDependenciesCount--;
+                        continue;
+                    }
+                    var dependencyModule = this._modules2[dependency.id];
+                    if (dependencyModule && dependencyModule.isComplete()) {
+                        module.unresolvedDependenciesCount--;
+                        continue;
+                    }
+                    if (this._hasDependencyPath(dependency.id, module.id)) {
+                        console.warn('There is a dependency cycle between \'' + this._moduleIdProvider.getStrModuleId(dependency.id) + '\' and \'' + this._moduleIdProvider.getStrModuleId(module.id) + '\'. The cyclic path follows:');
+                        var cyclePath = this._findCyclePath(dependency.id, module.id, 0) || [];
+                        cyclePath.reverse();
+                        cyclePath.push(dependency.id);
+                        console.warn(cyclePath.map(function (id) { return _this._moduleIdProvider.getStrModuleId(id); }).join(' => \n'));
+                        // Break the cycle
+                        module.unresolvedDependenciesCount--;
+                        continue;
+                    }
+                    // record inverse dependency
+                    this._inverseDependencies2[dependency.id] = this._inverseDependencies2[dependency.id] || [];
+                    this._inverseDependencies2[dependency.id].push(module.id);
+                    if (dependency instanceof PluginDependency) {
+                        var plugin = this._modules2[dependency.pluginId];
+                        if (plugin && plugin.isComplete()) {
+                            this._loadPluginDependency(plugin.exports, dependency);
+                            continue;
+                        }
+                        // Record dependency for when the plugin gets loaded
+                        var inversePluginDeps = this._inversePluginDependencies2.get(dependency.pluginId);
+                        if (!inversePluginDeps) {
+                            inversePluginDeps = [];
+                            this._inversePluginDependencies2.set(dependency.pluginId, inversePluginDeps);
+                        }
+                        inversePluginDeps.push(dependency);
+                        this._loadModule(dependency.pluginId);
+                        continue;
+                    }
+                    this._loadModule(dependency.id);
                 }
-                this._loadModule(dependency.id);
             }
             if (module.unresolvedDependenciesCount === 0) {
                 this._onModuleComplete(module);
@@ -1566,31 +1573,33 @@ var AMDLoader;
             }
             var dependencies = module.dependencies;
             var dependenciesValues = [];
-            for (var i = 0, len = dependencies.length; i < len; i++) {
-                var dependency = dependencies[i];
-                if (dependency === RegularDependency.EXPORTS) {
-                    dependenciesValues[i] = module.exports;
-                    continue;
+            if (dependencies) {
+                for (var i = 0, len = dependencies.length; i < len; i++) {
+                    var dependency = dependencies[i];
+                    if (dependency === RegularDependency.EXPORTS) {
+                        dependenciesValues[i] = module.exports;
+                        continue;
+                    }
+                    if (dependency === RegularDependency.MODULE) {
+                        dependenciesValues[i] = {
+                            id: module.strId,
+                            config: function () {
+                                return _this._config.getConfigForModule(module.strId);
+                            }
+                        };
+                        continue;
+                    }
+                    if (dependency === RegularDependency.REQUIRE) {
+                        dependenciesValues[i] = this._createRequire(module.moduleIdResolver);
+                        continue;
+                    }
+                    var dependencyModule = this._modules2[dependency.id];
+                    if (dependencyModule) {
+                        dependenciesValues[i] = dependencyModule.exports;
+                        continue;
+                    }
+                    dependenciesValues[i] = null;
                 }
-                if (dependency === RegularDependency.MODULE) {
-                    dependenciesValues[i] = {
-                        id: module.strId,
-                        config: function () {
-                            return _this._config.getConfigForModule(module.strId);
-                        }
-                    };
-                    continue;
-                }
-                if (dependency === RegularDependency.REQUIRE) {
-                    dependenciesValues[i] = this._createRequire(module.moduleIdResolver);
-                    continue;
-                }
-                var dependencyModule = this._modules2[dependency.id];
-                if (dependencyModule) {
-                    dependenciesValues[i] = dependencyModule.exports;
-                    continue;
-                }
-                dependenciesValues[i] = null;
             }
             module.complete(recorder, this._config, dependenciesValues);
             // Fetch and clear inverse dependencies

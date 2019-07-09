@@ -13,7 +13,7 @@ namespace AMDLoader {
 	}
 
 	export interface IDefineCall {
-		stack: string;
+		stack: string | null;
 		dependencies: string[];
 		callback: any;
 	}
@@ -107,16 +107,15 @@ namespace AMDLoader {
 
 	// ------------------------------------------------------------------------
 	// Module
-
 	export class Module {
 
 		public readonly id: ModuleId;
 		public readonly strId: string;
-		public readonly dependencies: Dependency[];
+		public readonly dependencies: Dependency[] | null;
 
-		private readonly _callback: any;
-		private readonly _errorback: Function;
-		public readonly moduleIdResolver: ModuleIdResolver;
+		private readonly _callback: any | null;
+		private readonly _errorback: Function | null | undefined;
+		public readonly moduleIdResolver: ModuleIdResolver | null;
 
 		public exports: any;
 		public exportsPassedIn: boolean;
@@ -128,7 +127,7 @@ namespace AMDLoader {
 			strId: string,
 			dependencies: Dependency[],
 			callback: any,
-			errorback: Function,
+			errorback: Function | null | undefined,
 			moduleIdResolver: ModuleIdResolver,
 		) {
 			this.id = id;
@@ -239,10 +238,10 @@ namespace AMDLoader {
 
 	export interface IBuildModuleInfo {
 		id: string;
-		path: string;
-		defineLocation: IPosition;
+		path: string | null;
+		defineLocation: IPosition | null;
 		dependencies: string[];
-		shim: string;
+		shim: string | null;
 		exports: any;
 	}
 
@@ -342,7 +341,7 @@ namespace AMDLoader {
 		/**
 		 * map of module id => array [module id]
 		 */
-		private _inverseDependencies2: ModuleId[][];
+		private _inverseDependencies2: (ModuleId[] | null)[];
 
 		/**
 		 * Hash map of module id => array [ { moduleId, pluginParam } ]
@@ -352,12 +351,12 @@ namespace AMDLoader {
 		/**
 		 * current annonymous received define call, but not yet processed
 		 */
-		private _currentAnnonymousDefineCall: IDefineCall;
+		private _currentAnnonymousDefineCall: IDefineCall | null;
 
-		private _recorder: ILoaderEventRecorder;
+		private _recorder: ILoaderEventRecorder | null;
 
 		private _buildInfoPath: string[];
-		private _buildInfoDefineStack: string[];
+		private _buildInfoDefineStack: (string | null)[];
 		private _buildInfoDependencies: string[][];
 
 		constructor(env: Environment, scriptLoader: IScriptLoader, defineFunc: IDefineFunc, requireFunc: IRequireFunc, loaderAvailableTimestamp: number = 0) {
@@ -428,7 +427,7 @@ namespace AMDLoader {
 			throw new Error('Could not correlate define call site for needle ' + needle);
 		}
 
-		public getBuildInfo(): IBuildModuleInfo[] {
+		public getBuildInfo(): IBuildModuleInfo[] | null {
 			if (!this._config.isBuild()) {
 				return null;
 			}
@@ -479,9 +478,9 @@ namespace AMDLoader {
 			if (this._currentAnnonymousDefineCall !== null) {
 				throw new Error('Can only have one anonymous define call per script file');
 			}
-			let stack: string = null;
+			let stack: string | null = null;
 			if (this._config.isBuild()) {
-				stack = new Error('StackLocation').stack;
+				stack = new Error('StackLocation').stack || null;
 			}
 			this._currentAnnonymousDefineCall = {
 				stack: stack,
@@ -496,7 +495,7 @@ namespace AMDLoader {
 		 * @param dependencies An array with the dependencies of the module. Special keys are: "require", "exports" and "module"
 		 * @param callback if callback is a function, it will be called with the resolved dependencies. if callback is an object, it will be considered as the exports of the module.
 		 */
-		public defineModule(strModuleId: string, dependencies: string[], callback: any, errorback: Function, stack: string, moduleIdResolver: ModuleIdResolver = new ModuleIdResolver(strModuleId)): void {
+		public defineModule(strModuleId: string, dependencies: string[], callback: any, errorback: Function | null | undefined, stack: string | null, moduleIdResolver: ModuleIdResolver = new ModuleIdResolver(strModuleId)): void {
 			let moduleId = this._moduleIdProvider.getModuleId(strModuleId);
 			if (this._modules2[moduleId]) {
 				if (!this._config.isDuplicateMessageIgnoredFor(strModuleId)) {
@@ -511,7 +510,7 @@ namespace AMDLoader {
 
 			if (this._config.isBuild()) {
 				this._buildInfoDefineStack[moduleId] = stack;
-				this._buildInfoDependencies[moduleId] = m.dependencies.map(dep => this._moduleIdProvider.getStrModuleId(dep.id));
+				this._buildInfoDependencies[moduleId] = (m.dependencies || []).map(dep => this._moduleIdProvider.getStrModuleId(dep.id));
 			}
 
 			// Resolving of dependencies is immediate (not in a timeout). If there's a need to support a packer that concatenates in an
@@ -638,7 +637,7 @@ namespace AMDLoader {
 			seenModuleId[moduleId] = true;
 
 			while (queue.length > 0) {
-				let queueElement = queue.shift();
+				let queueElement = queue.shift()!;
 				let m = this._modules2[queueElement];
 				if (m) {
 					someoneNotified = m.onDependencyError(error) || someoneNotified;
@@ -685,7 +684,7 @@ namespace AMDLoader {
 
 			while (queue.length > 0) {
 				// Pop first inserted element of queue
-				let element = queue.shift();
+				let element = queue.shift()!;
 				let dependencies = element.dependencies;
 				if (dependencies) {
 					// Walk the element's dependencies
@@ -717,7 +716,7 @@ namespace AMDLoader {
 		 * @param from Module id to start at
 		 * @param to Module id to look for
 		 */
-		private _findCyclePath(fromId: ModuleId, toId: ModuleId, depth: number): ModuleId[] {
+		private _findCyclePath(fromId: ModuleId, toId: ModuleId, depth: number): (ModuleId[] | null) {
 			if (fromId === toId || depth === 50) {
 				return [fromId];
 			}
@@ -729,11 +728,13 @@ namespace AMDLoader {
 
 			// Walk the element's dependencies
 			let dependencies = from.dependencies;
-			for (let i = 0, len = dependencies.length; i < len; i++) {
-				let path = this._findCyclePath(dependencies[i].id, toId, depth + 1);
-				if (path !== null) {
-					path.push(fromId);
-					return path;
+			if (dependencies) {
+				for (let i = 0, len = dependencies.length; i < len; i++) {
+					let path = this._findCyclePath(dependencies[i].id, toId, depth + 1);
+					if (path !== null) {
+						path.push(fromId);
+						return path;
+					}
 				}
 			}
 
@@ -836,68 +837,70 @@ namespace AMDLoader {
 		 */
 		private _resolve(module: Module): void {
 			let dependencies = module.dependencies;
-			for (let i = 0, len = dependencies.length; i < len; i++) {
-				let dependency = dependencies[i];
+			if (dependencies) {
+				for (let i = 0, len = dependencies.length; i < len; i++) {
+					let dependency = dependencies[i];
 
-				if (dependency === RegularDependency.EXPORTS) {
-					module.exportsPassedIn = true;
-					module.unresolvedDependenciesCount--;
-					continue;
-				}
-
-				if (dependency === RegularDependency.MODULE) {
-					module.unresolvedDependenciesCount--;
-					continue;
-				}
-
-				if (dependency === RegularDependency.REQUIRE) {
-					module.unresolvedDependenciesCount--;
-					continue;
-				}
-
-				let dependencyModule = this._modules2[dependency.id];
-				if (dependencyModule && dependencyModule.isComplete()) {
-					module.unresolvedDependenciesCount--;
-					continue;
-				}
-
-				if (this._hasDependencyPath(dependency.id, module.id)) {
-					console.warn('There is a dependency cycle between \'' + this._moduleIdProvider.getStrModuleId(dependency.id) + '\' and \'' + this._moduleIdProvider.getStrModuleId(module.id) + '\'. The cyclic path follows:');
-					let cyclePath = this._findCyclePath(dependency.id, module.id, 0);
-					cyclePath.reverse();
-					cyclePath.push(dependency.id);
-					console.warn(cyclePath.map(id => this._moduleIdProvider.getStrModuleId(id)).join(' => \n'));
-
-					// Break the cycle
-					module.unresolvedDependenciesCount--;
-					continue;
-				}
-
-				// record inverse dependency
-				this._inverseDependencies2[dependency.id] = this._inverseDependencies2[dependency.id] || [];
-				this._inverseDependencies2[dependency.id].push(module.id);
-
-				if (dependency instanceof PluginDependency) {
-					let plugin = this._modules2[dependency.pluginId];
-					if (plugin && plugin.isComplete()) {
-						this._loadPluginDependency(plugin.exports, dependency);
+					if (dependency === RegularDependency.EXPORTS) {
+						module.exportsPassedIn = true;
+						module.unresolvedDependenciesCount--;
 						continue;
 					}
 
-					// Record dependency for when the plugin gets loaded
-					let inversePluginDeps: PluginDependency[] = this._inversePluginDependencies2.get(dependency.pluginId);
-					if (!inversePluginDeps) {
-						inversePluginDeps = [];
-						this._inversePluginDependencies2.set(dependency.pluginId, inversePluginDeps);
+					if (dependency === RegularDependency.MODULE) {
+						module.unresolvedDependenciesCount--;
+						continue;
 					}
 
-					inversePluginDeps.push(dependency);
+					if (dependency === RegularDependency.REQUIRE) {
+						module.unresolvedDependenciesCount--;
+						continue;
+					}
 
-					this._loadModule(dependency.pluginId);
-					continue;
+					let dependencyModule = this._modules2[dependency.id];
+					if (dependencyModule && dependencyModule.isComplete()) {
+						module.unresolvedDependenciesCount--;
+						continue;
+					}
+
+					if (this._hasDependencyPath(dependency.id, module.id)) {
+						console.warn('There is a dependency cycle between \'' + this._moduleIdProvider.getStrModuleId(dependency.id) + '\' and \'' + this._moduleIdProvider.getStrModuleId(module.id) + '\'. The cyclic path follows:');
+						let cyclePath = this._findCyclePath(dependency.id, module.id, 0) || [];
+						cyclePath.reverse();
+						cyclePath.push(dependency.id);
+						console.warn(cyclePath.map(id => this._moduleIdProvider.getStrModuleId(id)).join(' => \n'));
+
+						// Break the cycle
+						module.unresolvedDependenciesCount--;
+						continue;
+					}
+
+					// record inverse dependency
+					this._inverseDependencies2[dependency.id] = this._inverseDependencies2[dependency.id] || [];
+					this._inverseDependencies2[dependency.id]!.push(module.id);
+
+					if (dependency instanceof PluginDependency) {
+						let plugin = this._modules2[dependency.pluginId];
+						if (plugin && plugin.isComplete()) {
+							this._loadPluginDependency(plugin.exports, dependency);
+							continue;
+						}
+
+						// Record dependency for when the plugin gets loaded
+						let inversePluginDeps: PluginDependency[] = this._inversePluginDependencies2.get(dependency.pluginId);
+						if (!inversePluginDeps) {
+							inversePluginDeps = [];
+							this._inversePluginDependencies2.set(dependency.pluginId, inversePluginDeps);
+						}
+
+						inversePluginDeps.push(dependency);
+
+						this._loadModule(dependency.pluginId);
+						continue;
+					}
+
+					this._loadModule(dependency.id);
 				}
-
-				this._loadModule(dependency.id);
 			}
 
 			if (module.unresolvedDependenciesCount === 0) {
@@ -915,36 +918,38 @@ namespace AMDLoader {
 
 			let dependencies = module.dependencies;
 			let dependenciesValues: any[] = [];
-			for (let i = 0, len = dependencies.length; i < len; i++) {
-				let dependency = dependencies[i];
+			if (dependencies) {
+				for (let i = 0, len = dependencies.length; i < len; i++) {
+					let dependency = dependencies[i];
 
-				if (dependency === RegularDependency.EXPORTS) {
-					dependenciesValues[i] = module.exports;
-					continue;
+					if (dependency === RegularDependency.EXPORTS) {
+						dependenciesValues[i] = module.exports;
+						continue;
+					}
+
+					if (dependency === RegularDependency.MODULE) {
+						dependenciesValues[i] = {
+							id: module.strId,
+							config: () => {
+								return this._config.getConfigForModule(module.strId);
+							}
+						};
+						continue;
+					}
+
+					if (dependency === RegularDependency.REQUIRE) {
+						dependenciesValues[i] = this._createRequire(module.moduleIdResolver!);
+						continue;
+					}
+
+					let dependencyModule = this._modules2[dependency.id];
+					if (dependencyModule) {
+						dependenciesValues[i] = dependencyModule.exports;
+						continue;
+					}
+
+					dependenciesValues[i] = null;
 				}
-
-				if (dependency === RegularDependency.MODULE) {
-					dependenciesValues[i] = {
-						id: module.strId,
-						config: () => {
-							return this._config.getConfigForModule(module.strId);
-						}
-					};
-					continue;
-				}
-
-				if (dependency === RegularDependency.REQUIRE) {
-					dependenciesValues[i] = this._createRequire(module.moduleIdResolver);
-					continue;
-				}
-
-				let dependencyModule = this._modules2[dependency.id];
-				if (dependencyModule) {
-					dependenciesValues[i] = dependencyModule.exports;
-					continue;
-				}
-
-				dependenciesValues[i] = null;
 			}
 
 			module.complete(recorder, this._config, dependenciesValues);

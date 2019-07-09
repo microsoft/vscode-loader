@@ -31,7 +31,7 @@ namespace AMDLoader {
 	class OnlyOnceScriptLoader implements IScriptLoader {
 
 		private readonly _env: Environment;
-		private _scriptLoader: IScriptLoader;
+		private _scriptLoader: IScriptLoader | null;
 		private readonly _callbackMap: { [scriptSrc: string]: IScriptCallbacks[]; };
 
 		constructor(env: Environment) {
@@ -286,7 +286,7 @@ namespace AMDLoader {
 				// cached data aftermath
 				setTimeout(
 					() => that._handleCachedData(script, cachedDataPath, !options.cachedData, moduleManager),
-					Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay * Math.random())
+					Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData!.writeDelay! * Math.random())
 				);
 
 				return result;
@@ -322,7 +322,7 @@ namespace AMDLoader {
 				const normalizedScriptSrc = this._path.normalize(scriptSrc);
 				const vmScriptPathOrUri = this._getElectronRendererScriptPathOrUri(normalizedScriptSrc);
 				const wantsCachedData = Boolean(opts.nodeCachedData);
-				const cachedDataPath = wantsCachedData ? this._getCachedDataPath(opts.nodeCachedData, scriptSrc) : undefined;
+				const cachedDataPath = wantsCachedData ? this._getCachedDataPath(opts.nodeCachedData!, scriptSrc) : undefined;
 
 				this._readSourceAndCachedData(normalizedScriptSrc, cachedDataPath, recorder, (err: any, data: string, cachedData: Buffer) => {
 					if (err) {
@@ -341,7 +341,7 @@ namespace AMDLoader {
 					const scriptOpts: INodeVMScriptOptions = { filename: vmScriptPathOrUri, cachedData };
 					const script = this._createAndEvalScript(moduleManager, scriptSource, scriptOpts, callback, errorback);
 
-					this._handleCachedData(script, cachedDataPath, wantsCachedData && !cachedData, moduleManager);
+					this._handleCachedData(script, cachedDataPath!, wantsCachedData && !cachedData, moduleManager);
 				});
 			}
 		}
@@ -389,7 +389,7 @@ namespace AMDLoader {
 		}
 
 		private _getCachedDataPath(config: INodeCachedDataConfiguration, filename: string): string {
-			const hash = this._crypto.createHash('md5').update(filename, 'utf8').update(config.seed, 'utf8').digest('hex');
+			const hash = this._crypto.createHash('md5').update(filename, 'utf8').update(config.seed!, 'utf8').digest('hex');
 			const basename = this._path.basename(filename).replace(/\.js$/, '');
 			return this._path.join(config.path, `${basename}-${hash}.code`);
 		}
@@ -412,7 +412,7 @@ namespace AMDLoader {
 
 		private _createAndWriteCachedData(script: INodeVMScript, cachedDataPath: string, moduleManager: IModuleManager): void {
 
-			let timeout = Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData.writeDelay * (1 + Math.random()));
+			let timeout = Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData!.writeDelay! * (1 + Math.random()));
 			let lastSize: number = -1;
 			let iteration = 0;
 

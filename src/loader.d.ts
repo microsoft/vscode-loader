@@ -141,7 +141,7 @@ declare namespace AMDLoader {
         /**
          * Non standard extension to fetch loader state for building purposes.
          */
-        getBuildInfo(): IBuildModuleInfo[];
+        getBuildInfo(): IBuildModuleInfo[] | null;
         /**
          * Non standard extension to fetch loader events
          */
@@ -223,6 +223,7 @@ declare namespace AMDLoader {
          * Optional Content Security Policy nonce value used to load child scripts.
          */
         cspNonce?: string;
+        nodeModules?: string[];
         /**
          * The main entry point node's require
          */
@@ -232,18 +233,34 @@ declare namespace AMDLoader {
          */
         nodeInstrumenter?: (source: string, vmScriptSrc: string) => string;
         nodeMain?: string;
-        nodeModules?: string[];
         /**
         * Support v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
         */
         nodeCachedData?: INodeCachedDataConfiguration;
+    }
+    interface IValidatedConfigurationOptions extends IConfigurationOptions {
+        baseUrl: string;
+        paths: {
+            [path: string]: any;
+        };
+        config: {
+            [moduleId: string]: IModuleConfiguration;
+        };
+        catchError: boolean;
+        recordStats: boolean;
+        urlArgs: string;
+        onError: (err: any) => void;
+        ignoreDuplicateModules: string[];
+        isBuild: boolean;
+        cspNonce: string;
+        nodeModules: string[];
     }
     class ConfigurationOptionsUtil {
         /**
          * Ensure configuration options make sense
          */
         private static validateConfigurationOptions;
-        static mergeConfigurationOptions(overwrite?: IConfigurationOptions, base?: IConfigurationOptions): IConfigurationOptions;
+        static mergeConfigurationOptions(overwrite?: IConfigurationOptions | null, base?: IConfigurationOptions | null): IValidatedConfigurationOptions;
     }
     class Configuration {
         private readonly _env;
@@ -297,7 +314,7 @@ declare namespace AMDLoader {
         /**
          * Get the configuration settings for the provided module id
          */
-        getConfigForModule(moduleId: string): IModuleConfiguration;
+        getConfigForModule(moduleId: string): IModuleConfiguration | undefined;
         /**
          * Should errors be caught when executing module factories?
          */
@@ -330,7 +347,7 @@ declare namespace AMDLoader {
         load: (pluginParam: string, parentRequire: IRelativeRequire, loadCallback: IPluginLoadCallback, options: IConfigurationOptions) => void;
     }
     interface IDefineCall {
-        stack: string;
+        stack: string | null;
         dependencies: string[];
         callback: any;
     }
@@ -373,15 +390,15 @@ declare namespace AMDLoader {
     class Module {
         readonly id: ModuleId;
         readonly strId: string;
-        readonly dependencies: Dependency[];
+        readonly dependencies: Dependency[] | null;
         private readonly _callback;
         private readonly _errorback;
-        readonly moduleIdResolver: ModuleIdResolver;
+        readonly moduleIdResolver: ModuleIdResolver | null;
         exports: any;
         exportsPassedIn: boolean;
         unresolvedDependenciesCount: number;
         private _isComplete;
-        constructor(id: ModuleId, strId: string, dependencies: Dependency[], callback: any, errorback: Function, moduleIdResolver: ModuleIdResolver);
+        constructor(id: ModuleId, strId: string, dependencies: Dependency[], callback: any, errorback: Function | null | undefined, moduleIdResolver: ModuleIdResolver);
         private static _safeInvokeFunction;
         private static _invokeFactory;
         complete(recorder: ILoaderEventRecorder, config: Configuration, dependenciesValues: any[]): void;
@@ -400,10 +417,10 @@ declare namespace AMDLoader {
     }
     interface IBuildModuleInfo {
         id: string;
-        path: string;
-        defineLocation: IPosition;
+        path: string | null;
+        defineLocation: IPosition | null;
         dependencies: string[];
-        shim: string;
+        shim: string | null;
         exports: any;
     }
     const enum ModuleId {
@@ -467,7 +484,7 @@ declare namespace AMDLoader {
         getGlobalAMDDefineFunc(): IDefineFunc;
         getGlobalAMDRequireFunc(): IRequireFunc;
         private static _findRelevantLocationInStack;
-        getBuildInfo(): IBuildModuleInfo[];
+        getBuildInfo(): IBuildModuleInfo[] | null;
         getRecorder(): ILoaderEventRecorder;
         getLoaderEvents(): LoaderEvent[];
         /**
@@ -482,7 +499,7 @@ declare namespace AMDLoader {
          * @param dependencies An array with the dependencies of the module. Special keys are: "require", "exports" and "module"
          * @param callback if callback is a function, it will be called with the resolved dependencies. if callback is an object, it will be considered as the exports of the module.
          */
-        defineModule(strModuleId: string, dependencies: string[], callback: any, errorback: Function, stack: string, moduleIdResolver?: ModuleIdResolver): void;
+        defineModule(strModuleId: string, dependencies: string[], callback: any, errorback: Function | null | undefined, stack: string | null, moduleIdResolver?: ModuleIdResolver): void;
         private _normalizeDependency;
         private _normalizeDependencies;
         private _relativeRequire;

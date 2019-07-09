@@ -40,7 +40,7 @@ namespace AMDLoader {
 		/**
 		 * Non standard extension to fetch loader state for building purposes.
 		 */
-		getBuildInfo(): IBuildModuleInfo[];
+		getBuildInfo(): IBuildModuleInfo[] | null;
 
 		/**
 		 * Non standard extension to fetch loader events
@@ -124,6 +124,7 @@ namespace AMDLoader {
 		 * Optional Content Security Policy nonce value used to load child scripts.
 		 */
 		cspNonce?: string;
+		nodeModules?: string[];
 		/**
 		 * The main entry point node's require
 		 */
@@ -133,7 +134,6 @@ namespace AMDLoader {
 		 */
 		nodeInstrumenter?: (source: string, vmScriptSrc: string) => string;
 		nodeMain?: string;
-		nodeModules?: string[];
 
 		/**
 		* Support v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
@@ -141,12 +141,26 @@ namespace AMDLoader {
 		nodeCachedData?: INodeCachedDataConfiguration
 	}
 
+	export interface IValidatedConfigurationOptions extends IConfigurationOptions {
+		baseUrl: string;
+		paths: { [path: string]: any; };
+		config: { [moduleId: string]: IModuleConfiguration };
+		catchError: boolean;
+		recordStats: boolean;
+		urlArgs: string;
+		onError: (err: any) => void;
+		ignoreDuplicateModules: string[];
+		isBuild: boolean;
+		cspNonce: string;
+		nodeModules: string[];
+	}
+
 	export class ConfigurationOptionsUtil {
 
 		/**
 		 * Ensure configuration options make sense
 		 */
-		private static validateConfigurationOptions(options: IConfigurationOptions): IConfigurationOptions {
+		private static validateConfigurationOptions(options: IConfigurationOptions): IValidatedConfigurationOptions {
 
 			function defaultOnError(err): void {
 				if (err.errorCode === 'load') {
@@ -186,13 +200,16 @@ namespace AMDLoader {
 			if (typeof options.catchError === 'undefined') {
 				options.catchError = false;
 			}
+			if (typeof options.recordStats === 'undefined') {
+				options.recordStats = false;
+			}
 			if (typeof options.urlArgs !== 'string') {
 				options.urlArgs = '';
 			}
 			if (typeof options.onError !== 'function') {
 				options.onError = defaultOnError;
 			}
-			if (typeof options.ignoreDuplicateModules !== 'object' || !Array.isArray(options.ignoreDuplicateModules)) {
+			if (!Array.isArray(options.ignoreDuplicateModules)) {
 				options.ignoreDuplicateModules = [];
 			}
 			if (options.baseUrl.length > 0) {
@@ -219,10 +236,10 @@ namespace AMDLoader {
 				}
 			}
 
-			return options;
+			return <IValidatedConfigurationOptions>options;
 		}
 
-		public static mergeConfigurationOptions(overwrite: IConfigurationOptions = null, base: IConfigurationOptions = null): IConfigurationOptions {
+		public static mergeConfigurationOptions(overwrite: IConfigurationOptions | null = null, base: IConfigurationOptions | null = null): IValidatedConfigurationOptions {
 			let result: IConfigurationOptions = Utilities.recursiveClone(base || {});
 
 			// Merge known properties and overwrite the unknown ones
@@ -230,9 +247,9 @@ namespace AMDLoader {
 				if (key === 'ignoreDuplicateModules' && typeof result.ignoreDuplicateModules !== 'undefined') {
 					result.ignoreDuplicateModules = result.ignoreDuplicateModules.concat(value);
 				} else if (key === 'paths' && typeof result.paths !== 'undefined') {
-					Utilities.forEachProperty(value, (key2: string, value2: any) => result.paths[key2] = value2);
+					Utilities.forEachProperty(value, (key2: string, value2: any) => result.paths![key2] = value2);
 				} else if (key === 'config' && typeof result.config !== 'undefined') {
-					Utilities.forEachProperty(value, (key2: string, value2: any) => result.config[key2] = value2);
+					Utilities.forEachProperty(value, (key2: string, value2: any) => result.config![key2] = value2);
 				} else {
 					result[key] = Utilities.recursiveClone(value);
 				}
@@ -246,7 +263,7 @@ namespace AMDLoader {
 
 		private readonly _env: Environment;
 
-		private options: IConfigurationOptions;
+		private options: IValidatedConfigurationOptions;
 
 		/**
 		 * Generated from the `ignoreDuplicateModules` configuration option.
@@ -457,7 +474,7 @@ namespace AMDLoader {
 		/**
 		 * Get the configuration settings for the provided module id
 		 */
-		public getConfigForModule(moduleId: string): IModuleConfiguration {
+		public getConfigForModule(moduleId: string): IModuleConfiguration | undefined {
 			if (this.options.config) {
 				return this.options.config[moduleId];
 			}
