@@ -27,6 +27,6 @@
   "homepage": "https://github.com/Microsoft/vscode-loader#readme",
   "devDependencies": {
     "http-server": "^0.11.1",
-    "typescript": "^3.0.3"
+    "typescript": "^3.5.3"
   }
 }
