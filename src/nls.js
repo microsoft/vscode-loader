@@ -16,7 +16,7 @@
 'use strict';
 var NLSLoaderPlugin;
 (function (NLSLoaderPlugin) {
-    var Environment = (function () {
+    var Environment = /** @class */ (function () {
         function Environment() {
             this._detected = false;
             this._isPseudo = false;
@@ -85,7 +85,7 @@ var NLSLoaderPlugin;
             return _format(scope[idx], restArgs, env);
         };
     }
-    var NLSPlugin = (function () {
+    var NLSPlugin = /** @class */ (function () {
         function NLSPlugin(env) {
             var _this = this;
             this._env = env;
@@ -145,9 +145,9 @@ var NLSLoaderPlugin;
                 }
             }
         };
+        NLSPlugin.DEFAULT_TAG = 'i-default';
         return NLSPlugin;
     }());
-    NLSPlugin.DEFAULT_TAG = 'i-default';
     NLSLoaderPlugin.NLSPlugin = NLSPlugin;
     define('vs/nls', new NLSPlugin(new Environment()));
 })(NLSLoaderPlugin || (NLSLoaderPlugin = {}));

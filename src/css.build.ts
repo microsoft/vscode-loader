@@ -17,11 +17,24 @@
 
 'use strict';
 
+interface ICSSEntryPointData {
+	moduleName: string;
+	contents: string;
+	fsPath: string;
+}
+
+interface IGlobalState {
+	inlineResources: string;
+	inlineResourcesLimit: number;
+	cssPluginEntryPoints: { [entryPoint: string]: ICSSEntryPointData[]; };
+	cssInlinedResources: string[];
+}
+
 var _cssPluginGlobal = this;
 
 module CSSBuildLoaderPlugin {
 
-	var global = _cssPluginGlobal || {};
+	var global: IGlobalState = <any>(_cssPluginGlobal || {});
 
 	export interface ICSSLoader {
 		load(name: string, cssUrl: string, externalCallback: (contents?: string) => void, externalErrorback: (err: any) => void): void;
@@ -72,7 +85,7 @@ module CSSBuildLoaderPlugin {
 		public _insertLinkNode(linkNode: HTMLLinkElement): void {
 			this._pendingLoads++;
 			var head = document.head || document.getElementsByTagName('head')[0];
-			var other: NodeListOf<HTMLElement> = head.getElementsByTagName('link') || document.head.getElementsByTagName('script');
+			var other: HTMLCollectionOf<HTMLElement> = head.getElementsByTagName('link') || document.head.getElementsByTagName('script');
 			if (other.length > 0) {
 				head.insertBefore(linkNode, other[other.length - 1]);
 			} else {

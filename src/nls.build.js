@@ -17,7 +17,7 @@
 var _nlsPluginGlobal = this;
 var NLSBuildLoaderPlugin;
 (function (NLSBuildLoaderPlugin) {
-    var global = _nlsPluginGlobal || {};
+    var global = (_nlsPluginGlobal || {});
     var Resources = global.Plugin && global.Plugin.Resources ? global.Plugin.Resources : undefined;
     var IS_PSEUDO = (global && global.document && global.document.location && global.document.location.hash.indexOf('pseudo=true') >= 0);
     function _format(message, args) {
@@ -59,7 +59,7 @@ var NLSBuildLoaderPlugin;
             return _format(scope[idx], restArgs);
         };
     }
-    var NLSPlugin = (function () {
+    var NLSPlugin = /** @class */ (function () {
         function NLSPlugin() {
             this.localize = localize;
         }
@@ -170,11 +170,11 @@ var NLSBuildLoaderPlugin;
             }, null, '\t'));
         };
         ;
+        NLSPlugin.DEFAULT_TAG = 'i-default';
+        NLSPlugin.BUILD_MAP = {};
+        NLSPlugin.BUILD_MAP_KEYS = {};
         return NLSPlugin;
     }());
-    NLSPlugin.DEFAULT_TAG = 'i-default';
-    NLSPlugin.BUILD_MAP = {};
-    NLSPlugin.BUILD_MAP_KEYS = {};
     NLSBuildLoaderPlugin.NLSPlugin = NLSPlugin;
     (function () {
         define('vs/nls', new NLSPlugin());

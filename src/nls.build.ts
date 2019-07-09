@@ -17,11 +17,25 @@
 
 'use strict';
 
+interface IGlobalState {
+	Plugin?: {
+		Resources?: {
+			getString?(args: any[]): string;
+		}
+	};
+	document?: {
+		location?: {
+			hash: string
+		}
+	}
+	nlsPluginEntryPoints: { [entryPoint: string]: string[]; };
+}
+
 let _nlsPluginGlobal = this;
 
 module NLSBuildLoaderPlugin {
 
-	let global = _nlsPluginGlobal || {};
+	let global: IGlobalState = <any>(_nlsPluginGlobal || {});
 	let Resources = global.Plugin && global.Plugin.Resources ? global.Plugin.Resources : undefined;
 	let IS_PSEUDO = (global && global.document && global.document.location && global.document.location.hash.indexOf('pseudo=true') >= 0);
 
