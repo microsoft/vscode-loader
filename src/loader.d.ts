@@ -112,6 +112,20 @@ declare namespace AMDLoader {
     }
 }
 declare namespace AMDLoader {
+    interface AnnotatedLoadingError extends Error {
+        phase: 'loading';
+        moduleId: string;
+        neededBy: string[];
+    }
+    interface AnnotatedFactoryError extends Error {
+        phase: 'factory';
+        moduleId: string;
+    }
+    interface AnnotatedValidationError extends Error {
+        phase: 'configuration';
+    }
+    type AnnotatedError = AnnotatedLoadingError | AnnotatedFactoryError | AnnotatedValidationError;
+    function ensureError<T extends Error>(err: any): T;
     /**
      * The signature for the loader's AMD "define" function.
      */
@@ -209,7 +223,7 @@ declare namespace AMDLoader {
         /**
          * Callback that will be called when errors are encountered
          */
-        onError?: (err: any) => void;
+        onError?: (err: AnnotatedError) => void;
         /**
          * The loader will issue warnings when duplicate modules are encountered.
          * This list will inhibit those warnings if duplicate modules are expected.
@@ -249,7 +263,7 @@ declare namespace AMDLoader {
         catchError: boolean;
         recordStats: boolean;
         urlArgs: string;
-        onError: (err: any) => void;
+        onError: (err: AnnotatedError) => void;
         ignoreDuplicateModules: string[];
         isBuild: boolean;
         cspNonce: string;
@@ -326,7 +340,7 @@ declare namespace AMDLoader {
         /**
          * Forward an error to the error handler.
          */
-        onError(err: any): void;
+        onError(err: AnnotatedError): void;
     }
 }
 declare namespace AMDLoader {
@@ -343,16 +357,6 @@ declare namespace AMDLoader {
     function createScriptLoader(env: Environment): IScriptLoader;
 }
 declare namespace AMDLoader {
-    interface AnnotatedLoadingError extends Error {
-        phase: 'loading';
-        moduleId: string;
-        neededBy: string[];
-    }
-    interface AnnotatedFactoryError extends Error {
-        phase: 'factory';
-        moduleId: string;
-    }
-    type AnnotatedError = AnnotatedLoadingError | AnnotatedFactoryError;
     interface ILoaderPlugin {
         load: (pluginParam: string, parentRequire: IRelativeRequire, loadCallback: IPluginLoadCallback, options: IConfigurationOptions) => void;
     }
@@ -408,14 +412,14 @@ declare namespace AMDLoader {
         exportsPassedIn: boolean;
         unresolvedDependenciesCount: number;
         private _isComplete;
-        constructor(id: ModuleId, strId: string, dependencies: Dependency[], callback: any, errorback: Function | null | undefined, moduleIdResolver: ModuleIdResolver);
+        constructor(id: ModuleId, strId: string, dependencies: Dependency[], callback: any, errorback: ((err: AnnotatedError) => void) | null | undefined, moduleIdResolver: ModuleIdResolver);
         private static _safeInvokeFunction;
         private static _invokeFactory;
         complete(recorder: ILoaderEventRecorder, config: Configuration, dependenciesValues: any[]): void;
         /**
          * One of the direct dependencies or a transitive dependency has failed to load.
          */
-        onDependencyError(err: any): boolean;
+        onDependencyError(err: AnnotatedError): boolean;
         /**
          * Is the current module complete?
          */
@@ -509,7 +513,7 @@ declare namespace AMDLoader {
          * @param dependencies An array with the dependencies of the module. Special keys are: "require", "exports" and "module"
          * @param callback if callback is a function, it will be called with the resolved dependencies. if callback is an object, it will be considered as the exports of the module.
          */
-        defineModule(strModuleId: string, dependencies: string[], callback: any, errorback: Function | null | undefined, stack: string | null, moduleIdResolver?: ModuleIdResolver): void;
+        defineModule(strModuleId: string, dependencies: string[], callback: any, errorback: ((err: AnnotatedError) => void) | null | undefined, stack: string | null, moduleIdResolver?: ModuleIdResolver): void;
         private _normalizeDependency;
         private _normalizeDependencies;
         private _relativeRequire;

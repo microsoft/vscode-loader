@@ -5,6 +5,34 @@
 
 namespace AMDLoader {
 
+	export interface AnnotatedLoadingError extends Error {
+		phase: 'loading';
+		moduleId: string;
+		neededBy: string[];
+	}
+
+	export interface AnnotatedFactoryError extends Error {
+		phase: 'factory';
+		moduleId: string;
+	}
+
+	export interface AnnotatedValidationError extends Error {
+		phase: 'configuration';
+	}
+
+	export type AnnotatedError = AnnotatedLoadingError | AnnotatedFactoryError | AnnotatedValidationError;
+
+	export function ensureError<T extends Error>(err: any): T {
+		if (err instanceof Error) {
+			return <T>err;
+		}
+		const result = new Error(err.message || String(err) || 'Unknown Error');
+		if (err.stack) {
+			result.stack = err.stack;
+		}
+		return <T>result;
+	}
+
 	/**
 	 * The signature for the loader's AMD "define" function.
 	 */
@@ -110,7 +138,7 @@ namespace AMDLoader {
 		/**
 		 * Callback that will be called when errors are encountered
 		 */
-		onError?: (err: any) => void;
+		onError?: (err: AnnotatedError) => void;
 		/**
 		 * The loader will issue warnings when duplicate modules are encountered.
 		 * This list will inhibit those warnings if duplicate modules are expected.
@@ -148,7 +176,7 @@ namespace AMDLoader {
 		catchError: boolean;
 		recordStats: boolean;
 		urlArgs: string;
-		onError: (err: any) => void;
+		onError: (err: AnnotatedError) => void;
 		ignoreDuplicateModules: string[];
 		isBuild: boolean;
 		cspNonce: string;
@@ -231,7 +259,9 @@ namespace AMDLoader {
 					options.nodeCachedData.writeDelay = 1000 * 7;
 				}
 				if (!options.nodeCachedData.path || typeof options.nodeCachedData.path !== 'string') {
-					options.onError('INVALID cached data configuration, \'path\' MUST be set');
+					const err = ensureError<AnnotatedValidationError>(new Error('INVALID cached data configuration, \'path\' MUST be set'));
+					err.phase = 'configuration';
+					options.onError(err);
 					options.nodeCachedData = undefined;
 				}
 			}
@@ -497,7 +527,7 @@ namespace AMDLoader {
 		/**
 		 * Forward an error to the error handler.
 		 */
-		public onError(err: any): void {
+		public onError(err: AnnotatedError): void {
 			this.options.onError(err);
 		}
 	}

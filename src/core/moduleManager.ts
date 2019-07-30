@@ -5,19 +5,6 @@
 
 namespace AMDLoader {
 
-	export interface AnnotatedLoadingError extends Error {
-		phase: 'loading';
-		moduleId: string;
-		neededBy: string[];
-	}
-
-	export interface AnnotatedFactoryError extends Error {
-		phase: 'factory';
-		moduleId: string;
-	}
-
-	export type AnnotatedError = AnnotatedLoadingError | AnnotatedFactoryError;
-
 	export interface ILoaderPlugin {
 		load: (pluginParam: string, parentRequire: IRelativeRequire, loadCallback: IPluginLoadCallback, options: IConfigurationOptions) => void;
 		// write?: (pluginName: string, moduleName: string, write: IPluginWriteCallback) => void;
@@ -54,17 +41,6 @@ namespace AMDLoader {
 		(filename: string, contents: string): void;
 		getEntryPoint(): string;
 		asModule(moduleId: string, contents: string): void;
-	}
-
-	function ensureError(err: any): Error {
-		if (err instanceof Error) {
-			return err;
-		}
-		const result = new Error(err.message || String(err) || 'Unknown Error');
-		if (err.stack) {
-			result.stack = err.stack;
-		}
-		return result;
 	}
 
 	// ------------------------------------------------------------------------
@@ -138,7 +114,7 @@ namespace AMDLoader {
 		public readonly dependencies: Dependency[] | null;
 
 		private readonly _callback: any | null;
-		private readonly _errorback: Function | null | undefined;
+		private readonly _errorback: ((err: AnnotatedError) => void) | null | undefined;
 		public readonly moduleIdResolver: ModuleIdResolver | null;
 
 		public exports: any;
@@ -151,7 +127,7 @@ namespace AMDLoader {
 			strId: string,
 			dependencies: Dependency[],
 			callback: any,
-			errorback: Function | null | undefined,
+			errorback: ((err: AnnotatedError) => void) | null | undefined,
 			moduleIdResolver: ModuleIdResolver,
 		) {
 			this.id = id;
@@ -220,10 +196,10 @@ namespace AMDLoader {
 			}
 
 			if (producedError) {
-				producedError = ensureError(producedError);
-				(<AnnotatedFactoryError>producedError).phase = 'factory';
-				(<AnnotatedFactoryError>producedError).moduleId = this.strId;
-				config.onError(producedError);
+				let err = ensureError<AnnotatedFactoryError>(producedError);
+				err.phase = 'factory';
+				err.moduleId = this.strId;
+				config.onError(err);
 			}
 
 			(<any>this).dependencies = null;
@@ -235,7 +211,7 @@ namespace AMDLoader {
 		/**
 		 * One of the direct dependencies or a transitive dependency has failed to load.
 		 */
-		public onDependencyError(err: any): boolean {
+		public onDependencyError(err: AnnotatedError): boolean {
 			if (this._errorback) {
 				this._errorback(err);
 				return true;
@@ -518,7 +494,7 @@ namespace AMDLoader {
 		 * @param dependencies An array with the dependencies of the module. Special keys are: "require", "exports" and "module"
 		 * @param callback if callback is a function, it will be called with the resolved dependencies. if callback is an object, it will be considered as the exports of the module.
 		 */
-		public defineModule(strModuleId: string, dependencies: string[], callback: any, errorback: Function | null | undefined, stack: string | null, moduleIdResolver: ModuleIdResolver = new ModuleIdResolver(strModuleId)): void {
+		public defineModule(strModuleId: string, dependencies: string[], callback: any, errorback: ((err: AnnotatedError) => void) | null | undefined, stack: string | null, moduleIdResolver: ModuleIdResolver = new ModuleIdResolver(strModuleId)): void {
 			let moduleId = this._moduleIdProvider.getModuleId(strModuleId);
 			if (this._modules2[moduleId]) {
 				if (!this._config.isDuplicateMessageIgnoredFor(strModuleId)) {
@@ -573,7 +549,7 @@ namespace AMDLoader {
 			return result;
 		}
 
-		private _relativeRequire(moduleIdResolver: ModuleIdResolver, dependencies: string | string[], callback?: Function, errorback?: Function): any {
+		private _relativeRequire(moduleIdResolver: ModuleIdResolver, dependencies: string | string[], callback?: Function, errorback?: ((err: AnnotatedError) => void)): any {
 			if (typeof dependencies === 'string') {
 				return this.synchronousRequire(dependencies, moduleIdResolver);
 			}
@@ -630,14 +606,14 @@ namespace AMDLoader {
 			}
 		}
 
-		private _createLoadError(moduleId: ModuleId, err: any) {
+		private _createLoadError(moduleId: ModuleId, _err: any): AnnotatedError {
 			let strModuleId = this._moduleIdProvider.getStrModuleId(moduleId);
 			let neededBy = (this._inverseDependencies2[moduleId] || []).map((intModuleId) => this._moduleIdProvider.getStrModuleId(intModuleId));
 
-			err = ensureError(err);
-			(<AnnotatedLoadingError>err).phase = 'loading';
-			(<AnnotatedLoadingError>err).moduleId = strModuleId;
-			(<AnnotatedLoadingError>err).neededBy = neededBy;
+			const err = ensureError<AnnotatedLoadingError>(_err);
+			err.phase = 'loading';
+			err.moduleId = strModuleId;
+			err.neededBy = neededBy;
 
 			return err;
 		}
@@ -769,7 +745,7 @@ namespace AMDLoader {
 		 * Create the local 'require' that is passed into modules
 		 */
 		private _createRequire(moduleIdResolver: ModuleIdResolver): IRelativeRequire {
-			let result: IRelativeRequire = <any>((dependencies: any, callback?: Function, errorback?: Function) => {
+			let result: IRelativeRequire = <any>((dependencies: any, callback?: Function, errorback?: ((err: AnnotatedError) => void)) => {
 				return this._relativeRequire(moduleIdResolver, dependencies, callback, errorback);
 			});
 			result.toUrl = (id: string) => {
