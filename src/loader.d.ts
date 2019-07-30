@@ -343,6 +343,16 @@ declare namespace AMDLoader {
     function createScriptLoader(env: Environment): IScriptLoader;
 }
 declare namespace AMDLoader {
+    interface AnnotatedLoadingError extends Error {
+        phase: 'loading';
+        moduleId: string;
+        neededBy: string[];
+    }
+    interface AnnotatedFactoryError extends Error {
+        phase: 'factory';
+        moduleId: string;
+    }
+    type AnnotatedError = AnnotatedLoadingError | AnnotatedFactoryError;
     interface ILoaderPlugin {
         load: (pluginParam: string, parentRequire: IRelativeRequire, loadCallback: IPluginLoadCallback, options: IConfigurationOptions) => void;
     }

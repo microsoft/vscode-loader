@@ -25,6 +25,7 @@ QUnit.test('Default configuration', function () {
         config: {},
         urlArgs: '',
         cspNonce: '',
+        recordStats: false,
         nodeModules: []
     });
 });
@@ -38,6 +39,7 @@ function createSimpleKnownConfigurationOptions() {
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
         cspNonce: '',
+        recordStats: false,
         nodeModules: []
     });
 }
@@ -52,6 +54,7 @@ QUnit.test('Simple known configuration options', function () {
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
         cspNonce: '',
+        recordStats: false,
         nodeModules: []
     });
 });
@@ -69,6 +72,7 @@ QUnit.test('Overwriting known configuration options', function () {
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
         cspNonce: '',
+        recordStats: false,
         nodeModules: []
     });
     // Overwrite baseUrl 2
@@ -84,6 +88,7 @@ QUnit.test('Overwriting known configuration options', function () {
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
         cspNonce: '',
+        recordStats: false,
         nodeModules: []
     });
     // Overwrite catchError
@@ -99,6 +104,7 @@ QUnit.test('Overwriting known configuration options', function () {
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
         cspNonce: '',
+        recordStats: false,
         nodeModules: []
     });
     // Contribute additional ignoreDuplicateModules
@@ -114,6 +120,7 @@ QUnit.test('Overwriting known configuration options', function () {
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
         cspNonce: '',
+        recordStats: false,
         nodeModules: []
     });
     // Change defined paths
@@ -129,6 +136,8 @@ QUnit.test('Overwriting known configuration options', function () {
         config: { 'd': {} },
         urlArgs: 'myUrlArgs',
         cspNonce: '',
+        recordStats: false,
+        nodeModules: []
     });
     // Contribute additional module configs
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -143,6 +152,7 @@ QUnit.test('Overwriting known configuration options', function () {
         config: { 'd': {}, 'e': {} },
         urlArgs: 'myUrlArgs',
         cspNonce: '',
+        recordStats: false,
         nodeModules: []
     });
     // Change defined module configs
@@ -158,6 +168,7 @@ QUnit.test('Overwriting known configuration options', function () {
         config: { 'd': { 'a': 'a' } },
         urlArgs: 'myUrlArgs',
         cspNonce: '',
+        recordStats: false,
         nodeModules: []
     });
 });
@@ -172,6 +183,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         config: {},
         urlArgs: '',
         cspNonce: '',
+        recordStats: false,
         nodeModules: []
     });
     // Adding unknown key
@@ -187,8 +199,8 @@ QUnit.test('Overwriting unknown configuration options', function () {
         config: {},
         urlArgs: '',
         cspNonce: '',
+        recordStats: false,
         unknownKey1: 'value1',
-        nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
     // Adding another unknown key
@@ -204,9 +216,9 @@ QUnit.test('Overwriting unknown configuration options', function () {
         config: {},
         urlArgs: '',
         cspNonce: '',
+        recordStats: false,
         unknownKey1: 'value1',
         unknownKey2: 'value2',
-        nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
     // Overwriting unknown key
@@ -222,9 +234,9 @@ QUnit.test('Overwriting unknown configuration options', function () {
         config: {},
         urlArgs: '',
         cspNonce: '',
+        recordStats: false,
         unknownKey1: 'value1',
         unknownKey2: 'new-value2',
-        nodeCachedDataWriteDelay: 7000,
         nodeModules: []
     });
 });
@@ -467,7 +479,7 @@ QUnit.test('Using a local error handler immediate script loading failure', funct
         QUnit.equal(b, 'b');
         return 'a';
     }, function (err) {
-        QUnit.equal(err.detail, 'b.js not found');
+        QUnit.equal(err.message, 'b.js not found');
     }, null);
 });
 QUnit.test('Using a local error handler secondary script loading failure', function () {
@@ -494,7 +506,7 @@ QUnit.test('Using a local error handler secondary script loading failure', funct
     mm.defineModule('a', ['b'], function (b) {
         QUnit.ok(false);
     }, function (err) {
-        QUnit.equal(err.detail, 'c.js not found');
+        QUnit.equal(err.message, 'c.js not found');
     }, null);
 });
 QUnit.module('FallBack Tests');

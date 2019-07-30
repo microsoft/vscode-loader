@@ -5,6 +5,19 @@
 
 namespace AMDLoader {
 
+	export interface AnnotatedLoadingError extends Error {
+		phase: 'loading';
+		moduleId: string;
+		neededBy: string[];
+	}
+
+	export interface AnnotatedFactoryError extends Error {
+		phase: 'factory';
+		moduleId: string;
+	}
+
+	export type AnnotatedError = AnnotatedLoadingError | AnnotatedFactoryError;
+
 	export interface ILoaderPlugin {
 		load: (pluginParam: string, parentRequire: IRelativeRequire, loadCallback: IPluginLoadCallback, options: IConfigurationOptions) => void;
 		// write?: (pluginName: string, moduleName: string, write: IPluginWriteCallback) => void;
@@ -41,6 +54,17 @@ namespace AMDLoader {
 		(filename: string, contents: string): void;
 		getEntryPoint(): string;
 		asModule(moduleId: string, contents: string): void;
+	}
+
+	function ensureError(err: any): Error {
+		if (err instanceof Error) {
+			return err;
+		}
+		const result = new Error(err.message || String(err) || 'Unknown Error');
+		if (err.stack) {
+			result.stack = err.stack;
+		}
+		return result;
 	}
 
 	// ------------------------------------------------------------------------
@@ -196,11 +220,10 @@ namespace AMDLoader {
 			}
 
 			if (producedError) {
-				config.onError({
-					errorCode: 'factory',
-					moduleId: this.strId,
-					detail: producedError
-				});
+				producedError = ensureError(producedError);
+				(<AnnotatedFactoryError>producedError).phase = 'factory';
+				(<AnnotatedFactoryError>producedError).moduleId = this.strId;
+				config.onError(producedError);
 			}
 
 			(<any>this).dependencies = null;
@@ -610,12 +633,13 @@ namespace AMDLoader {
 		private _createLoadError(moduleId: ModuleId, err: any) {
 			let strModuleId = this._moduleIdProvider.getStrModuleId(moduleId);
 			let neededBy = (this._inverseDependencies2[moduleId] || []).map((intModuleId) => this._moduleIdProvider.getStrModuleId(intModuleId));
-			return {
-				errorCode: 'load',
-				moduleId: strModuleId,
-				neededBy: neededBy,
-				detail: err
-			};
+
+			err = ensureError(err);
+			(<AnnotatedLoadingError>err).phase = 'loading';
+			(<AnnotatedLoadingError>err).moduleId = strModuleId;
+			(<AnnotatedLoadingError>err).neededBy = neededBy;
+
+			return err;
 		}
 
 		/**
