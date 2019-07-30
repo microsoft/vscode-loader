@@ -409,10 +409,11 @@ declare namespace AMDLoader {
         private readonly _errorback;
         readonly moduleIdResolver: ModuleIdResolver | null;
         exports: any;
+        error: AnnotatedError | null;
         exportsPassedIn: boolean;
         unresolvedDependenciesCount: number;
         private _isComplete;
-        constructor(id: ModuleId, strId: string, dependencies: Dependency[], callback: any, errorback: ((err: AnnotatedError) => void) | null | undefined, moduleIdResolver: ModuleIdResolver);
+        constructor(id: ModuleId, strId: string, dependencies: Dependency[], callback: any, errorback: ((err: AnnotatedError) => void) | null | undefined, moduleIdResolver: ModuleIdResolver | null);
         private static _safeInvokeFunction;
         private static _invokeFactory;
         complete(recorder: ILoaderEventRecorder, config: Configuration, dependenciesValues: any[]): void;

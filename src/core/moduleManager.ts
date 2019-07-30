@@ -118,6 +118,7 @@ namespace AMDLoader {
 		public readonly moduleIdResolver: ModuleIdResolver | null;
 
 		public exports: any;
+		public error: AnnotatedError | null;
 		public exportsPassedIn: boolean;
 		public unresolvedDependenciesCount: number;
 		private _isComplete: boolean;
@@ -128,7 +129,7 @@ namespace AMDLoader {
 			dependencies: Dependency[],
 			callback: any,
 			errorback: ((err: AnnotatedError) => void) | null | undefined,
-			moduleIdResolver: ModuleIdResolver,
+			moduleIdResolver: ModuleIdResolver | null,
 		) {
 			this.id = id;
 			this.strId = strId;
@@ -137,6 +138,7 @@ namespace AMDLoader {
 			this._errorback = errorback;
 			this.moduleIdResolver = moduleIdResolver;
 			this.exports = {};
+			this.error = null;
 			this.exportsPassedIn = false;
 			this.unresolvedDependenciesCount = this.dependencies.length;
 			this._isComplete = false;
@@ -199,6 +201,7 @@ namespace AMDLoader {
 				let err = ensureError<AnnotatedFactoryError>(producedError);
 				err.phase = 'factory';
 				err.moduleId = this.strId;
+				this.error = err;
 				config.onError(err);
 			}
 
@@ -212,6 +215,8 @@ namespace AMDLoader {
 		 * One of the direct dependencies or a transitive dependency has failed to load.
 		 */
 		public onDependencyError(err: AnnotatedError): boolean {
+			this._isComplete = true;
+			this.error = err;
 			if (this._errorback) {
 				this._errorback(err);
 				return true;
@@ -572,7 +577,9 @@ namespace AMDLoader {
 			if (!m.isComplete()) {
 				throw new Error('Check dependency list! Synchronous require cannot resolve module \'' + _strModuleId + '\'. This module has not been resolved completely yet.');
 			}
-
+			if (m.error) {
+				throw m.error;
+			}
 			return m.exports;
 		}
 
@@ -623,7 +630,10 @@ namespace AMDLoader {
 		 * This means that the script was not found (e.g. 404) or there was an error in the script.
 		 */
 		private _onLoadError(moduleId: ModuleId, err: any): void {
-			let error = this._createLoadError(moduleId, err);
+			const error = this._createLoadError(moduleId, err);
+			if (!this._modules2[moduleId]) {
+				this._modules2[moduleId] = new Module(moduleId, this._moduleIdProvider.getStrModuleId(moduleId), [], () => {}, () => {}, null);
+			}
 
 			// Find any 'local' error handlers, walk the entire chain of inverse dependencies if necessary.
 			let seenModuleId: boolean[] = [];
@@ -859,6 +869,10 @@ namespace AMDLoader {
 
 					let dependencyModule = this._modules2[dependency.id];
 					if (dependencyModule && dependencyModule.isComplete()) {
+						if (dependencyModule.error) {
+							module.onDependencyError(dependencyModule.error);
+							return;
+						}
 						module.unresolvedDependenciesCount--;
 						continue;
 					}
