@@ -193,10 +193,7 @@ namespace AMDLoader {
 			function defaultOnError(err: AnnotatedError): void {
 				if (err.phase === 'loading') {
 					console.error('Loading "' + err.moduleId + '" failed');
-					console.error('Detail: ', err);
-					if (err.stack) {
-						console.error(err.stack);
-					}
+					console.error(err);
 					console.error('Here are the modules that depend on it:');
 					console.error(err.neededBy);
 					return;
@@ -205,9 +202,6 @@ namespace AMDLoader {
 				if (err.phase === 'factory') {
 					console.error('The factory method of "' + err.moduleId + '" has thrown an exception');
 					console.error(err);
-					if (err.stack) {
-						console.error(err.stack);
-					}
 					return;
 				}
 			}
