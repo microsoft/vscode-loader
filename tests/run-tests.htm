@@ -18,6 +18,7 @@ To add integration tests, edit tests/run-tests.htm (amdjsTests array)
 		<div id="qunit-fixture"></div>
 		<script src="qunit/qunit.js"></script>
 		<script>
+/// <reference path="qunit/quinit.d.ts">
 QUnit.config.autostart = false;
 
 var enableCC = window.location.href.indexOf('/test/instrument/') !== -1;
@@ -180,6 +181,9 @@ function startAMDJSTESTS() {
 		});
 	}
 
+	// HACK to QUnit so it doesn't notice the stuff we just added to the global scope
+	// This lets us use the `noglobals` option.
+	QUnit.config.pollution = undefined
 	QUnit.module('amdjs-tests or ms-specific');
 	runOneMoreTest();
 }
