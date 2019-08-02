@@ -1,0 +1,9 @@
+# Keep CRLF line terminators out of our text files,
+# regardless of the "core.autocrlf" setting.
+* text=auto
+
+# We already ask TypeScript to use this form for its output files;
+# ask git to do the same to avoid flip-flopping.
+*.js eol=lf
+*.ts.d eol=lf
+*.map eol=lf
