@@ -3,7 +3,9 @@
 	"files.trimTrailingWhitespace": true,
 	"editor.tabSize": 4,
 	"editor.insertSpaces": false,
-	"editor.formatOnSave": true,
+	"[typescript]": {
+		"editor.formatOnSave": true,
+	},
 	"files.exclude": {
 		".git": true,
 		"**/*.js": {
