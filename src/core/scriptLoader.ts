@@ -146,6 +146,7 @@ namespace AMDLoader {
 		writeInt32BE(value: number, offset: number);
 		readInt32BE(offset: number);
 		slice(start?: number, end?: number): Buffer;
+		equals(b: Buffer): boolean;
 		toString(): string;
 	}
 
@@ -186,6 +187,7 @@ namespace AMDLoader {
 	interface INodeCryptoHash {
 		update(str: string, encoding: string): INodeCryptoHash;
 		digest(type: string): string;
+		digest(): Buffer;
 	}
 	interface INodeCrypto {
 		createHash(type: string): INodeCryptoHash;
@@ -268,8 +270,11 @@ namespace AMDLoader {
 				const recorder = moduleManager.getRecorder();
 				const cachedDataPath = that._getCachedDataPath(nodeCachedData, filename);
 				const options: INodeVMScriptOptions = { filename };
+				let hashData: Buffer | undefined;
 				try {
-					options.cachedData = that._fs.readFileSync(cachedDataPath);
+					const data = that._fs.readFileSync(cachedDataPath);
+					hashData = data.slice(0, 16);
+					options.cachedData = data.slice(16);
 					recorder.record(LoaderEventType.CachedDataFound, cachedDataPath);
 				} catch (_e) {
 					recorder.record(LoaderEventType.CachedDataMissed, cachedDataPath);
@@ -284,10 +289,8 @@ namespace AMDLoader {
 				const result = compileWrapper.apply(this.exports, args);
 
 				// cached data aftermath
-				setTimeout(
-					() => that._handleCachedData(script, cachedDataPath, !options.cachedData, moduleManager),
-					Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData!.writeDelay! * Math.random())
-				);
+				that._handleCachedData(script, scriptSource, cachedDataPath, !options.cachedData, moduleManager);
+				that._verifyCachedData(script, scriptSource, cachedDataPath!, hashData);
 
 				return result;
 			}
@@ -324,7 +327,7 @@ namespace AMDLoader {
 				const wantsCachedData = Boolean(opts.nodeCachedData);
 				const cachedDataPath = wantsCachedData ? this._getCachedDataPath(opts.nodeCachedData!, scriptSrc) : undefined;
 
-				this._readSourceAndCachedData(normalizedScriptSrc, cachedDataPath, recorder, (err: any, data: string, cachedData: Buffer) => {
+				this._readSourceAndCachedData(normalizedScriptSrc, cachedDataPath, recorder, (err: any, data: string, cachedData: Buffer, hashData: Buffer) => {
 					if (err) {
 						errorback(err);
 						return;
@@ -341,7 +344,8 @@ namespace AMDLoader {
 					const scriptOpts: INodeVMScriptOptions = { filename: vmScriptPathOrUri, cachedData };
 					const script = this._createAndEvalScript(moduleManager, scriptSource, scriptOpts, callback, errorback);
 
-					this._handleCachedData(script, cachedDataPath!, wantsCachedData && !cachedData, moduleManager);
+					this._handleCachedData(script, scriptSource, cachedDataPath!, wantsCachedData && !cachedData, moduleManager);
+					this._verifyCachedData(script, scriptSource, cachedDataPath!, hashData);
 				});
 			}
 		}
@@ -394,36 +398,46 @@ namespace AMDLoader {
 			return this._path.join(config.path, `${basename}-${hash}.code`);
 		}
 
-		private _handleCachedData(script: INodeVMScript, cachedDataPath: string, createCachedData: boolean, moduleManager: IModuleManager): void {
+		private _handleCachedData(script: INodeVMScript, scriptSource: string, cachedDataPath: string, createCachedData: boolean, moduleManager: IModuleManager): void {
 			if (script.cachedDataRejected) {
 				// cached data got rejected -> delete and re-create
 				this._fs.unlink(cachedDataPath, err => {
 					moduleManager.getRecorder().record(LoaderEventType.CachedDataRejected, cachedDataPath);
-					this._createAndWriteCachedData(script, cachedDataPath, moduleManager);
+					this._createAndWriteCachedData(script, scriptSource, cachedDataPath, moduleManager);
 					if (err) {
 						moduleManager.getConfig().onError(err)
 					}
 				});
 			} else if (createCachedData) {
 				// no cached data, but wanted
-				this._createAndWriteCachedData(script, cachedDataPath, moduleManager);
+				this._createAndWriteCachedData(script, scriptSource, cachedDataPath, moduleManager);
 			}
 		}
 
-		private _createAndWriteCachedData(script: INodeVMScript, cachedDataPath: string, moduleManager: IModuleManager): void {
+		// Cached data format: | SOURCE_HASH | V8_CACHED_DATA |
+		// -SOURCE_HASH is the md5 hash of the JS source (always 16 bytes)
+		// -V8_CACHED_DATA is what v8 produces
 
-			let timeout = Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData!.writeDelay! * (1 + Math.random()));
+		private _createAndWriteCachedData(script: INodeVMScript, scriptSource: string, cachedDataPath: string, moduleManager: IModuleManager): void {
+
+			let timeout: number = Math.ceil(moduleManager.getConfig().getOptionsLiteral().nodeCachedData!.writeDelay! * (1 + Math.random()));
 			let lastSize: number = -1;
-			let iteration = 0;
+			let iteration: number = 0;
+			let hashData: Buffer | undefined = undefined;
 
 			const createLoop = () => {
 				setTimeout(() => {
+
+					if (!hashData) {
+						hashData = this._crypto.createHash('md5').update(scriptSource, 'utf8').digest();
+					}
+
 					const cachedData = script.createCachedData();
 					if (cachedData.length === 0 || cachedData.length === lastSize || iteration >= 5) {
 						return;
 					}
 					lastSize = cachedData.length;
-					this._fs.writeFile(cachedDataPath, cachedData, err => {
+					this._fs.writeFile(cachedDataPath, Buffer.concat([hashData, cachedData]), err => {
 						if (err) {
 							moduleManager.getConfig().onError(err);
 						}
@@ -439,7 +453,7 @@ namespace AMDLoader {
 			createLoop();
 		}
 
-		private _readSourceAndCachedData(sourcePath: string, cachedDataPath: string | undefined, recorder: ILoaderEventRecorder, callback: (err?: any, source?: string, data?: Buffer) => any): void {
+		private _readSourceAndCachedData(sourcePath: string, cachedDataPath: string | undefined, recorder: ILoaderEventRecorder, callback: (err?: any, source?: string, cachedData?: Buffer, hashData?: Buffer) => any): void {
 
 			if (!cachedDataPath) {
 				// no cached data case
@@ -447,15 +461,17 @@ namespace AMDLoader {
 
 			} else {
 				// cached data case: read both files in parallel
-				let source: string | undefined;
-				let cachedData: Buffer | undefined;
+				let source: string | undefined = undefined;
+				let cachedData: Buffer | undefined = undefined;
+				let hashData: Buffer | undefined = undefined;
 				let steps = 2;
 
 				const step = (err?: any) => {
 					if (err) {
 						callback(err);
+
 					} else if (--steps === 0) {
-						callback(undefined, source, cachedData);
+						callback(undefined, source, cachedData, hashData);
 					}
 				}
 
@@ -465,11 +481,39 @@ namespace AMDLoader {
 				});
 
 				this._fs.readFile(cachedDataPath, (err: any, data: Buffer) => {
-					cachedData = data && data.length > 0 ? data : undefined;
+					if (!err && data && data.length > 0) {
+						hashData = data.slice(0, 16);
+						cachedData = data.slice(16);
+						recorder.record(LoaderEventType.CachedDataFound, cachedDataPath);
+
+					} else {
+						recorder.record(LoaderEventType.CachedDataMissed, cachedDataPath);
+					}
 					step(); // ignored: cached data is optional
-					recorder.record(err ? LoaderEventType.CachedDataMissed : LoaderEventType.CachedDataFound, cachedDataPath);
 				});
 			}
+		}
+
+		private _verifyCachedData(script: INodeVMScript, scriptSource: string, cachedDataPath: string, hashData: Buffer | undefined): void {
+			if (!hashData) {
+				// nothing to do
+				return;
+			}
+			if (script.cachedDataRejected) {
+				// invalid anyways
+				return;
+			}
+			setTimeout(() => {
+				// check source hash - the contract is that file paths change when file content
+				// change (e.g use the commit or version id as cache path). this check is
+				// for violations of this contract.
+				const hashDataNow = this._crypto.createHash('md5').update(scriptSource, 'utf8').digest();
+				if (!hashData.equals(hashDataNow)) {
+					console.warn(`FAILED TO VERIFY CACHED DATA. Deleting '${cachedDataPath}' now, but a RESTART IS REQUIRED`)
+					this._fs.unlink(cachedDataPath!, err => console.error(`FAILED to unlink: '${cachedDataPath}'`, err));
+				}
+
+			}, Math.ceil(5000 * (1 + Math.random())));
 		}
 	}
 
