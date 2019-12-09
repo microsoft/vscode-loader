@@ -290,7 +290,7 @@ namespace AMDLoader {
 
 				// cached data aftermath
 				that._handleCachedData(script, scriptSource, cachedDataPath, !options.cachedData, moduleManager);
-				that._verifyCachedData(script, scriptSource, cachedDataPath!, hashData);
+				that._verifyCachedData(script, scriptSource, cachedDataPath!, hashData, moduleManager);
 
 				return result;
 			}
@@ -345,7 +345,7 @@ namespace AMDLoader {
 					const script = this._createAndEvalScript(moduleManager, scriptSource, scriptOpts, callback, errorback);
 
 					this._handleCachedData(script, scriptSource, cachedDataPath!, wantsCachedData && !cachedData, moduleManager);
-					this._verifyCachedData(script, scriptSource, cachedDataPath!, hashData);
+					this._verifyCachedData(script, scriptSource, cachedDataPath!, hashData, moduleManager);
 				});
 			}
 		}
@@ -494,7 +494,7 @@ namespace AMDLoader {
 			}
 		}
 
-		private _verifyCachedData(script: INodeVMScript, scriptSource: string, cachedDataPath: string, hashData: Buffer | undefined): void {
+		private _verifyCachedData(script: INodeVMScript, scriptSource: string, cachedDataPath: string, hashData: Buffer | undefined, moduleManager: IModuleManager): void {
 			if (!hashData) {
 				// nothing to do
 				return;
@@ -509,8 +509,8 @@ namespace AMDLoader {
 				// for violations of this contract.
 				const hashDataNow = this._crypto.createHash('md5').update(scriptSource, 'utf8').digest();
 				if (!hashData.equals(hashDataNow)) {
-					console.warn(`FAILED TO VERIFY CACHED DATA. Deleting '${cachedDataPath}' now, but a RESTART IS REQUIRED`)
-					this._fs.unlink(cachedDataPath!, err => console.error(`FAILED to unlink: '${cachedDataPath}'`, err));
+					moduleManager.getConfig().onError(<any>new Error(`FAILED TO VERIFY CACHED DATA, deleting stale '${cachedDataPath}' now, but a RESTART IS REQUIRED`));
+					this._fs.unlink(cachedDataPath!, err => moduleManager.getConfig().onError(err));
 				}
 
 			}, Math.ceil(5000 * (1 + Math.random())));
