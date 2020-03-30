@@ -13,7 +13,7 @@
     "compile-all": "tsc -p src/core/tsconfig.json && tsc",
     "watch-all": "tsc -w -p src/core/tsconfig.json && tsc -w",
     "test": "node ./tests/run-tests.js",
-    "simpleserver": "http-server -p 9999"
+    "simpleserver": "yaserver --root ./ --port 9999"
   },
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/Microsoft/vscode-loader#readme",
   "devDependencies": {
-    "http-server": "^0.11.1",
+    "yaserver": "^0.2.0",
     "typescript": "^3.5.3"
   }
 }
