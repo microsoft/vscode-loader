@@ -373,6 +373,7 @@ declare namespace AMDLoader {
         getChecksums(): {
             [scriptSrc: string]: string;
         };
+        config(params: IConfigurationOptions, shouldOverwrite?: boolean): void;
     }
     interface IPluginLoadCallback {
         (value: any): void;

@@ -24,6 +24,7 @@ namespace AMDLoader {
 		toUrl(id: string): string;
 		getStats(): LoaderEvent[];
 		getChecksums(): { [scriptSrc: string]: string };
+		config(params: IConfigurationOptions, shouldOverwrite?: boolean): void;
 	}
 
 	export interface IPluginLoadCallback {
@@ -763,6 +764,9 @@ namespace AMDLoader {
 			};
 			result.getStats = () => {
 				return this.getLoaderEvents();
+			};
+			result.config = (params: IConfigurationOptions, shouldOverwrite: boolean = false) => {
+				this.configure(params, shouldOverwrite);
 			};
 			(<any>result).__$__nodeRequire = global.nodeRequire;
 			return result;
