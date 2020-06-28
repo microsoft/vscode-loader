@@ -108,21 +108,38 @@ namespace AMDLoader {
 		}
 
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
-			let script = document.createElement('script');
-			script.setAttribute('async', 'async');
-			script.setAttribute('type', 'text/javascript');
+			if (/^node\|/.test(scriptSrc)) {
+				let opts = moduleManager.getConfig().getOptionsLiteral();
+				let nodeRequire = (opts.nodeRequire || AMDLoader.global.nodeRequire);
+				let pieces = scriptSrc.split('|');
 
-			this.attachListeners(script, callback, errorback);
+				let moduleExports = null;
+				try {
+					moduleExports = nodeRequire(pieces[1]);
+				} catch (err) {
+					errorback(err);
+					return;
+				}
 
-			script.setAttribute('src', scriptSrc);
+				moduleManager.enqueueDefineAnonymousModule([], () => moduleExports);
+				callback();
+			} else {
+				let script = document.createElement('script');
+				script.setAttribute('async', 'async');
+				script.setAttribute('type', 'text/javascript');
 
-			// Propagate CSP nonce to dynamically created script tag.
-			const { cspNonce } = moduleManager.getConfig().getOptionsLiteral();
-			if (cspNonce) {
-				script.setAttribute('nonce', cspNonce);
+				this.attachListeners(script, callback, errorback);
+
+				script.setAttribute('src', scriptSrc);
+
+				// Propagate CSP nonce to dynamically created script tag.
+				const { cspNonce } = moduleManager.getConfig().getOptionsLiteral();
+				if (cspNonce) {
+					script.setAttribute('nonce', cspNonce);
+				}
+
+				document.getElementsByTagName('head')[0].appendChild(script);
 			}
-
-			document.getElementsByTagName('head')[0].appendChild(script);
 		}
 	}
 
