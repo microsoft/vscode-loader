@@ -451,8 +451,16 @@ namespace AMDLoader {
 
 					const cachedData = script.createCachedData();
 					if (cachedData.length === 0 || cachedData.length === lastSize || iteration >= 5) {
+						// done
 						return;
 					}
+
+					if (cachedData.length < lastSize) {
+						// less data than before: skip, try again next round
+						createLoop();
+						return;
+					}
+
 					lastSize = cachedData.length;
 					this._fs.writeFile(cachedDataPath, Buffer.concat([hashData, cachedData]), err => {
 						if (err) {
