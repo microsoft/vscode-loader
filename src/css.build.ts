@@ -397,7 +397,7 @@ module CSSBuildLoaderPlugin {
 						global.cssInlinedResources = global.cssInlinedResources || [];
 						let normalizedFSPath = fsPath.replace(/\\/g, '/');
 						if (global.cssInlinedResources.indexOf(normalizedFSPath) >= 0) {
-							console.warn('CSS INLINING IMAGE AT ' + fsPath + ' MORE THAN ONCE. CONSIDER CONSOLIDATING CSS RULES');
+							// console.warn('CSS INLINING IMAGE AT ' + fsPath + ' MORE THAN ONCE. CONSIDER CONSOLIDATING CSS RULES');
 						}
 						global.cssInlinedResources.push(normalizedFSPath);
 
