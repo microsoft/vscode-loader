@@ -445,7 +445,7 @@ namespace AMDLoader {
 
 			const isNodeModule = (
 				(this.nodeModulesMap[moduleId] === true)
-				|| (this.options.amdModulesPattern && !this.options.amdModulesPattern.test(moduleId))
+				|| (this.options.amdModulesPattern instanceof RegExp && !this.options.amdModulesPattern.test(moduleId))
 			);
 
 			if (isNodeModule) {

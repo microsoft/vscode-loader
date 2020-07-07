@@ -68,7 +68,7 @@ namespace AMDLoader {
 		}
 
 		public static recursiveClone(obj: any): any {
-			if (!obj || typeof obj !== 'object') {
+			if (!obj || typeof obj !== 'object' || obj instanceof RegExp) {
 				return obj;
 			}
 			let result = Array.isArray(obj) ? [] : {};

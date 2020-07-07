@@ -195,7 +195,7 @@ var AMDLoader;
             return isEmpty;
         };
         Utilities.recursiveClone = function (obj) {
-            if (!obj || typeof obj !== 'object') {
+            if (!obj || typeof obj !== 'object' || obj instanceof RegExp) {
                 return obj;
             }
             var result = Array.isArray(obj) ? [] : {};
@@ -463,7 +463,7 @@ var AMDLoader;
          */
         Configuration.prototype.moduleIdToPaths = function (moduleId) {
             var isNodeModule = ((this.nodeModulesMap[moduleId] === true)
-                || (this.options.amdModulesPattern && !this.options.amdModulesPattern.test(moduleId)));
+                || (this.options.amdModulesPattern instanceof RegExp && !this.options.amdModulesPattern.test(moduleId)));
             if (isNodeModule) {
                 // This is a node module...
                 if (this.isBuild()) {
