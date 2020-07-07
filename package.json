@@ -7,11 +7,11 @@
     "test": "tests"
   },
   "scripts": {
-    "watch1": "cd src && cd core && tsc -w",
-    "watch2": "tsc -w",
-    "compile": "tsc",
-    "compile-all": "tsc -p src/core/tsconfig.json && tsc",
-    "watch-all": "tsc -w -p src/core/tsconfig.json && tsc -w",
+    "watch1": "tsc -w -p src/core/tsconfig.json",
+    "watch2": "tsc -w -p tsconfig.json",
+    "compile1": "tsc -p src/core/tsconfig.json",
+    "compile2": "tsc -p tsconfig.json",
+    "compile-all": "tsc -p src/core/tsconfig.json && tsc -p tsconfig.json",
     "test": "node ./tests/run-tests.js",
     "simpleserver": "yaserver --root ./ --port 9999"
   },
@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/Microsoft/vscode-loader#readme",
   "devDependencies": {
-    "yaserver": "^0.2.0",
-    "typescript": "^3.5.3"
+    "typescript": "^3.5.3",
+    "yaserver": "^0.2.0"
   }
 }
