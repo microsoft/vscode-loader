@@ -29,6 +29,7 @@ QUnit.test('Default configuration', () => {
 		config: {},
 		urlArgs: '',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -44,6 +45,7 @@ function createSimpleKnownConfigurationOptions(): loader.IConfigurationOptions {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -60,6 +62,7 @@ QUnit.test('Simple known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -79,6 +82,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -96,6 +100,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -113,6 +118,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -130,6 +136,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -147,6 +154,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -164,6 +172,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': {}, 'e': {} },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -181,6 +190,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': { 'a': 'a' } },
 		urlArgs: 'myUrlArgs',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -197,6 +207,7 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		config: {},
 		urlArgs: '',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		nodeModules: []
 	});
@@ -214,6 +225,7 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		config: {},
 		urlArgs: '',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		unknownKey1: 'value1',
 		nodeModules: []
@@ -232,6 +244,7 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		config: {},
 		urlArgs: '',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		unknownKey1: 'value1',
 		unknownKey2: 'value2',
@@ -251,6 +264,7 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		config: {},
 		urlArgs: '',
 		cspNonce: '',
+		preferScriptTags: false,
 		recordStats: false,
 		unknownKey1: 'value1',
 		unknownKey2: 'new-value2',
