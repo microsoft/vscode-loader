@@ -462,7 +462,9 @@ var AMDLoader;
          * Transform a module id to a location. Appends .js to module ids
          */
         Configuration.prototype.moduleIdToPaths = function (moduleId) {
-            if (this.nodeModulesMap[moduleId] === true) {
+            var isNodeModule = ((this.nodeModulesMap[moduleId] === true)
+                || (this.options.amdModulesPattern && !this.options.amdModulesPattern.test(moduleId)));
+            if (isNodeModule) {
                 // This is a node module...
                 if (this.isBuild()) {
                     // ...and we are at build time, drop it

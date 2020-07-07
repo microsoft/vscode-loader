@@ -158,6 +158,11 @@ namespace AMDLoader {
 		 */
 		preferScriptTags?: boolean;
 		/**
+		 * A regex to help determine if a module is an AMD module or a node module.
+		 * If defined, then all amd modules in the system must match this regular expression.
+		 */
+		amdModulesPattern?: RegExp;
+		/**
 		 * A list of known node modules that should be directly loaded via node's require.
 		 */
 		nodeModules?: string[];
@@ -438,7 +443,12 @@ namespace AMDLoader {
 		 */
 		public moduleIdToPaths(moduleId: string): string[] {
 
-			if (this.nodeModulesMap[moduleId] === true) {
+			const isNodeModule = (
+				(this.nodeModulesMap[moduleId] === true)
+				|| (this.options.amdModulesPattern && !this.options.amdModulesPattern.test(moduleId))
+			);
+
+			if (isNodeModule) {
 				// This is a node module...
 				if (this.isBuild()) {
 					// ...and we are at build time, drop it

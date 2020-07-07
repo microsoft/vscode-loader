@@ -243,6 +243,11 @@ declare namespace AMDLoader {
          */
         preferScriptTags?: boolean;
         /**
+         * A regex to help determine if a module is an AMD module or a node module.
+         * If defined, then all amd modules in the system must match this regular expression.
+         */
+        amdModulesPattern?: RegExp;
+        /**
          * A list of known node modules that should be directly loaded via node's require.
          */
         nodeModules?: string[];
