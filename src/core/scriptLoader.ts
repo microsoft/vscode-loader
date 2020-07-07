@@ -20,6 +20,16 @@ namespace AMDLoader {
 	// ------------------------------------------------------------------------
 	// IScriptLoader(s)
 
+	// class LazyScriptLoader implements IScriptLoader {
+	// 	constructor() {
+
+	// 	}
+
+	// 	public load(moduleManager: IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void): void {
+
+	// 	}
+	// }
+
 	interface IScriptCallbacks {
 		callback: () => void;
 		errorback: (err: any) => void;
@@ -42,13 +52,20 @@ namespace AMDLoader {
 
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 			if (!this._scriptLoader) {
-				this._scriptLoader = (
-					this._env.isWebWorker
-						? new WorkerScriptLoader()
-						: this._env.isNode
-							? new NodeScriptLoader(this._env)
-							: new BrowserScriptLoader()
-				);
+				if (this._env.isWebWorker) {
+					this._scriptLoader = new WorkerScriptLoader();
+				} else if (this._env.isElectronRenderer) {
+					const { preferScriptTags } = moduleManager.getConfig().getOptionsLiteral();
+					if (preferScriptTags) {
+						this._scriptLoader = new BrowserScriptLoader();
+					} else {
+						this._scriptLoader = new NodeScriptLoader(this._env);
+					}
+				} else if (this._env.isNode) {
+					this._scriptLoader = new NodeScriptLoader(this._env);
+				} else {
+					this._scriptLoader = new BrowserScriptLoader();
+				}
 			}
 			let scriptCallbacks: IScriptCallbacks = {
 				callback: callback,

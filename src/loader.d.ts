@@ -234,9 +234,17 @@ declare namespace AMDLoader {
          */
         isBuild?: boolean;
         /**
-         * Optional Content Security Policy nonce value used to load child scripts.
+         * Content Security Policy nonce value used to load child scripts.
          */
         cspNonce?: string;
+        /**
+         * If running inside an electron renderer, prefer using <script> tags to load code.
+         * Defaults to false.
+         */
+        preferScriptTags?: boolean;
+        /**
+         * A list of known node modules that should be directly loaded via node's require.
+         */
         nodeModules?: string[];
         /**
          * The main entry point node's require
@@ -246,6 +254,9 @@ declare namespace AMDLoader {
          * An optional transformation applied to the source before it is loaded in node's vm
          */
         nodeInstrumenter?: (source: string, vmScriptSrc: string) => string;
+        /**
+         * The main entry point.
+         */
         nodeMain?: string;
         /**
         * Support v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
@@ -267,6 +278,7 @@ declare namespace AMDLoader {
         ignoreDuplicateModules: string[];
         isBuild: boolean;
         cspNonce: string;
+        preferScriptTags: boolean;
         nodeModules: string[];
     }
     class ConfigurationOptionsUtil {
@@ -304,7 +316,7 @@ declare namespace AMDLoader {
         /**
          * Get current options bag. Useful for passing it forward to plugins.
          */
-        getOptionsLiteral(): IConfigurationOptions;
+        getOptionsLiteral(): IValidatedConfigurationOptions;
         private _applyPaths;
         private _addUrlArgsToUrl;
         private _addUrlArgsIfNecessaryToUrl;

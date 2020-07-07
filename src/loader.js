@@ -304,6 +304,9 @@ var AMDLoader;
             if (typeof options.cspNonce !== 'string') {
                 options.cspNonce = '';
             }
+            if (typeof options.preferScriptTags === 'undefined') {
+                options.preferScriptTags = false;
+            }
             if (!Array.isArray(options.nodeModules)) {
                 options.nodeModules = [];
             }
@@ -567,11 +570,24 @@ var AMDLoader;
         OnlyOnceScriptLoader.prototype.load = function (moduleManager, scriptSrc, callback, errorback) {
             var _this = this;
             if (!this._scriptLoader) {
-                this._scriptLoader = (this._env.isWebWorker
-                    ? new WorkerScriptLoader()
-                    : this._env.isNode
-                        ? new NodeScriptLoader(this._env)
-                        : new BrowserScriptLoader());
+                if (this._env.isWebWorker) {
+                    this._scriptLoader = new WorkerScriptLoader();
+                }
+                else if (this._env.isElectronRenderer) {
+                    var preferScriptTags = moduleManager.getConfig().getOptionsLiteral().preferScriptTags;
+                    if (preferScriptTags) {
+                        this._scriptLoader = new BrowserScriptLoader();
+                    }
+                    else {
+                        this._scriptLoader = new NodeScriptLoader(this._env);
+                    }
+                }
+                else if (this._env.isNode) {
+                    this._scriptLoader = new NodeScriptLoader(this._env);
+                }
+                else {
+                    this._scriptLoader = new BrowserScriptLoader();
+                }
             }
             var scriptCallbacks = {
                 callback: callback,
