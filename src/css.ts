@@ -121,7 +121,15 @@ module CSSLoaderPlugin {
 
 		private _cssLoader = new BrowserCSSLoader();
 
-		public load(name: string, req: AMDLoader.IRelativeRequire, load: AMDLoader.IPluginLoadCallback): void {
+		public load(name: string, req: AMDLoader.IRelativeRequire, load: AMDLoader.IPluginLoadCallback, config: AMDLoader.IConfigurationOptions): void {
+			config = config || {};
+			const cssConfig = config['vs/css'] || {};
+			if (cssConfig.disabled) {
+				// the plugin is asked to not create any style sheets
+				load({});
+				return;
+			}
+
 			const cssUrl = req.toUrl(name + '.css');
 			this._cssLoader.load(name, cssUrl, (contents?: string) => {
 				load({});
