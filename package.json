@@ -15,14 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Microsoft/vscode-loader.git"
+    "url": "git+https://github.com/microsoft/vscode-loader.git"
   },
   "author": "Microsoft Corporation",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Microsoft/vscode-loader/issues"
+    "url": "https://github.com/microsoft/vscode-loader/issues"
   },
-  "homepage": "https://github.com/Microsoft/vscode-loader#readme",
+  "homepage": "https://github.com/microsoft/vscode-loader#readme",
   "devDependencies": {
     "typescript": "^3.5.3",
     "yaserver": "^0.3.0"
