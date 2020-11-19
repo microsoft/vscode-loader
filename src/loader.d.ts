@@ -379,6 +379,7 @@ declare namespace AMDLoader {
     interface IScriptLoader {
         load(moduleManager: IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void): void;
     }
+    function ensureRecordedNodeRequire(recorder: ILoaderEventRecorder, _nodeRequire: (nodeModule: string) => any): (nodeModule: string) => any;
     function createScriptLoader(env: Environment): IScriptLoader;
 }
 declare namespace AMDLoader {

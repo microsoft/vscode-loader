@@ -83,15 +83,7 @@ namespace AMDLoader {
 			const _nodeRequire = (global.require || require);
 			if (typeof _nodeRequire === 'function' && typeof _nodeRequire.resolve === 'function') {
 				// re-expose node's require function
-				const nodeRequire = function (what) {
-					moduleManager.getRecorder().record(LoaderEventType.NodeBeginNativeRequire, what);
-					try {
-						return _nodeRequire(what);
-					} finally {
-						moduleManager.getRecorder().record(LoaderEventType.NodeEndNativeRequire, what);
-					}
-				};
-
+				const nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), _nodeRequire);
 				global.nodeRequire = nodeRequire;
 				(<any>RequireFunc).nodeRequire = nodeRequire;
 				(<any>RequireFunc).__$__nodeRequire = nodeRequire;

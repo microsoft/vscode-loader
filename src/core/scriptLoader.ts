@@ -185,7 +185,7 @@ namespace AMDLoader {
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 			if (/^node\|/.test(scriptSrc)) {
 				let opts = moduleManager.getConfig().getOptionsLiteral();
-				let nodeRequire = (opts.nodeRequire || AMDLoader.global.nodeRequire);
+				let nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), (opts.nodeRequire || AMDLoader.global.nodeRequire));
 				let pieces = scriptSrc.split('|');
 
 				let moduleExports = null;
@@ -329,7 +329,7 @@ namespace AMDLoader {
 			this._didPatchNodeRequire = false;
 		}
 
-		private _init(nodeRequire: INodeRequire): void {
+		private _init(nodeRequire: (nodeModule: string) => any): void {
 			if (this._didInitialize) {
 				return;
 			}
@@ -344,7 +344,7 @@ namespace AMDLoader {
 
 		// patch require-function of nodejs such that we can manually create a script
 		// from cached data. this is done by overriding the `Module._compile` function
-		private _initNodeRequire(nodeRequire: INodeRequire, moduleManager: IModuleManager): void {
+		private _initNodeRequire(nodeRequire: (nodeModule: string) => any, moduleManager: IModuleManager): void {
 			// It is important to check for `nodeCachedData` first and then set `_didPatchNodeRequire`.
 			// That's because `nodeCachedData` is set _after_ calling this for the first time...
 			const { nodeCachedData } = moduleManager.getConfig().getOptionsLiteral();
@@ -413,7 +413,7 @@ namespace AMDLoader {
 
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 			const opts = moduleManager.getConfig().getOptionsLiteral();
-			const nodeRequire = (opts.nodeRequire || global.nodeRequire);
+			const nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), (opts.nodeRequire || global.nodeRequire));
 			const nodeInstrumenter = (opts.nodeInstrumenter || function (c) { return c; });
 			this._init(nodeRequire);
 			this._initNodeRequire(nodeRequire, moduleManager);
@@ -642,6 +642,24 @@ namespace AMDLoader {
 
 			}, Math.ceil(5000 * (1 + Math.random())));
 		}
+	}
+
+	export function ensureRecordedNodeRequire(recorder: ILoaderEventRecorder, _nodeRequire: (nodeModule: string) => any): (nodeModule: string) => any {
+		if ((<any>_nodeRequire).__$__isRecorded) {
+			// it is already recorded
+			return _nodeRequire;
+		}
+
+		const nodeRequire = function nodeRequire (what) {
+			recorder.record(LoaderEventType.NodeBeginNativeRequire, what);
+			try {
+				return _nodeRequire(what);
+			} finally {
+				recorder.record(LoaderEventType.NodeEndNativeRequire, what);
+			}
+		};
+		(<any>nodeRequire).__$__isRecorded = true;
+		return nodeRequire;
 	}
 
 	export function createScriptLoader(env: Environment): IScriptLoader {
