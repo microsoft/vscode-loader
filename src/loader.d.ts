@@ -243,13 +243,12 @@ declare namespace AMDLoader {
          */
         preferScriptTags?: boolean;
         /**
-         * A callback that enables use of TrustedScriptURL instead of strings, see
+         * A trusted types policy which will be used to create TrustedScriptURL-values.
          * https://w3c.github.io/webappsec-trusted-types/dist/spec/#introduction.
-         *
-         * The implementation of this callback should validate the given value (which
-         * represents a script source value) and throw an error if validation fails.
          */
-        createTrustedScriptURL?: (value: string) => string;
+        trustedTypesPolicy?: {
+            createScriptURL(value: string): string & object;
+        };
         /**
          * A regex to help determine if a module is an AMD module or a node module.
          * If defined, then all amd modules in the system must match this regular expression.

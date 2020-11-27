@@ -98,65 +98,7 @@ namespace AMDLoader {
 		}
 	}
 
-	//#region --- TrustedTypes declarations and tiny polyfill
-
-	type TrustedHTML = string;
-	type TrustedScript = string;
-	type TrustedScriptURL = string;
-
-	interface TrustedTypePolicyOptions {
-		createHTML?: (value: string) => string
-		createScript?: (value: string) => string
-		createScriptURL?: (value: string) => string
-	}
-
-	interface TrustedTypePolicy {
-		readonly name: string;
-		createHTML(input: string, ...more: any[]): TrustedHTML
-		createScript(input: string, ...more: any[]): TrustedScript
-		createScriptURL(input: string, ...more: any[]): TrustedScriptURL
-	}
-
-	interface TrustedTypePolicyFactory {
-		createPolicy(policyName: string, object: TrustedTypePolicyOptions): TrustedTypePolicy;
-	}
-
-	declare var trustedTypes: TrustedTypePolicyFactory;
-
-	const trustedTypesPolyfill = new class {
-
-		installIfNeeded() {
-			if (typeof globalThis.trustedTypes !== 'undefined') {
-				return; // already defined
-			}
-			const _defaultRules: Required<TrustedTypePolicyOptions> = {
-				createHTML: () => { throw new Error('Policy\'s TrustedTypePolicyOptions did not specify a \'createHTML\' member') },
-				createScript: () => { throw new Error('Policy\'s TrustedTypePolicyOptions did not specify a \'createScript\' member') },
-				createScriptURL: () => { throw new Error('Policy\'s TrustedTypePolicyOptions did not specify a \'createScriptURL\' member') },
-			}
-			globalThis.trustedTypes = {
-				createPolicy(name: string, rules: TrustedTypePolicyOptions): TrustedTypePolicy {
-					return {
-						name,
-						createHTML: rules.createHTML ?? _defaultRules.createHTML,
-						createScript: rules.createScript ?? _defaultRules.createScript,
-						createScriptURL: rules.createScriptURL ?? _defaultRules.createScriptURL,
-					}
-				}
-			};
-		}
-	}
-
-	//#endregion
-
 	class BrowserScriptLoader implements IScriptLoader {
-
-		private scriptSourceURLPolicy: TrustedTypePolicy;
-
-		constructor() {
-			// polyfill trustedTypes-support if missing
-			trustedTypesPolyfill.installIfNeeded();
-		}
 
 		/**
 		 * Attach load / error listeners to a script element and remove them when either one has fired.
@@ -205,12 +147,9 @@ namespace AMDLoader {
 
 				this.attachListeners(script, callback, errorback);
 
-				const { createTrustedScriptURL } = moduleManager.getConfig().getOptionsLiteral();
-				if (createTrustedScriptURL) {
-					if (!this.scriptSourceURLPolicy) {
-						this.scriptSourceURLPolicy = trustedTypes.createPolicy('amdLoader', { createScriptURL: createTrustedScriptURL })
-					}
-					scriptSrc = this.scriptSourceURLPolicy.createScriptURL(scriptSrc);
+				const { trustedTypesPolicy } = moduleManager.getConfig().getOptionsLiteral();
+				if (trustedTypesPolicy) {
+					scriptSrc = trustedTypesPolicy.createScriptURL(scriptSrc);
 				}
 				script.setAttribute('src', scriptSrc);
 
@@ -227,21 +166,11 @@ namespace AMDLoader {
 
 	class WorkerScriptLoader implements IScriptLoader {
 
-		private scriptSourceURLPolicy: TrustedTypePolicy;
-
-		constructor() {
-			// polyfill trustedTypes-support if missing
-			trustedTypesPolyfill.installIfNeeded();
-		}
-
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 
-			const { createTrustedScriptURL } = moduleManager.getConfig().getOptionsLiteral();
-			if (createTrustedScriptURL) {
-				if (!this.scriptSourceURLPolicy) {
-					this.scriptSourceURLPolicy = trustedTypes.createPolicy('amdLoader', { createScriptURL: createTrustedScriptURL })
-				}
-				scriptSrc = this.scriptSourceURLPolicy.createScriptURL(scriptSrc);
+			const { trustedTypesPolicy } = moduleManager.getConfig().getOptionsLiteral();
+			if (trustedTypesPolicy) {
+				scriptSrc = trustedTypesPolicy.createScriptURL(scriptSrc);
 			}
 
 			try {
@@ -650,7 +579,7 @@ namespace AMDLoader {
 			return _nodeRequire;
 		}
 
-		const nodeRequire = function nodeRequire (what) {
+		const nodeRequire = function nodeRequire(what) {
 			recorder.record(LoaderEventType.NodeBeginNativeRequire, what);
 			try {
 				return _nodeRequire(what);

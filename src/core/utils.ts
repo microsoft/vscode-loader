@@ -71,6 +71,10 @@ namespace AMDLoader {
 			if (!obj || typeof obj !== 'object' || obj instanceof RegExp) {
 				return obj;
 			}
+			if (!Array.isArray(obj) && Object.getPrototypeOf(obj) !== Object.prototype) {
+				// only clone "simple" objects
+				return obj;
+			}
 			let result = Array.isArray(obj) ? [] : {};
 			Utilities.forEachProperty(obj, (key: string, value: any) => {
 				if (value && typeof value === 'object') {
