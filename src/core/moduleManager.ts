@@ -23,6 +23,7 @@ namespace AMDLoader {
 		(dependency: string): any;
 		toUrl(id: string): string;
 		getStats(): LoaderEvent[];
+		hasDependencyCycle(): boolean;
 		getChecksums(): { [scriptSrc: string]: string };
 		config(params: IConfigurationOptions, shouldOverwrite?: boolean): void;
 	}
@@ -327,6 +328,7 @@ namespace AMDLoader {
 
 		private _moduleIdProvider: ModuleIdProvider;
 		private _config: Configuration;
+		private _hasDependencyCycle: boolean;
 
 		/**
 		 * map of module id => module.
@@ -372,6 +374,7 @@ namespace AMDLoader {
 			this._requireFunc = requireFunc;
 			this._moduleIdProvider = new ModuleIdProvider();
 			this._config = new Configuration(this._env);
+			this._hasDependencyCycle = false;
 			this._modules2 = [];
 			this._knownModules2 = [];
 			this._inverseDependencies2 = [];
@@ -765,6 +768,9 @@ namespace AMDLoader {
 			result.getStats = () => {
 				return this.getLoaderEvents();
 			};
+			result.hasDependencyCycle = () => {
+				return this._hasDependencyCycle;
+			};
 			result.config = (params: IConfigurationOptions, shouldOverwrite: boolean = false) => {
 				this.configure(params, shouldOverwrite);
 			};
@@ -882,6 +888,7 @@ namespace AMDLoader {
 					}
 
 					if (this._hasDependencyPath(dependency.id, module.id)) {
+						this._hasDependencyCycle = true;
 						console.warn('There is a dependency cycle between \'' + this._moduleIdProvider.getStrModuleId(dependency.id) + '\' and \'' + this._moduleIdProvider.getStrModuleId(module.id) + '\'. The cyclic path follows:');
 						let cyclePath = this._findCyclePath(dependency.id, module.id, 0) || [];
 						cyclePath.reverse();

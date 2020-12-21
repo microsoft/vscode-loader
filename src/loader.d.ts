@@ -395,6 +395,7 @@ declare namespace AMDLoader {
         (dependency: string): any;
         toUrl(id: string): string;
         getStats(): LoaderEvent[];
+        hasDependencyCycle(): boolean;
         getChecksums(): {
             [scriptSrc: string]: string;
         };
@@ -491,6 +492,7 @@ declare namespace AMDLoader {
         private readonly _requireFunc;
         private _moduleIdProvider;
         private _config;
+        private _hasDependencyCycle;
         /**
          * map of module id => module.
          * If a module is found in _modules, its code has been loaded, but
