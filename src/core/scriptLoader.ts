@@ -437,7 +437,7 @@ namespace AMDLoader {
 		}
 
 		private _getCachedDataPath(config: INodeCachedDataConfiguration, filename: string): string {
-			const hash = this._crypto.createHash('md5').update(filename, 'utf8').update(config.seed!, 'utf8').digest('hex');
+			const hash = this._crypto.createHash('md5').update(filename, 'utf8').update(config.seed!, 'utf8').update(process.arch, '').digest('hex');
 			const basename = this._path.basename(filename).replace(/\.js$/, '');
 			return this._path.join(config.path, `${basename}-${hash}.code`);
 		}

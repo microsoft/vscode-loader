@@ -6,6 +6,7 @@ declare var process: {
     platform: string;
     type: string;
     mainModule: string;
+    arch: string;
     argv: string[];
     versions: {
         node: string;
