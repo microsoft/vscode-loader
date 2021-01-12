@@ -741,8 +741,8 @@ var AMDLoader;
                         // nothing
                     }
                 };
-                require.resolve = function resolve(request) {
-                    return Module._resolveFilename(request, mod);
+                require.resolve = function resolve(request, opts) {
+                    return Module._resolveFilename(request, mod, false, opts);
                 };
                 require.main = process.mainModule;
                 require.extensions = Module._extensions;
