@@ -297,8 +297,8 @@ namespace AMDLoader {
 						// nothing
 					}
 				}
-				require.resolve = function resolve(request) {
-					return Module._resolveFilename(request, mod);
+				require.resolve = function resolve(request, options) {
+					return Module._resolveFilename(request, mod, false, options);
 				};
 				require.main = process.mainModule;
 				require.extensions = Module._extensions;
