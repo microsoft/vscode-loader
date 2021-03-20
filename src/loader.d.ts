@@ -249,6 +249,7 @@ declare namespace AMDLoader {
          */
         trustedTypesPolicy?: {
             createScriptURL(value: string): string & object;
+            createScript(_: string, value: string): string;
         };
         /**
          * A regex to help determine if a module is an AMD module or a node module.

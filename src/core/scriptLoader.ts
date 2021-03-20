@@ -169,14 +169,37 @@ namespace AMDLoader {
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 
 			const { trustedTypesPolicy } = moduleManager.getConfig().getOptionsLiteral();
-			if (trustedTypesPolicy) {
-				scriptSrc = trustedTypesPolicy.createScriptURL(scriptSrc);
+
+			const isCrossOrigin = (/^((http:)|(https:)|(file:))/.test(scriptSrc) && scriptSrc.substring(0, self.origin.length) !== self.origin);
+			if (!isCrossOrigin) {
+				// use `fetch` if possible because `importScripts`
+				// is synchronous and can lead to deadlocks on Safari
+				fetch(scriptSrc).then((response) => {
+					if (response.status !== 200) {
+						throw new Error(response.statusText);
+					}
+					return response.text();
+				}).then((text) => {
+					text = `${text}\n//# sourceURL=${scriptSrc}`;
+					const func = (
+						trustedTypesPolicy
+							? self.eval(trustedTypesPolicy.createScript('', text))
+							: new Function(text)
+					);
+					func.call(self);
+					callback();
+				}).then(undefined, errorback);
+				return;
 			}
 
 			try {
+				if (trustedTypesPolicy) {
+					scriptSrc = trustedTypesPolicy.createScriptURL(scriptSrc);
+				}
 				importScripts(scriptSrc);
 				callback();
-			} catch (e) {
+			}
+			catch (e) {
 				errorback(e);
 			}
 		}

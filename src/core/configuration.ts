@@ -161,7 +161,10 @@ namespace AMDLoader {
 		 * A trusted types policy which will be used to create TrustedScriptURL-values.
 		 * https://w3c.github.io/webappsec-trusted-types/dist/spec/#introduction.
 		 */
-		trustedTypesPolicy?: { createScriptURL(value: string): string & object };
+		trustedTypesPolicy?: {
+			createScriptURL(value: string): string & object;
+			createScript(_: string, value: string): string;
+		};
 		/**
 		 * A regex to help determine if a module is an AMD module or a node module.
 		 * If defined, then all amd modules in the system must match this regular expression.

@@ -36,7 +36,7 @@ var AMDLoader;
                 this._detect();
                 return this._isWindows;
             },
-            enumerable: false,
+            enumerable: true,
             configurable: true
         });
         Object.defineProperty(Environment.prototype, "isNode", {
@@ -44,7 +44,7 @@ var AMDLoader;
                 this._detect();
                 return this._isNode;
             },
-            enumerable: false,
+            enumerable: true,
             configurable: true
         });
         Object.defineProperty(Environment.prototype, "isElectronRenderer", {
@@ -52,7 +52,7 @@ var AMDLoader;
                 this._detect();
                 return this._isElectronRenderer;
             },
-            enumerable: false,
+            enumerable: true,
             configurable: true
         });
         Object.defineProperty(Environment.prototype, "isWebWorker", {
@@ -60,7 +60,7 @@ var AMDLoader;
                 this._detect();
                 return this._isWebWorker;
             },
-            enumerable: false,
+            enumerable: true,
             configurable: true
         });
         Environment.prototype._detect = function () {
@@ -686,10 +686,29 @@ var AMDLoader;
         }
         WorkerScriptLoader.prototype.load = function (moduleManager, scriptSrc, callback, errorback) {
             var trustedTypesPolicy = moduleManager.getConfig().getOptionsLiteral().trustedTypesPolicy;
-            if (trustedTypesPolicy) {
-                scriptSrc = trustedTypesPolicy.createScriptURL(scriptSrc);
+            var isCrossOrigin = (/^((http:)|(https:)|(file:))/.test(scriptSrc) && scriptSrc.substring(0, self.origin.length) !== self.origin);
+            if (!isCrossOrigin) {
+                // use `fetch` if possible because `importScripts`
+                // is synchronous and can lead to deadlocks on Safari
+                fetch(scriptSrc).then(function (response) {
+                    if (response.status !== 200) {
+                        throw new Error(response.statusText);
+                    }
+                    return response.text();
+                }).then(function (text) {
+                    text = text + "\n//# sourceURL=" + scriptSrc;
+                    var func = (trustedTypesPolicy
+                        ? self.eval(trustedTypesPolicy.createScript('', text))
+                        : new Function(text));
+                    func.call(self);
+                    callback();
+                }).then(undefined, errorback);
+                return;
             }
             try {
+                if (trustedTypesPolicy) {
+                    scriptSrc = trustedTypesPolicy.createScriptURL(scriptSrc);
+                }
                 importScripts(scriptSrc);
                 callback();
             }
