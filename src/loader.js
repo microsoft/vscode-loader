@@ -36,7 +36,7 @@ var AMDLoader;
                 this._detect();
                 return this._isWindows;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Environment.prototype, "isNode", {
@@ -44,7 +44,7 @@ var AMDLoader;
                 this._detect();
                 return this._isNode;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Environment.prototype, "isElectronRenderer", {
@@ -52,7 +52,7 @@ var AMDLoader;
                 this._detect();
                 return this._isElectronRenderer;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Environment.prototype, "isWebWorker", {
@@ -60,7 +60,7 @@ var AMDLoader;
                 this._detect();
                 return this._isWebWorker;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Environment.prototype._detect = function () {
