@@ -183,7 +183,7 @@ namespace AMDLoader {
 					text = `${text}\n//# sourceURL=${scriptSrc}`;
 					const func = (
 						trustedTypesPolicy
-							? self.eval(trustedTypesPolicy.createScript('', text))
+							? self.eval(trustedTypesPolicy.createScript('', text).toString())
 							: new Function(text)
 					);
 					func.call(self);
