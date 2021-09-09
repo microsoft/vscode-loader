@@ -64,12 +64,7 @@ module CSSLoaderPlugin {
 		public _insertLinkNode(linkNode: HTMLLinkElement): void {
 			this._pendingLoads++;
 			var head = document.head || document.getElementsByTagName('head')[0];
-			var other: HTMLCollectionOf<HTMLElement> = head.getElementsByTagName('link');
-			if (other.length > 0) {
-				head.insertBefore(linkNode, other[other.length - 1]);
-			} else {
-				head.appendChild(linkNode);
-			}
+			head.appendChild(linkNode);
 		}
 
 		public createLinkTag(name: string, cssUrl: string, externalCallback: () => void, externalErrorback: (err: any) => void): HTMLLinkElement {
