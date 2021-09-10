@@ -358,7 +358,7 @@ namespace AMDLoader {
 		/**
 		 * current annonymous received define call, but not yet processed
 		 */
-		private _currentAnnonymousDefineCall: IDefineCall | null;
+		private _currentAnonymousDefineCall: IDefineCall | null;
 
 		private _recorder: ILoaderEventRecorder | null;
 
@@ -379,7 +379,7 @@ namespace AMDLoader {
 			this._knownModules2 = [];
 			this._inverseDependencies2 = [];
 			this._inversePluginDependencies2 = new Map<ModuleId, PluginDependency[]>();
-			this._currentAnnonymousDefineCall = null;
+			this._currentAnonymousDefineCall = null;
 
 			this._recorder = null;
 			this._buildInfoPath = [];
@@ -479,18 +479,18 @@ namespace AMDLoader {
 
 		/**
 		 * Defines an anonymous module (without an id). Its name will be resolved as we receive a callback from the scriptLoader.
-		 * @param dependecies @see defineModule
+		 * @param dependencies @see defineModule
 		 * @param callback @see defineModule
 		 */
 		public enqueueDefineAnonymousModule(dependencies: string[], callback: any): void {
-			if (this._currentAnnonymousDefineCall !== null) {
+			if (this._currentAnonymousDefineCall !== null) {
 				throw new Error('Can only have one anonymous define call per script file');
 			}
 			let stack: string | null = null;
 			if (this._config.isBuild()) {
 				stack = new Error('StackLocation').stack || null;
 			}
-			this._currentAnnonymousDefineCall = {
+			this._currentAnonymousDefineCall = {
 				stack: stack,
 				dependencies: dependencies,
 				callback: callback
@@ -608,9 +608,9 @@ namespace AMDLoader {
 		 * This means its code is available and has been executed.
 		 */
 		private _onLoad(moduleId: ModuleId): void {
-			if (this._currentAnnonymousDefineCall !== null) {
-				let defineCall = this._currentAnnonymousDefineCall;
-				this._currentAnnonymousDefineCall = null;
+			if (this._currentAnonymousDefineCall !== null) {
+				let defineCall = this._currentAnonymousDefineCall;
+				this._currentAnonymousDefineCall = null;
 
 				// Hit an anonymous define call
 				this.defineModule(this._moduleIdProvider.getStrModuleId(moduleId), defineCall.dependencies, defineCall.callback, null, defineCall.stack);

@@ -519,7 +519,7 @@ declare namespace AMDLoader {
         /**
          * current annonymous received define call, but not yet processed
          */
-        private _currentAnnonymousDefineCall;
+        private _currentAnonymousDefineCall;
         private _recorder;
         private _buildInfoPath;
         private _buildInfoDefineStack;
@@ -534,7 +534,7 @@ declare namespace AMDLoader {
         getLoaderEvents(): LoaderEvent[];
         /**
          * Defines an anonymous module (without an id). Its name will be resolved as we receive a callback from the scriptLoader.
-         * @param dependecies @see defineModule
+         * @param dependencies @see defineModule
          * @param callback @see defineModule
          */
         enqueueDefineAnonymousModule(dependencies: string[], callback: any): void;

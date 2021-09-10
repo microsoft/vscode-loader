@@ -102,7 +102,7 @@ namespace AMDLoader {
 
 		/**
 		 * Attach load / error listeners to a script element and remove them when either one has fired.
-		 * Implemented for browssers supporting HTML5 standard 'load' and 'error' events.
+		 * Implemented for browsers supporting HTML5 standard 'load' and 'error' events.
 		 */
 		private attachListeners(script: HTMLScriptElement, callback: () => void, errorback: (err: any) => void): void {
 			let unbind = () => {

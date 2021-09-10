@@ -140,7 +140,7 @@ module NLSBuildLoaderPlugin {
 									return 'NLS error: unknown key ' + moduleKey;
 								let mk = keyMap[moduleKey].keys;
 								if (index >= mk.length)
-									return 'NLS error unknow index ' + index;
+									return 'NLS error unknown index ' + index;
 								let subKey = mk[index];
 								let args = [];
 								args[0] = moduleKey + '_' + subKey;
