@@ -164,14 +164,38 @@ namespace AMDLoader {
 		}
 	}
 
+	function canUseEval(moduleManager: IModuleManager): boolean {
+		const { trustedTypesPolicy } = moduleManager.getConfig().getOptionsLiteral();
+		try {
+			const func = (
+				trustedTypesPolicy
+					? self.eval(trustedTypesPolicy.createScript('', 'true'))
+					: new Function('true')
+			);
+			func.call(self);
+			return true;
+		} catch (err) {
+			return false;
+		}
+	}
+
 	class WorkerScriptLoader implements IScriptLoader {
+
+		private _cachedCanUseEval: boolean | null = null;
+
+		private _canUseEval(moduleManager: IModuleManager): boolean {
+			if (this._cachedCanUseEval === null) {
+				this._cachedCanUseEval = canUseEval(moduleManager);
+			}
+			return this._cachedCanUseEval;
+		}
 
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 
 			const { trustedTypesPolicy } = moduleManager.getConfig().getOptionsLiteral();
 
 			const isCrossOrigin = (/^((http:)|(https:)|(file:))/.test(scriptSrc) && scriptSrc.substring(0, self.origin.length) !== self.origin);
-			if (!isCrossOrigin) {
+			if (!isCrossOrigin && this._canUseEval(moduleManager)) {
 				// use `fetch` if possible because `importScripts`
 				// is synchronous and can lead to deadlocks on Safari
 				fetch(scriptSrc).then((response) => {
