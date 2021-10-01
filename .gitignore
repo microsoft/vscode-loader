@@ -5,3 +5,4 @@ obj/
 *.csproj.user
 *.js.map
 node_modules/
+*.lsif
