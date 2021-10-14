@@ -636,7 +636,7 @@ namespace AMDLoader {
 		private _onLoadError(moduleId: ModuleId, err: any): void {
 			const error = this._createLoadError(moduleId, err);
 			if (!this._modules2[moduleId]) {
-				this._modules2[moduleId] = new Module(moduleId, this._moduleIdProvider.getStrModuleId(moduleId), [], () => {}, () => {}, null);
+				this._modules2[moduleId] = new Module(moduleId, this._moduleIdProvider.getStrModuleId(moduleId), [], () => {}, null, null);
 			}
 
 			// Find any 'local' error handlers, walk the entire chain of inverse dependencies if necessary.
