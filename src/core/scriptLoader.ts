@@ -192,39 +192,58 @@ namespace AMDLoader {
 
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 
-			const { trustedTypesPolicy } = moduleManager.getConfig().getOptionsLiteral();
+			if (/^node\|/.test(scriptSrc)) {
 
-			const isCrossOrigin = (/^((http:)|(https:)|(file:))/.test(scriptSrc) && scriptSrc.substring(0, self.origin.length) !== self.origin);
-			if (!isCrossOrigin && this._canUseEval(moduleManager)) {
-				// use `fetch` if possible because `importScripts`
-				// is synchronous and can lead to deadlocks on Safari
-				fetch(scriptSrc).then((response) => {
-					if (response.status !== 200) {
-						throw new Error(response.statusText);
-					}
-					return response.text();
-				}).then((text) => {
-					text = `${text}\n//# sourceURL=${scriptSrc}`;
-					const func = (
-						trustedTypesPolicy
-							? self.eval(trustedTypesPolicy.createScript('', text))
-							: new Function(text)
-					);
-					func.call(self);
-					callback();
-				}).then(undefined, errorback);
-				return;
-			}
-
-			try {
-				if (trustedTypesPolicy) {
-					scriptSrc = trustedTypesPolicy.createScriptURL(scriptSrc);
+				const opts = moduleManager.getConfig().getOptionsLiteral();
+				const nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), (opts.nodeRequire || AMDLoader.global.nodeRequire));
+				const pieces = scriptSrc.split('|');
+				let moduleExports = null;
+				try {
+					moduleExports = nodeRequire(pieces[1]);
 				}
-				importScripts(scriptSrc);
+				catch (err) {
+					errorback(err);
+					return;
+				}
+				moduleManager.enqueueDefineAnonymousModule([], function () { return moduleExports; });
 				callback();
-			}
-			catch (e) {
-				errorback(e);
+
+			} else {
+
+				const { trustedTypesPolicy } = moduleManager.getConfig().getOptionsLiteral();
+
+				const isCrossOrigin = (/^((http:)|(https:)|(file:))/.test(scriptSrc) && scriptSrc.substring(0, self.origin.length) !== self.origin);
+				if (!isCrossOrigin && this._canUseEval(moduleManager)) {
+					// use `fetch` if possible because `importScripts`
+					// is synchronous and can lead to deadlocks on Safari
+					fetch(scriptSrc).then((response) => {
+						if (response.status !== 200) {
+							throw new Error(response.statusText);
+						}
+						return response.text();
+					}).then((text) => {
+						text = `${text}\n//# sourceURL=${scriptSrc}`;
+						const func = (
+							trustedTypesPolicy
+								? self.eval(trustedTypesPolicy.createScript('', text))
+								: new Function(text)
+						);
+						func.call(self);
+						callback();
+					}).then(undefined, errorback);
+					return;
+				}
+
+				try {
+					if (trustedTypesPolicy) {
+						scriptSrc = trustedTypesPolicy.createScriptURL(scriptSrc);
+					}
+					importScripts(scriptSrc);
+					callback();
+				}
+				catch (e) {
+					errorback(e);
+				}
 			}
 		}
 	}
