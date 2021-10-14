@@ -69,6 +69,7 @@ namespace AMDLoader {
 		private _isNode: boolean;
 		private _isElectronRenderer: boolean;
 		private _isWebWorker: boolean;
+		private _isElectronNodeIntegrationWebWorker;
 
 		public get isWindows(): boolean {
 			this._detect();
@@ -86,6 +87,10 @@ namespace AMDLoader {
 			this._detect();
 			return this._isWebWorker;
 		}
+		public get isElectronNodeIntegrationWebWorker(): boolean {
+			this._detect();
+			return this._isElectronNodeIntegrationWebWorker;
+		}
 
 		constructor() {
 			this._detected = false;
@@ -93,6 +98,7 @@ namespace AMDLoader {
 			this._isNode = false;
 			this._isElectronRenderer = false;
 			this._isWebWorker = false;
+			this._isElectronNodeIntegrationWebWorker = false;
 		}
 
 		private _detect(): void {
@@ -104,6 +110,7 @@ namespace AMDLoader {
 			this._isNode = (typeof module !== 'undefined' && !!module.exports);
 			this._isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
 			this._isWebWorker = (typeof global.importScripts === 'function');
+			this._isElectronNodeIntegrationWebWorker = this._isWebWorker && (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'worker');
 		}
 
 		private static _isWindows(): boolean {

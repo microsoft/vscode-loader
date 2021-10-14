@@ -40,10 +40,12 @@ declare namespace AMDLoader {
         private _isNode;
         private _isElectronRenderer;
         private _isWebWorker;
+        private _isElectronNodeIntegrationWebWorker;
         get isWindows(): boolean;
         get isNode(): boolean;
         get isElectronRenderer(): boolean;
         get isWebWorker(): boolean;
+        get isElectronNodeIntegrationWebWorker(): boolean;
         constructor();
         private _detect;
         private static _isWindows;

@@ -30,6 +30,7 @@ var AMDLoader;
             this._isNode = false;
             this._isElectronRenderer = false;
             this._isWebWorker = false;
+            this._isElectronNodeIntegrationWebWorker = false;
         }
         Object.defineProperty(Environment.prototype, "isWindows", {
             get: function () {
@@ -63,6 +64,14 @@ var AMDLoader;
             enumerable: false,
             configurable: true
         });
+        Object.defineProperty(Environment.prototype, "isElectronNodeIntegrationWebWorker", {
+            get: function () {
+                this._detect();
+                return this._isElectronNodeIntegrationWebWorker;
+            },
+            enumerable: false,
+            configurable: true
+        });
         Environment.prototype._detect = function () {
             if (this._detected) {
                 return;
@@ -72,6 +81,7 @@ var AMDLoader;
             this._isNode = (typeof module !== 'undefined' && !!module.exports);
             this._isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
             this._isWebWorker = (typeof AMDLoader.global.importScripts === 'function');
+            this._isElectronNodeIntegrationWebWorker = this._isWebWorker && (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'worker');
         };
         Environment._isWindows = function () {
             if (typeof navigator !== 'undefined') {
@@ -1892,7 +1902,7 @@ var AMDLoader;
                 RequireFunc.__$__nodeRequire = nodeRequire;
             }
         }
-        if (env.isNode && !env.isElectronRenderer) {
+        if (env.isNode && !env.isElectronRenderer && !env.isElectronNodeIntegrationWebWorker) {
             module.exports = RequireFunc;
             require = RequireFunc;
         }
