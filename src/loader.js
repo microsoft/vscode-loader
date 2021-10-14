@@ -1489,7 +1489,7 @@ var AMDLoader;
         ModuleManager.prototype._onLoadError = function (moduleId, err) {
             var error = this._createLoadError(moduleId, err);
             if (!this._modules2[moduleId]) {
-                this._modules2[moduleId] = new Module(moduleId, this._moduleIdProvider.getStrModuleId(moduleId), [], function () { }, function () { }, null);
+                this._modules2[moduleId] = new Module(moduleId, this._moduleIdProvider.getStrModuleId(moduleId), [], function () { }, null, null);
             }
             // Find any 'local' error handlers, walk the entire chain of inverse dependencies if necessary.
             var seenModuleId = [];
@@ -1880,9 +1880,7 @@ var AMDLoader;
     RequireFunc.getStats = function () {
         return moduleManager.getLoaderEvents();
     };
-    RequireFunc.define = function () {
-        return DefineFunc.apply(null, arguments);
-    };
+    RequireFunc.define = DefineFunc;
     function init() {
         if (typeof AMDLoader.global.require !== 'undefined' || typeof require !== 'undefined') {
             var _nodeRequire = (AMDLoader.global.require || require);
