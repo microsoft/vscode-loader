@@ -451,19 +451,21 @@ namespace AMDLoader {
 		 */
 		public moduleIdToPaths(moduleId: string): string[] {
 
-			const isNodeModule = (
-				(this.nodeModulesMap[moduleId] === true)
-				|| (this.options.amdModulesPattern instanceof RegExp && !this.options.amdModulesPattern.test(moduleId))
-			);
+			if (this._env.isNode) {
+				const isNodeModule = (
+					(this.nodeModulesMap[moduleId] === true)
+					|| (this.options.amdModulesPattern instanceof RegExp && !this.options.amdModulesPattern.test(moduleId))
+				);
 
-			if (isNodeModule) {
-				// This is a node module...
-				if (this.isBuild()) {
-					// ...and we are at build time, drop it
-					return ['empty:'];
-				} else {
-					// ...and at runtime we create a `shortcut`-path
-					return ['node|' + moduleId];
+				if (isNodeModule) {
+					// This is a node module...
+					if (this.isBuild()) {
+						// ...and we are at build time, drop it
+						return ['empty:'];
+					} else {
+						// ...and at runtime we create a `shortcut`-path
+						return ['node|' + moduleId];
+					}
 				}
 			}
 
