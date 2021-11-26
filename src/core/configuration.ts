@@ -14,6 +14,7 @@ namespace AMDLoader {
 	export interface AnnotatedFactoryError extends Error {
 		phase: 'factory';
 		moduleId: string;
+		neededBy: string[];
 	}
 
 	export interface AnnotatedValidationError extends Error {
@@ -224,8 +225,10 @@ namespace AMDLoader {
 				}
 
 				if (err.phase === 'factory') {
-					console.error('The factory method of "' + err.moduleId + '" has thrown an exception');
+					console.error('The factory function of "' + err.moduleId + '" has thrown an exception');
 					console.error(err);
+					console.error('Here are the modules that depend on it:');
+					console.error(err.neededBy);
 					return;
 				}
 			}

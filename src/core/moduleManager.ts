@@ -178,7 +178,7 @@ namespace AMDLoader {
 			};
 		}
 
-		public complete(recorder: ILoaderEventRecorder, config: Configuration, dependenciesValues: any[]): void {
+		public complete(recorder: ILoaderEventRecorder, config: Configuration, dependenciesValues: any[], inversedependenciesProvider: (moduleId: number) => string[]): void {
 			this._isComplete = true;
 
 			let producedError: any = null;
@@ -203,6 +203,7 @@ namespace AMDLoader {
 				let err = ensureError<AnnotatedFactoryError>(producedError);
 				err.phase = 'factory';
 				err.moduleId = this.strId;
+				err.neededBy = inversedependenciesProvider(this.id);
 				this.error = err;
 				config.onError(err);
 			}
@@ -977,7 +978,11 @@ namespace AMDLoader {
 				}
 			}
 
-			module.complete(recorder, this._config, dependenciesValues);
+			const inversedependenciesProvider = (moduleId: number) => {
+				return (this._inverseDependencies2[moduleId] || []).map((intModuleId) => this._moduleIdProvider.getStrModuleId(intModuleId));
+			}
+
+			module.complete(recorder, this._config, dependenciesValues, inversedependenciesProvider);
 
 			// Fetch and clear inverse dependencies
 			let inverseDeps = this._inverseDependencies2[module.id];

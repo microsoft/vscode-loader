@@ -123,6 +123,7 @@ declare namespace AMDLoader {
     interface AnnotatedFactoryError extends Error {
         phase: 'factory';
         moduleId: string;
+        neededBy: string[];
     }
     interface AnnotatedValidationError extends Error {
         phase: 'configuration';
@@ -447,7 +448,7 @@ declare namespace AMDLoader {
         constructor(id: ModuleId, strId: string, dependencies: Dependency[], callback: any, errorback: ((err: AnnotatedError) => void) | null | undefined, moduleIdResolver: ModuleIdResolver | null);
         private static _safeInvokeFunction;
         private static _invokeFactory;
-        complete(recorder: ILoaderEventRecorder, config: Configuration, dependenciesValues: any[]): void;
+        complete(recorder: ILoaderEventRecorder, config: Configuration, dependenciesValues: any[], inversedependenciesProvider: (moduleId: number) => string[]): void;
         /**
          * One of the direct dependencies or a transitive dependency has failed to load.
          */
