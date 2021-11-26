@@ -40,10 +40,6 @@ module CSSBuildLoaderPlugin {
 		load(name: string, cssUrl: string, externalCallback: (contents?: string) => void, externalErrorback: (err: any) => void): void;
 	}
 
-	/**
-	 * Known issue:
-	 * - In IE there is no way to know if the CSS file loaded successfully or not.
-	 */
 	class BrowserCSSLoader implements ICSSLoader {
 
 		private _pendingLoads: number;

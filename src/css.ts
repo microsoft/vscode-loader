@@ -19,10 +19,6 @@
 
 module CSSLoaderPlugin {
 
-	/**
-	 * Known issue:
-	 * - In IE there is no way to know if the CSS file loaded successfully or not.
-	 */
 	class BrowserCSSLoader {
 
 		private _pendingLoads: number;

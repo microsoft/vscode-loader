@@ -3,7 +3,7 @@
 An universal [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD) Loader developed primarily to load VSCode's sources.
 
 ## Supported environments
-* IE 11, Edge, Firefox, Chrome, Safari, Opera
+* Edge, Firefox, Chrome, Safari
 * nodejs
 * electron (renderer & browser processes)
 In nodejs and electron, when loading a module, if it cannot be found with the AMD rules, it delegates loading them to the native `require`.
