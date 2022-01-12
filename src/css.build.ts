@@ -404,6 +404,7 @@ module CSSBuildLoaderPlugin {
 							// .svg => url encode as explained at https://codepen.io/tigt/post/optimizing-svgs-in-data-uris
 							let newText = fileContents.toString()
 								.replace(/"/g, '\'')
+								.replace(/%/g, '%25')
 								.replace(/</g, '%3C')
 								.replace(/>/g, '%3E')
 								.replace(/&/g, '%26')
