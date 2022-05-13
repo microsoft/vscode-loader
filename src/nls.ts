@@ -170,7 +170,8 @@ module NLSLoaderPlugin {
 						}
 					});
 				} else {
-					req([name + suffix], messagesLoaded);
+					const base = pluginConfig.baseUrl ?? '';
+					req([base + name + suffix], messagesLoaded);
 				}
 			}
 		}
