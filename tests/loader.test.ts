@@ -586,6 +586,25 @@ QUnit.test('Using a local error handler secondary script loading failure', () =>
 	}, null);
 });
 
+QUnit.test('RelativeRequire error handler', () => {
+	QUnit.expect(1);
+
+	const dne = 'Does not exist';
+	var scriptLoader: loader.IScriptLoader = {
+		load: (moduleManager: AMDLoader.IModuleManager, scriptPath: string, loadCallback: () => void, errorCallback: (err: any) => void) => {
+			errorCallback(new Error(dne));
+		},
+	};
+
+	var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
+	mm.defineModule('a/b/d', ['require'], (relativeRequire) => {
+		relativeRequire(['doesnotexist'], undefined, (err: Error) => {
+			QUnit.deepEqual(err.message, dne);
+		});
+		return 'a/b/d';
+	}, null, null);
+});
+
 QUnit.module('FallBack Tests');
 
 QUnit.test('No path config', () => {

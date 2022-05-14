@@ -171,7 +171,11 @@ module NLSLoaderPlugin {
 					});
 				} else {
 					const base = pluginConfig.baseUrl ?? '';
-					req([base + name + suffix], messagesLoaded);
+					req([base + name + suffix], messagesLoaded, (err: Error) => {
+						// We have an error. Load the English default strings instead.
+						console.warn(`Falling back to default strings. Unable to load translations because of: ${err.message ?? err}`);
+						req([name + '.nls'], messagesLoaded);
+					});
 				}
 			}
 		}

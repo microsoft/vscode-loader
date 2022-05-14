@@ -523,6 +523,22 @@ QUnit.test('Using a local error handler secondary script loading failure', funct
         QUnit.equal(err.message, 'c.js not found');
     }, null);
 });
+QUnit.test('RelativeRequire error handler', function () {
+    QUnit.expect(1);
+    var dne = 'Does not exist';
+    var scriptLoader = {
+        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+            errorCallback(new Error(dne));
+        },
+    };
+    var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
+    mm.defineModule('a/b/d', ['require'], function (relativeRequire) {
+        relativeRequire(['doesnotexist'], undefined, function (err) {
+            QUnit.deepEqual(err.message, dne);
+        });
+        return 'a/b/d';
+    }, null, null);
+});
 QUnit.module('FallBack Tests');
 QUnit.test('No path config', function () {
     QUnit.expect(1);
