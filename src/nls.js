@@ -150,18 +150,12 @@ var NLSLoaderPlugin;
                 }
                 else {
                     var base = (_a = pluginConfig.baseUrl) !== null && _a !== void 0 ? _a : '';
-                    try {
-                        req([base + name + suffix], messagesLoaded_1, function (err) {
-                            var _a;
-                            // We have an error. Load the English default strings instead.
-                            console.warn("Falling back to default strings. Unable to load translations because of: " + ((_a = err.message) !== null && _a !== void 0 ? _a : err));
-                            req([name + '.nls'], messagesLoaded_1);
-                        });
-                    }
-                    catch (err) {
-                        // load the default English bundle
+                    req([base + name + suffix], messagesLoaded_1, function (err) {
+                        var _a;
+                        // We have an error. Load the English default strings instead.
+                        console.warn("Falling back to default strings. Unable to load translations because of: " + ((_a = err.message) !== null && _a !== void 0 ? _a : err));
                         req([name + '.nls'], messagesLoaded_1);
-                    }
+                    });
                 }
             }
         };
