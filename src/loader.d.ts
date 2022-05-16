@@ -396,7 +396,7 @@ declare namespace AMDLoader {
         callback: any;
     }
     interface IRelativeRequire {
-        (dependencies: string[], callback: Function): void;
+        (dependencies: string[], callback: Function, errorback?: (error: Error) => void): void;
         (dependency: string): any;
         toUrl(id: string): string;
         getStats(): LoaderEvent[];
