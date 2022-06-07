@@ -61,8 +61,13 @@ module NLSLoaderPlugin {
 		(idx: number, defaultValue: null);
 	}
 
+	interface IGetLanguageConfigurationFunc {
+		(): { [entry: string]: string} | undefined
+	}
+
 	export interface IConsumerAPI {
 		localize: ILocalizeFunc | IBoundLocalizeFunc;
+		getLanguageConfiguration: IGetLanguageConfigurationFunc;
 	}
 
 	export interface BundleLoader {
@@ -117,12 +122,23 @@ module NLSLoaderPlugin {
 		}
 	}
 
+	function getLanguageConfiguration(loadedConfig: AMDLoader.IConfigurationOptions | undefined): IGetLanguageConfigurationFunc {
+		return function () {
+			if (!loadedConfig?.['vs/nls']?.['availableLanguages']) {
+				return undefined;
+			}
+
+			return this._loadedConfig['vs/nls']['availableLanguages'];
+		}
+	}
+
 	export class NLSPlugin implements AMDLoader.ILoaderPlugin {
 
 		private static DEFAULT_TAG = 'i-default';
 		private _env: Environment;
 
 		public localize: (data, message, ...args: (string | number | boolean | undefined | null)[]) => string;
+		public getLanguageConfiguration: IGetLanguageConfigurationFunc = getLanguageConfiguration(undefined);
 
 		constructor(env: Environment) {
 			this._env = env;
@@ -135,15 +151,19 @@ module NLSLoaderPlugin {
 
 		public create(key: string, data: IBundledStrings): IConsumerAPI {
 			return {
-				localize: createScopedLocalize(data[key], this._env)
+				localize: createScopedLocalize(data[key], this._env),
+				getLanguageConfiguration: this.getLanguageConfiguration,
 			}
 		}
 
 		public load(name: string, req: AMDLoader.IRelativeRequire, load: AMDLoader.IPluginLoadCallback, config: AMDLoader.IConfigurationOptions): void {
 			config = config || {};
+			this.getLanguageConfiguration = getLanguageConfiguration(config);
+
 			if (!name || name.length === 0) {
 				load({
-					localize: this.localize
+					localize: this.localize,
+					getLanguageConfiguration: this.getLanguageConfiguration
 				});
 			} else {
 				let pluginConfig = config['vs/nls'] || {};
@@ -153,11 +173,13 @@ module NLSLoaderPlugin {
 					suffix = suffix + '.' + language;
 				}
 				let messagesLoaded = (messages: string[] | IBundledStrings) => {
+					const api = messages as any as IConsumerAPI;
 					if (Array.isArray(messages)) {
-						(messages as any as IConsumerAPI).localize = createScopedLocalize(messages, this._env);
+						api.localize = createScopedLocalize(messages, this._env);
 					} else {
-						(messages as any as IConsumerAPI).localize = createScopedLocalize(messages[name], this._env);
+						api.localize = createScopedLocalize(messages[name], this._env);
 					}
+					api.getLanguageConfiguration = this.getLanguageConfiguration;
 					load(messages);
 				};
 				if (typeof pluginConfig.loadBundle === 'function') {

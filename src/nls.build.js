@@ -59,6 +59,15 @@ var NLSBuildLoaderPlugin;
             return _format(scope[idx], restArgs);
         };
     }
+    function getLanguageConfiguration(loadedConfig) {
+        return function () {
+            var _a;
+            if (!((_a = loadedConfig === null || loadedConfig === void 0 ? void 0 : loadedConfig['vs/nls']) === null || _a === void 0 ? void 0 : _a['availableLanguages'])) {
+                return undefined;
+            }
+            return this._loadedConfig['vs/nls']['availableLanguages'];
+        };
+    }
     var NLSPlugin = /** @class */ (function () {
         function NLSPlugin() {
             this.localize = localize;
@@ -68,14 +77,16 @@ var NLSBuildLoaderPlugin;
         };
         NLSPlugin.prototype.create = function (key, data) {
             return {
-                localize: createScopedLocalize(data[key])
+                localize: createScopedLocalize(data[key]),
+                getLanguageConfiguration: this.getLanguageConfiguration,
             };
         };
         NLSPlugin.prototype.load = function (name, req, load, config) {
             config = config || {};
             if (!name || name.length === 0) {
                 load({
-                    localize: localize
+                    localize: localize,
+                    getLanguageConfiguration: this.getLanguageConfiguration
                 });
             }
             else {
@@ -123,6 +134,7 @@ var NLSBuildLoaderPlugin;
                             else {
                                 messages.localize = createScopedLocalize(messages[name]);
                             }
+                            messages.getLanguageConfiguration = this.getLanguageConfiguration;
                             load(messages);
                         });
                     }

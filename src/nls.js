@@ -92,9 +92,19 @@ var NLSLoaderPlugin;
             return _format(scope[idx], restArgs, env);
         };
     }
+    function getLanguageConfiguration(loadedConfig) {
+        return function () {
+            var _a;
+            if (!((_a = loadedConfig === null || loadedConfig === void 0 ? void 0 : loadedConfig['vs/nls']) === null || _a === void 0 ? void 0 : _a['availableLanguages'])) {
+                return undefined;
+            }
+            return this._loadedConfig['vs/nls']['availableLanguages'];
+        };
+    }
     var NLSPlugin = /** @class */ (function () {
         function NLSPlugin(env) {
             var _this = this;
+            this.getLanguageConfiguration = getLanguageConfiguration(undefined);
             this._env = env;
             this.localize = function (data, message) {
                 var args = [];
@@ -109,16 +119,19 @@ var NLSLoaderPlugin;
         };
         NLSPlugin.prototype.create = function (key, data) {
             return {
-                localize: createScopedLocalize(data[key], this._env)
+                localize: createScopedLocalize(data[key], this._env),
+                getLanguageConfiguration: this.getLanguageConfiguration,
             };
         };
         NLSPlugin.prototype.load = function (name, req, load, config) {
             var _this = this;
             var _a;
             config = config || {};
+            this.getLanguageConfiguration = getLanguageConfiguration(config);
             if (!name || name.length === 0) {
                 load({
-                    localize: this.localize
+                    localize: this.localize,
+                    getLanguageConfiguration: this.getLanguageConfiguration
                 });
             }
             else {
@@ -129,12 +142,14 @@ var NLSLoaderPlugin;
                     suffix = suffix + '.' + language;
                 }
                 var messagesLoaded_1 = function (messages) {
+                    var api = messages;
                     if (Array.isArray(messages)) {
-                        messages.localize = createScopedLocalize(messages, _this._env);
+                        api.localize = createScopedLocalize(messages, _this._env);
                     }
                     else {
-                        messages.localize = createScopedLocalize(messages[name], _this._env);
+                        api.localize = createScopedLocalize(messages[name], _this._env);
                     }
+                    api.getLanguageConfiguration = _this.getLanguageConfiguration;
                     load(messages);
                 };
                 if (typeof pluginConfig.loadBundle === 'function') {

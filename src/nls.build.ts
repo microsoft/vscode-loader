@@ -53,8 +53,13 @@ module NLSBuildLoaderPlugin {
 		(key: string, message: string, ...args: any[]): string;
 	}
 
+	interface IGetLanguageConfigurationFunc {
+		(): { [entry: string]: string} | undefined
+	}
+
 	export interface IConsumerAPI {
 		localize: ILocalizeFunc;
+		getLanguageConfiguration: IGetLanguageConfigurationFunc;
 	}
 
 	function _format(message: string, args: string[]): string {
@@ -102,12 +107,23 @@ module NLSBuildLoaderPlugin {
 		}
 	}
 
+	function getLanguageConfiguration(loadedConfig: AMDLoader.IConfigurationOptions | undefined): IGetLanguageConfigurationFunc {
+		return function () {
+			if (!loadedConfig?.['vs/nls']?.['availableLanguages']) {
+				return undefined;
+			}
+
+			return this._loadedConfig['vs/nls']['availableLanguages'];
+		}
+	}
+
 	export class NLSPlugin implements AMDLoader.ILoaderPlugin {
 		static DEFAULT_TAG = 'i-default';
 		static BUILD_MAP: { [name: string]: string[]; } = {};
 		static BUILD_MAP_KEYS: { [name: string]: string[]; } = {};
 
 		public localize;
+		public getLanguageConfiguration: IGetLanguageConfigurationFunc;
 
 		constructor() {
 			this.localize = localize;
@@ -119,7 +135,8 @@ module NLSBuildLoaderPlugin {
 
 		public create(key: string, data: IBundledStrings): IConsumerAPI {
 			return {
-				localize: createScopedLocalize(data[key])
+				localize: createScopedLocalize(data[key]),
+				getLanguageConfiguration: this.getLanguageConfiguration,
 			}
 		}
 
@@ -127,7 +144,8 @@ module NLSBuildLoaderPlugin {
 			config = config || {};
 			if (!name || name.length === 0) {
 				load({
-					localize: localize
+					localize: localize,
+					getLanguageConfiguration: this.getLanguageConfiguration
 				});
 			} else {
 				let suffix;
@@ -172,6 +190,7 @@ module NLSBuildLoaderPlugin {
 							} else {
 								messages.localize = createScopedLocalize(messages[name]);
 							}
+							(<IConsumerAPI>messages).getLanguageConfiguration = this.getLanguageConfiguration;
 							load(messages);
 						});
 					}
