@@ -238,6 +238,13 @@ declare namespace AMDLoader {
          */
         isBuild?: boolean;
         /**
+         * Normally, during a build, no module factories are invoked. This can be used
+         * to forcefully execute a module's factory.
+         */
+        buildForceInvokeFactory?: {
+            [moduleId: string]: boolean;
+        };
+        /**
          * Content Security Policy nonce value used to load child scripts.
          */
         cspNonce?: string;
@@ -294,6 +301,9 @@ declare namespace AMDLoader {
         onError: (err: AnnotatedError) => void;
         ignoreDuplicateModules: string[];
         isBuild: boolean;
+        buildForceInvokeFactory: {
+            [moduleId: string]: boolean;
+        };
         cspNonce: string;
         preferScriptTags: boolean;
         nodeModules: string[];
@@ -350,6 +360,7 @@ declare namespace AMDLoader {
          * Flag to indicate if current execution is as part of a build.
          */
         isBuild(): boolean;
+        shouldInvokeFactory(strModuleId: string): boolean;
         /**
          * Test if module `moduleId` is expected to be defined multiple times
          */
