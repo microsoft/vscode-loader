@@ -241,7 +241,7 @@ declare namespace AMDLoader {
          * Normally, during a build, no module factories are invoked. This can be used
          * to forcefully execute a module's factory.
          */
-        buildForceInvokeFactory: {
+        buildForceInvokeFactory?: {
             [moduleId: string]: boolean;
         };
         /**

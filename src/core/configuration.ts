@@ -153,7 +153,7 @@ namespace AMDLoader {
 		 * Normally, during a build, no module factories are invoked. This can be used
 		 * to forcefully execute a module's factory.
 		 */
-		buildForceInvokeFactory: { [moduleId: string]: boolean; }
+		buildForceInvokeFactory?: { [moduleId: string]: boolean; }
 		/**
 		 * Content Security Policy nonce value used to load child scripts.
 		 */
