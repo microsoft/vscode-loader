@@ -161,7 +161,7 @@ namespace AMDLoader {
 		}
 
 		private static _invokeFactory(config: Configuration, strModuleId: string, callback: Function, dependenciesValues: any[]): { returnedValue: any; producedError: any; } {
-			if (config.isBuild() && !Utilities.isAnonymousModule(strModuleId)) {
+			if (!config.shouldInvokeFactory(strModuleId)) {
 				return {
 					returnedValue: null,
 					producedError: null

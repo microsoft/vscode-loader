@@ -150,6 +150,11 @@ namespace AMDLoader {
 		 */
 		isBuild?: boolean;
 		/**
+		 * Normally, during a build, no module factories are invoked. This can be used
+		 * to forcefully execute a module's factory.
+		 */
+		buildForceInvokeFactory: { [moduleId: string]: boolean; }
+		/**
 		 * Content Security Policy nonce value used to load child scripts.
 		 */
 		cspNonce?: string;
@@ -203,6 +208,7 @@ namespace AMDLoader {
 		onError: (err: AnnotatedError) => void;
 		ignoreDuplicateModules: string[];
 		isBuild: boolean;
+		buildForceInvokeFactory: { [moduleId: string]: boolean; }
 		cspNonce: string;
 		preferScriptTags: boolean;
 		nodeModules: string[];
@@ -239,6 +245,9 @@ namespace AMDLoader {
 			}
 			if (typeof options.isBuild !== 'boolean') {
 				options.isBuild = false;
+			}
+			if (typeof options.buildForceInvokeFactory !== 'object') {
+				options.buildForceInvokeFactory = {};
 			}
 			if (typeof options.paths !== 'object') {
 				options.paths = {};
@@ -523,6 +532,18 @@ namespace AMDLoader {
 		 */
 		public isBuild(): boolean {
 			return this.options.isBuild;
+		}
+
+		public shouldInvokeFactory(strModuleId: string): boolean {
+			if (!this.options.isBuild) {
+				// outside of a build, all factories should be invoked
+				return true;
+			}
+			// during a build, only explicitly marked or anonymous modules get their factories invoked
+			return (
+				this.options.buildForceInvokeFactory[strModuleId]
+				|| Utilities.isAnonymousModule(strModuleId)
+			);
 		}
 
 		/**
