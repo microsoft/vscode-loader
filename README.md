@@ -11,8 +11,6 @@ In nodejs and electron, when loading a module, if it cannot be found with the AM
 ## Features
 
 * Runs factory methods as soon as dependencies are resolved.
-* Contains a CSS loader (`vs/css`).
-* Contains a natural language strings loader (`vs/nls`).
 
 ## Using
 
