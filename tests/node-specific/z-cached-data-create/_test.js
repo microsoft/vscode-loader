@@ -7,7 +7,7 @@ var nodeCachedDataDir = path.join(__dirname, 'cache-dir');
 
 loader.config({
 	nodeRequire: require,
-	nodeMain: module.filename,
+	baseUrl: __dirname,
 	nodeCachedData: {
 		path: nodeCachedDataDir,
 		seed: 'foo',

@@ -3,7 +3,7 @@ var control = require('../_control');
 
 loader.config({
 	nodeRequire: require,
-	nodeMain: module.filename
+	baseUrl: __dirname
 });
 
 loader(['./folder/foo', 'fs'], function(foo, fs) {

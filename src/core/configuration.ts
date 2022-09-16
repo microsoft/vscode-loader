@@ -177,10 +177,6 @@ namespace AMDLoader {
 		 */
 		amdModulesPattern?: RegExp;
 		/**
-		 * A list of known node modules that should be directly loaded via node's require.
-		 */
-		nodeModules?: string[];
-		/**
 		 * The main entry point node's require
 		 */
 		nodeRequire?: INodeRequire;
@@ -188,10 +184,6 @@ namespace AMDLoader {
 		 * An optional transformation applied to the source before it is loaded in node's vm
 		 */
 		nodeInstrumenter?: (source: string, vmScriptSrc: string) => string;
-		/**
-		 * The main entry point.
-		 */
-		nodeMain?: string;
 		/**
 		* Support v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
 		*/
@@ -208,10 +200,8 @@ namespace AMDLoader {
 		onError: (err: AnnotatedError) => void;
 		ignoreDuplicateModules: string[];
 		isBuild: boolean;
-		buildForceInvokeFactory: { [moduleId: string]: boolean; }
 		cspNonce: string;
 		preferScriptTags: boolean;
-		nodeModules: string[];
 	}
 
 	export class ConfigurationOptionsUtil {
@@ -246,9 +236,6 @@ namespace AMDLoader {
 			if (typeof options.isBuild !== 'boolean') {
 				options.isBuild = false;
 			}
-			if (typeof options.buildForceInvokeFactory !== 'object') {
-				options.buildForceInvokeFactory = {};
-			}
 			if (typeof options.paths !== 'object') {
 				options.paths = {};
 			}
@@ -280,9 +267,6 @@ namespace AMDLoader {
 			}
 			if (typeof options.preferScriptTags === 'undefined') {
 				options.preferScriptTags = false;
-			}
-			if (!Array.isArray(options.nodeModules)) {
-				options.nodeModules = [];
 			}
 			if (options.nodeCachedData && typeof options.nodeCachedData === 'object') {
 				if (typeof options.nodeCachedData.seed !== 'string') {
@@ -334,11 +318,6 @@ namespace AMDLoader {
 		private ignoreDuplicateModulesMap: { [moduleId: string]: boolean; };
 
 		/**
-		 * Generated from the `nodeModules` configuration option.
-		 */
-		private nodeModulesMap: { [nodeModuleId: string]: boolean };
-
-		/**
 		 * Generated from the `paths` configuration option. These are sorted with the longest `from` first.
 		 */
 		private sortedPathsRules: { from: string; to: string[]; }[];
@@ -348,17 +327,11 @@ namespace AMDLoader {
 			this.options = ConfigurationOptionsUtil.mergeConfigurationOptions(options);
 
 			this._createIgnoreDuplicateModulesMap();
-			this._createNodeModulesMap();
 			this._createSortedPathsRules();
 
 			if (this.options.baseUrl === '') {
 				if (this.options.nodeRequire && this.options.nodeRequire.main && this.options.nodeRequire.main.filename && this._env.isNode) {
 					let nodeMain = this.options.nodeRequire.main.filename;
-					let dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
-					this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
-				}
-				if (this.options.nodeMain && this._env.isNode) {
-					let nodeMain = this.options.nodeMain;
 					let dirnameIndex = Math.max(nodeMain.lastIndexOf('/'), nodeMain.lastIndexOf('\\'));
 					this.options.baseUrl = nodeMain.substring(0, dirnameIndex + 1);
 				}
@@ -370,14 +343,6 @@ namespace AMDLoader {
 			this.ignoreDuplicateModulesMap = {};
 			for (let i = 0; i < this.options.ignoreDuplicateModules.length; i++) {
 				this.ignoreDuplicateModulesMap[this.options.ignoreDuplicateModules[i]] = true;
-			}
-		}
-
-		private _createNodeModulesMap(): void {
-			// Build a map out of nodeModules array
-			this.nodeModulesMap = Object.create(null);
-			for (const nodeModule of this.options.nodeModules) {
-				this.nodeModulesMap[nodeModule] = true;
 			}
 		}
 
@@ -465,8 +430,8 @@ namespace AMDLoader {
 
 			if (this._env.isNode) {
 				const isNodeModule = (
-					(this.nodeModulesMap[moduleId] === true)
-					|| (this.options.amdModulesPattern instanceof RegExp && !this.options.amdModulesPattern.test(moduleId))
+					this.options.amdModulesPattern instanceof RegExp
+					&& !this.options.amdModulesPattern.test(moduleId)
 				);
 
 				if (isNodeModule) {
@@ -540,10 +505,13 @@ namespace AMDLoader {
 				return true;
 			}
 			// during a build, only explicitly marked or anonymous modules get their factories invoked
-			return (
-				this.options.buildForceInvokeFactory[strModuleId]
-				|| Utilities.isAnonymousModule(strModuleId)
-			);
+			if (Utilities.isAnonymousModule(strModuleId)) {
+				return true;
+			}
+			if (this.options.buildForceInvokeFactory && this.options.buildForceInvokeFactory[strModuleId]) {
+				return true;
+			}
+			return false;
 		}
 
 		/**
