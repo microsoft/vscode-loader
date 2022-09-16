@@ -3,7 +3,7 @@ var control = require('../_control');
 
 loader.config({
 	nodeRequire: require,
-	nodeMain: module.filename,
+	baseUrl: __dirname,
 	catchError: true,
 	onError: function (err) {
 		control.ok();

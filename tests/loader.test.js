@@ -26,8 +26,7 @@ QUnit.test('Default configuration', function () {
         urlArgs: '',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
 });
 function createSimpleKnownConfigurationOptions() {
@@ -41,8 +40,7 @@ function createSimpleKnownConfigurationOptions() {
         urlArgs: 'myUrlArgs',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
 }
 QUnit.test('Simple known configuration options', function () {
@@ -57,8 +55,7 @@ QUnit.test('Simple known configuration options', function () {
         urlArgs: 'myUrlArgs',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
 });
 QUnit.test('Overwriting known configuration options', function () {
@@ -76,8 +73,7 @@ QUnit.test('Overwriting known configuration options', function () {
         urlArgs: 'myUrlArgs',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
     // Overwrite baseUrl 2
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -93,8 +89,7 @@ QUnit.test('Overwriting known configuration options', function () {
         urlArgs: 'myUrlArgs',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
     // Overwrite catchError
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -110,8 +105,7 @@ QUnit.test('Overwriting known configuration options', function () {
         urlArgs: 'myUrlArgs',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
     // Contribute additional ignoreDuplicateModules
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -127,8 +121,7 @@ QUnit.test('Overwriting known configuration options', function () {
         urlArgs: 'myUrlArgs',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
     // Change defined paths
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -144,8 +137,7 @@ QUnit.test('Overwriting known configuration options', function () {
         urlArgs: 'myUrlArgs',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
     // Contribute additional module configs
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -161,8 +153,7 @@ QUnit.test('Overwriting known configuration options', function () {
         urlArgs: 'myUrlArgs',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
     // Change defined module configs
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -178,8 +169,7 @@ QUnit.test('Overwriting known configuration options', function () {
         urlArgs: 'myUrlArgs',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
 });
 QUnit.test('Overwriting unknown configuration options', function () {
@@ -194,8 +184,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         urlArgs: '',
         cspNonce: '',
         preferScriptTags: false,
-        recordStats: false,
-        nodeModules: []
+        recordStats: false
     });
     // Adding unknown key
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -212,8 +201,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         cspNonce: '',
         preferScriptTags: false,
         recordStats: false,
-        unknownKey1: 'value1',
-        nodeModules: []
+        unknownKey1: 'value1'
     });
     // Adding another unknown key
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -231,8 +219,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         preferScriptTags: false,
         recordStats: false,
         unknownKey1: 'value1',
-        unknownKey2: 'value2',
-        nodeModules: []
+        unknownKey2: 'value2'
     });
     // Overwriting unknown key
     result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
@@ -250,8 +237,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
         preferScriptTags: false,
         recordStats: false,
         unknownKey1: 'value1',
-        unknownKey2: 'new-value2',
-        nodeModules: []
+        unknownKey2: 'new-value2'
     });
 });
 QUnit.module('Configuration');

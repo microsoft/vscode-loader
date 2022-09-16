@@ -267,10 +267,6 @@ declare namespace AMDLoader {
          */
         amdModulesPattern?: RegExp;
         /**
-         * A list of known node modules that should be directly loaded via node's require.
-         */
-        nodeModules?: string[];
-        /**
          * The main entry point node's require
          */
         nodeRequire?: INodeRequire;
@@ -278,10 +274,6 @@ declare namespace AMDLoader {
          * An optional transformation applied to the source before it is loaded in node's vm
          */
         nodeInstrumenter?: (source: string, vmScriptSrc: string) => string;
-        /**
-         * The main entry point.
-         */
-        nodeMain?: string;
         /**
         * Support v8 cached data (http://v8project.blogspot.co.uk/2015/07/code-caching.html)
         */
@@ -301,12 +293,8 @@ declare namespace AMDLoader {
         onError: (err: AnnotatedError) => void;
         ignoreDuplicateModules: string[];
         isBuild: boolean;
-        buildForceInvokeFactory: {
-            [moduleId: string]: boolean;
-        };
         cspNonce: string;
         preferScriptTags: boolean;
-        nodeModules: string[];
     }
     class ConfigurationOptionsUtil {
         /**
@@ -323,16 +311,11 @@ declare namespace AMDLoader {
          */
         private ignoreDuplicateModulesMap;
         /**
-         * Generated from the `nodeModules` configuration option.
-         */
-        private nodeModulesMap;
-        /**
          * Generated from the `paths` configuration option. These are sorted with the longest `from` first.
          */
         private sortedPathsRules;
         constructor(env: Environment, options?: IConfigurationOptions);
         private _createIgnoreDuplicateModulesMap;
-        private _createNodeModulesMap;
         private _createSortedPathsRules;
         /**
          * Clone current configuration and overwrite options selectively.
