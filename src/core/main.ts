@@ -90,7 +90,6 @@ namespace AMDLoader {
 
 		if (env.isNode && !env.isElectronRenderer && !env.isElectronNodeIntegrationWebWorker) {
 			module.exports = RequireFunc;
-			require = <any>RequireFunc;
 		} else {
 			if (!env.isElectronRenderer) {
 				global.define = DefineFunc;
