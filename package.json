@@ -1,5 +1,5 @@
 {
-  "name": "vscode-loader",
+  "name": "@vscode/loader",
   "version": "1.0.0",
   "description": "An universal AMD Loader",
   "main": "index.js",
