@@ -149,7 +149,7 @@ namespace AMDLoader {
 		private static _safeInvokeFunction(callback: Function, args: any[]): { returnedValue: any; producedError: any; } {
 			try {
 				return {
-					returnedValue: callback.apply(globalThis, args),
+					returnedValue: callback.apply(global, args),
 					producedError: null
 				};
 			} catch (e) {
@@ -173,7 +173,7 @@ namespace AMDLoader {
 			}
 
 			return {
-				returnedValue: callback.apply(globalThis, dependenciesValues),
+				returnedValue: callback.apply(global, dependenciesValues),
 				producedError: null
 			};
 		}
@@ -775,7 +775,7 @@ namespace AMDLoader {
 			result.config = (params: IConfigurationOptions, shouldOverwrite: boolean = false) => {
 				this.configure(params, shouldOverwrite);
 			};
-			(<any>result).__$__nodeRequire = globalThis.nodeRequire;
+			(<any>result).__$__nodeRequire = global.nodeRequire;
 			return result;
 		}
 

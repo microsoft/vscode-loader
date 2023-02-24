@@ -3,6 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+/*---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ * Please make sure to make edits in the .ts file at https://github.com/microsoft/vscode-loader/
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *--------------------------------------------------------------------------------------------*/
+
+const _amdLoaderGlobal = this;
+
 declare var module: {
 	exports: any;
 };
@@ -17,21 +31,14 @@ declare var process: {
 		electron: string;
 	}
 };
-declare var require: any;
+declare var require: {
+	nodeRequire(module: string): any;
+};
+declare var global: object;
+const _commonjsGlobal = typeof global === 'object' ? global : {};
 
-/*---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- * Please make sure to make edits in the .ts file at https://github.com/microsoft/vscode-loader/
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *--------------------------------------------------------------------------------------------*/
 namespace AMDLoader {
-	export const global: any = globalThis;
+	export const global: any = _amdLoaderGlobal
 
 	export class Environment {
 
@@ -80,7 +87,7 @@ namespace AMDLoader {
 			this._isWindows = Environment._isWindows();
 			this._isNode = (typeof module !== 'undefined' && !!module.exports);
 			this._isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
-			this._isWebWorker = (typeof globalThis.importScripts === 'function');
+			this._isWebWorker = (typeof global.importScripts === 'function');
 			this._isElectronNodeIntegrationWebWorker = this._isWebWorker && (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'worker');
 		}
 

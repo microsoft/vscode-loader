@@ -1,3 +1,4 @@
+declare const _amdLoaderGlobal: typeof globalThis;
 declare var module: {
     exports: any;
 };
@@ -12,7 +13,11 @@ declare var process: {
         electron: string;
     };
 };
-declare var require: any;
+declare var require: {
+    nodeRequire(module: string): any;
+};
+declare var global: object;
+declare const _commonjsGlobal: object;
 declare namespace AMDLoader {
     const global: any;
     class Environment {
