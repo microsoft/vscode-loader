@@ -14,7 +14,7 @@ function assertConfigurationIs(actual, expected) {
     expected.nodeCachedData = null;
     QUnit.deepEqual(actual, expected, 'Configuration options are equal');
 }
-QUnit.test('Default configuration', function () {
+QUnit.test('Default configuration', () => {
     var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions();
     assertConfigurationIs(result, {
         baseUrl: '',
@@ -43,7 +43,7 @@ function createSimpleKnownConfigurationOptions() {
         recordStats: false
     });
 }
-QUnit.test('Simple known configuration options', function () {
+QUnit.test('Simple known configuration options', () => {
     var result = createSimpleKnownConfigurationOptions();
     assertConfigurationIs(result, {
         baseUrl: 'myBaseUrl/',
@@ -58,7 +58,7 @@ QUnit.test('Simple known configuration options', function () {
         recordStats: false
     });
 });
-QUnit.test('Overwriting known configuration options', function () {
+QUnit.test('Overwriting known configuration options', () => {
     // Overwrite baseUrl 1
     var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
         baseUrl: ''
@@ -172,7 +172,7 @@ QUnit.test('Overwriting known configuration options', function () {
         recordStats: false
     });
 });
-QUnit.test('Overwriting unknown configuration options', function () {
+QUnit.test('Overwriting unknown configuration options', () => {
     var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions();
     assertConfigurationIs(result, {
         baseUrl: '',
@@ -241,7 +241,7 @@ QUnit.test('Overwriting unknown configuration options', function () {
     });
 });
 QUnit.module('Configuration');
-QUnit.test('moduleIdToPath', function () {
+QUnit.test('moduleIdToPath', () => {
     var config = new loader.Configuration(new loader.Environment(), {
         baseUrl: 'prefix',
         urlArgs: 'suffix',
@@ -277,7 +277,7 @@ QUnit.test('moduleIdToPath', function () {
     QUnit.equal(config.moduleIdToPaths('https://a/b/c/d'), 'https://a/b/c/d.js?suffix');
     QUnit.equal(config.moduleIdToPaths('https://a'), 'https://a.js?suffix');
 });
-QUnit.test('requireToUrl', function () {
+QUnit.test('requireToUrl', () => {
     var config = new loader.Configuration(new loader.Environment(), {
         baseUrl: 'prefix',
         urlArgs: 'suffix',
@@ -311,7 +311,7 @@ QUnit.test('requireToUrl', function () {
     QUnit.equal(config.requireToUrl('https://a/b/c/d'), 'https://a/b/c/d?suffix');
     QUnit.equal(config.requireToUrl('https://a'), 'https://a?suffix');
 });
-QUnit.test('ignoreDuplicateModules', function () {
+QUnit.test('ignoreDuplicateModules', () => {
     var config = new loader.Configuration(new loader.Environment(), {
         ignoreDuplicateModules: ['a1', 'a2', 'a/b/c']
     });
@@ -321,7 +321,7 @@ QUnit.test('ignoreDuplicateModules', function () {
     QUnit.equal(config.isDuplicateMessageIgnoredFor('a'), false);
 });
 QUnit.module('ModuleIdResolver');
-QUnit.test('resolveModule', function () {
+QUnit.test('resolveModule', () => {
     var resolver = new loader.ModuleIdResolver('a/b/c/d');
     // normal modules
     QUnit.equal(resolver.resolveModule('e/f/g'), 'e/f/g');
@@ -364,10 +364,10 @@ QUnit.test('resolveModule', function () {
     QUnit.equal(loader.ModuleIdResolver._normalizeModuleId('../../ab/../a'), '../../a');
 });
 QUnit.module('ModuleManager');
-QUnit.test('Loading 3 simple modules', function () {
+QUnit.test('Loading 3 simple modules', () => {
     QUnit.expect(3);
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             if (scriptPath === 'a1.js') {
                 mm.enqueueDefineAnonymousModule([], 'a1');
                 loadCallback();
@@ -382,24 +382,24 @@ QUnit.test('Loading 3 simple modules', function () {
         },
     };
     var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
-    mm.defineModule('a', ['a1', 'a2'], function (a1, a2) {
+    mm.defineModule('a', ['a1', 'a2'], (a1, a2) => {
         QUnit.equal(a1, 'a1');
         QUnit.equal(a2, 'a2');
         return 'a';
     }, null, null);
     QUnit.equal(mm.synchronousRequire('a'), 'a');
 });
-QUnit.test('Loading a plugin dependency', function () {
+QUnit.test('Loading a plugin dependency', () => {
     QUnit.expect(5);
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             if (scriptPath === 'plugin.js') {
                 mm.enqueueDefineAnonymousModule([], {
-                    normalize: function (pluginParam, normalize) {
+                    normalize: (pluginParam, normalize) => {
                         return normalize(pluginParam);
                     },
-                    load: function (pluginParam, parentRequire, loadCallback, options) {
-                        parentRequire([pluginParam], function (v) { return loadCallback(v); });
+                    load: (pluginParam, parentRequire, loadCallback, options) => {
+                        parentRequire([pluginParam], (v) => loadCallback(v));
                     }
                 });
                 loadCallback();
@@ -414,24 +414,24 @@ QUnit.test('Loading a plugin dependency', function () {
         },
     };
     var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
-    mm.defineModule('a/b/c', ['../../plugin!./d', 'require'], function (r, req) {
+    mm.defineModule('a/b/c', ['../../plugin!./d', 'require'], (r, req) => {
         QUnit.equal(r, 'r');
         QUnit.equal(req.toUrl('./d.txt'), 'a/b/d.txt');
         return 'a/b/c';
     }, null, null);
     QUnit.equal(mm.synchronousRequire('a/b/c'), 'a/b/c');
-    mm.defineModule('a2', ['./plugin!a/b/d'], function (r) {
+    mm.defineModule('a2', ['./plugin!a/b/d'], (r) => {
         QUnit.equal(r, 'r');
         return 'a2';
     }, null, null);
     QUnit.equal(mm.synchronousRequire('a2'), 'a2');
 });
-QUnit.test('Loading a dependency cycle', function () {
+QUnit.test('Loading a dependency cycle', () => {
     QUnit.expect(6);
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             if (scriptPath === 'b.js') {
-                mm.enqueueDefineAnonymousModule(['c'], function (c) {
+                mm.enqueueDefineAnonymousModule(['c'], (c) => {
                     // This is how the cycle is broken. One of the modules receives undefined as the argument value
                     QUnit.equal(c, 'c');
                     return 'b';
@@ -439,7 +439,7 @@ QUnit.test('Loading a dependency cycle', function () {
                 loadCallback();
             }
             else if (scriptPath === 'c.js') {
-                mm.enqueueDefineAnonymousModule(['a'], function (a) {
+                mm.enqueueDefineAnonymousModule(['a'], (a) => {
                     // This is how the cycle is broken. One of the modules receives undefined as the argument value
                     QUnit.deepEqual(a, {});
                     // QUnit.ok(typeof a === 'undefined');
@@ -453,7 +453,7 @@ QUnit.test('Loading a dependency cycle', function () {
         },
     };
     var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
-    mm.defineModule('a', ['b'], function (b) {
+    mm.defineModule('a', ['b'], (b) => {
         QUnit.equal(b, 'b');
         return 'a';
     }, null, null);
@@ -461,11 +461,11 @@ QUnit.test('Loading a dependency cycle', function () {
     QUnit.equal(mm.synchronousRequire('b'), 'b');
     QUnit.equal(mm.synchronousRequire('c'), 'c');
 });
-QUnit.test('Using a local error handler immediate script loading failure', function () {
+QUnit.test('Using a local error handler immediate script loading failure', () => {
     QUnit.expect(1);
     // a -> b and b fails to load
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             if (scriptPath === 'b.js') {
                 errorCallback('b.js not found');
             }
@@ -475,20 +475,20 @@ QUnit.test('Using a local error handler immediate script loading failure', funct
         },
     };
     var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
-    mm.defineModule('a', ['b'], function (b) {
+    mm.defineModule('a', ['b'], (b) => {
         QUnit.equal(b, 'b');
         return 'a';
-    }, function (err) {
+    }, (err) => {
         QUnit.equal(err.message, 'b.js not found');
     }, null);
 });
-QUnit.test('Using a local error handler secondary script loading failure', function () {
+QUnit.test('Using a local error handler secondary script loading failure', () => {
     QUnit.expect(1);
     // a -> b -> c and c fails to load
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             if (scriptPath === 'b.js') {
-                mm.enqueueDefineAnonymousModule(['c'], function (c) {
+                mm.enqueueDefineAnonymousModule(['c'], (c) => {
                     QUnit.equal(c, 'c');
                     return 'b';
                 });
@@ -503,33 +503,33 @@ QUnit.test('Using a local error handler secondary script loading failure', funct
         },
     };
     var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
-    mm.defineModule('a', ['b'], function (b) {
+    mm.defineModule('a', ['b'], (b) => {
         QUnit.ok(false);
-    }, function (err) {
+    }, (err) => {
         QUnit.equal(err.message, 'c.js not found');
     }, null);
 });
-QUnit.test('RelativeRequire error handler', function () {
+QUnit.test('RelativeRequire error handler', () => {
     QUnit.expect(1);
-    var dne = 'Does not exist';
+    const dne = 'Does not exist';
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             errorCallback(new Error(dne));
         },
     };
     var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
-    mm.defineModule('a/b/d', ['require'], function (relativeRequire) {
-        relativeRequire(['doesnotexist'], undefined, function (err) {
+    mm.defineModule('a/b/d', ['require'], (relativeRequire) => {
+        relativeRequire(['doesnotexist'], undefined, (err) => {
             QUnit.deepEqual(err.message, dne);
         });
         return 'a/b/d';
     }, null, null);
 });
 QUnit.module('FallBack Tests');
-QUnit.test('No path config', function () {
+QUnit.test('No path config', () => {
     QUnit.expect(1);
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             if (scriptPath === 'a.js') {
                 errorCallback('a.js not found');
             }
@@ -539,16 +539,16 @@ QUnit.test('No path config', function () {
         },
     };
     var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
-    mm.defineModule('first', ['a'], function () {
+    mm.defineModule('first', ['a'], () => {
         QUnit.ok(false, 'a should not be found');
-    }, function (err) {
+    }, (err) => {
         QUnit.ok(true, 'a should not be found');
     }, null);
 });
-QUnit.test('With path config', function () {
+QUnit.test('With path config', () => {
     QUnit.expect(1);
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             if (scriptPath === 'alocation.js') {
                 errorCallback('alocation.js not found');
             }
@@ -563,21 +563,21 @@ QUnit.test('With path config', function () {
             a: 'alocation.js'
         }
     }, false);
-    mm.defineModule('first', ['a'], function () {
+    mm.defineModule('first', ['a'], () => {
         QUnit.ok(false, 'a should not be found');
-    }, function (err) {
+    }, (err) => {
         QUnit.ok(true, 'a should not be found');
     }, null);
 });
-QUnit.test('With one fallback', function () {
+QUnit.test('With one fallback', () => {
     QUnit.expect(1);
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             if (scriptPath === 'alocation.js') {
                 errorCallback('alocation.js not found');
             }
             else if (scriptPath === 'afallback.js') {
-                mm.enqueueDefineAnonymousModule([], function () {
+                mm.enqueueDefineAnonymousModule([], () => {
                     return 'a';
                 });
                 loadCallback();
@@ -593,16 +593,16 @@ QUnit.test('With one fallback', function () {
             a: ['alocation.js', 'afallback.js']
         }
     }, false);
-    mm.defineModule('first', ['a'], function () {
+    mm.defineModule('first', ['a'], () => {
         QUnit.ok(true, 'a was found');
-    }, function (err) {
+    }, (err) => {
         QUnit.ok(false, 'a was not found');
     }, null);
 });
-QUnit.test('With two fallbacks', function () {
+QUnit.test('With two fallbacks', () => {
     QUnit.expect(1);
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             if (scriptPath === 'alocation.js') {
                 errorCallback('alocation.js not found');
             }
@@ -610,7 +610,7 @@ QUnit.test('With two fallbacks', function () {
                 errorCallback('afallback.js not found');
             }
             else if (scriptPath === 'anotherfallback.js') {
-                mm.enqueueDefineAnonymousModule([], function () {
+                mm.enqueueDefineAnonymousModule([], () => {
                     return 'a';
                 });
                 loadCallback();
@@ -626,47 +626,47 @@ QUnit.test('With two fallbacks', function () {
             a: ['alocation.js', 'afallback.js', 'anotherfallback.js']
         }
     }, false);
-    mm.defineModule('first', ['a'], function () {
+    mm.defineModule('first', ['a'], () => {
         QUnit.ok(true, 'a was found');
-    }, function (err) {
+    }, (err) => {
         QUnit.ok(false, 'a was not found');
     }, null);
 });
 QUnit.module('Bugs');
-QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dependency to resolve is a (missing) plugin dependency', function () {
+QUnit.test('Bug #11710: [loader] Loader can enter a stale-mate when the last dependency to resolve is a (missing) plugin dependency', () => {
     QUnit.expect(2);
     // A script loader that captures the load request for 'plugin.js'
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
         },
     };
     var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
     // Define the resolved plugin value
-    mm.defineModule('plugin!pluginParam', [], function () {
+    mm.defineModule('plugin!pluginParam', [], () => {
         return {
             value: 5
         };
-    }, function (err) {
+    }, (err) => {
         QUnit.ok(false);
     }, null);
     // Ask for the plugin
-    mm.defineModule('a', ['plugin!pluginParam'], function (b) {
+    mm.defineModule('a', ['plugin!pluginParam'], (b) => {
         QUnit.equal(b.value, 5);
         return {
             value: b.value * 2
         };
-    }, function (err) {
+    }, (err) => {
         QUnit.ok(false);
     }, null);
     // Depend on a module that asks for the plugin
-    mm.defineModule('b', ['a'], function (a) {
+    mm.defineModule('b', ['a'], (a) => {
         QUnit.equal(a.value, 10);
-    }, function (err) {
+    }, (err) => {
         QUnit.ok(false);
     }, null);
 });
-QUnit.test('Bug #12024: [loader] Should not append .js to URLs containing query string', function () {
+QUnit.test('Bug #12024: [loader] Should not append .js to URLs containing query string', () => {
     var config = new loader.Configuration(new loader.Environment(), {
         baseUrl: 'prefix',
         paths: {
@@ -676,26 +676,26 @@ QUnit.test('Bug #12024: [loader] Should not append .js to URLs containing query 
     // No .js is appended
     QUnit.equal(config.moduleIdToPaths('searchBoxJss'), 'http://services.social.microsoft.com/search/Widgets/SearchBox.jss?boxid=HeaderSearchTextBox&btnid=HeaderSearchButton&brand=Msdn&loc=en-us&Refinement=198,234&focusOnInit=false&iroot=vscom&emptyWatermark=true&searchButtonTooltip=Search here');
 });
-QUnit.test('Bug #12020: [loader] relative (synchronous) require does not normalize plugin argument that follows "!"', function () {
+QUnit.test('Bug #12020: [loader] relative (synchronous) require does not normalize plugin argument that follows "!"', () => {
     QUnit.expect(3);
     var scriptLoader = {
-        load: function (moduleManager, scriptPath, loadCallback, errorCallback) {
+        load: (moduleManager, scriptPath, loadCallback, errorCallback) => {
             QUnit.ok(false, 'Unexpected scriptPath: ' + scriptPath);
         },
     };
     var mm = new loader.ModuleManager(new loader.Environment(), scriptLoader, null, null);
-    mm.defineModule('plugin!a/b/c', [], function () {
+    mm.defineModule('plugin!a/b/c', [], () => {
         QUnit.ok(true);
         return 'plugin!a/b/c';
     }, null, null);
-    mm.defineModule('a/b/d', ['require'], function (relativeRequire) {
+    mm.defineModule('a/b/d', ['require'], (relativeRequire) => {
         QUnit.ok(true);
         QUnit.equal(relativeRequire('plugin!./c'), 'plugin!a/b/c');
         return 'a/b/d';
     }, null, null);
 });
-QUnit.test('Utilities.fileUriToFilePath', function () {
-    var test = function (isWindows, input, expected) {
+QUnit.test('Utilities.fileUriToFilePath', () => {
+    var test = (isWindows, input, expected) => {
         QUnit.equal(loader.Utilities.fileUriToFilePath(isWindows, input), expected, 'Result for ' + input);
     };
     test(true, 'file:///c:/alex.txt', 'c:/alex.txt');
@@ -705,8 +705,8 @@ QUnit.test('Utilities.fileUriToFilePath', function () {
     test(false, 'file://monacotools/isi.txt', 'monacotools/isi.txt');
     test(false, 'file://monacotools1/certificates/SSL/', 'monacotools1/certificates/SSL/');
 });
-QUnit.test('Utilities.containsQueryString', function () {
-    var test = function (input, expected) {
+QUnit.test('Utilities.containsQueryString', () => {
+    var test = (input, expected) => {
         QUnit.equal(loader.Utilities.containsQueryString(input), expected, 'Result for ' + input);
     };
     test('http://www.microsoft.com/something?q=123&r=345#bangbang', true);

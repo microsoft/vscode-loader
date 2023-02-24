@@ -1,4 +1,3 @@
-declare const _amdLoaderGlobal: typeof globalThis;
 declare var module: {
     exports: any;
 };
@@ -13,25 +12,7 @@ declare var process: {
         electron: string;
     };
 };
-declare var require: {
-    nodeRequire(module: string): any;
-};
-declare var global: object;
-declare const _commonjsGlobal: object;
-interface Map<K, V> {
-    clear(): void;
-    delete(key: K): boolean;
-    forEach(callbackfn: (value: V, index: K, map: Map<K, V>) => void, thisArg?: any): void;
-    get(key: K): V;
-    has(key: K): boolean;
-    set(key: K, value?: V): Map<K, V>;
-    size: number;
-}
-interface MapConstructor {
-    new <K, V>(): Map<K, V>;
-    prototype: Map<any, any>;
-}
-declare var Map: MapConstructor;
+declare var require: any;
 declare namespace AMDLoader {
     const global: any;
     class Environment {

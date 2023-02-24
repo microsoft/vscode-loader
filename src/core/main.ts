@@ -77,12 +77,12 @@ namespace AMDLoader {
 	RequireFunc.define = DefineFunc;
 
 	export function init(): void {
-		if (typeof global.require !== 'undefined' || typeof require !== 'undefined') {
-			const _nodeRequire = (global.require || require);
+		if (typeof globalThis.require !== 'undefined' || typeof require !== 'undefined') {
+			const _nodeRequire = (globalThis.require || require);
 			if (typeof _nodeRequire === 'function' && typeof _nodeRequire.resolve === 'function') {
 				// re-expose node's require function
 				const nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), _nodeRequire);
-				global.nodeRequire = nodeRequire;
+				globalThis.nodeRequire = nodeRequire;
 				(<any>RequireFunc).nodeRequire = nodeRequire;
 				(<any>RequireFunc).__$__nodeRequire = nodeRequire;
 			}
@@ -92,18 +92,18 @@ namespace AMDLoader {
 			module.exports = RequireFunc;
 		} else {
 			if (!env.isElectronRenderer) {
-				global.define = DefineFunc;
+				globalThis.define = DefineFunc;
 			}
-			global.require = RequireFunc;
+			globalThis.require = RequireFunc;
 		}
 	}
 
-	if (typeof global.define !== 'function' || !global.define.amd) {
+	if (typeof globalThis.define !== 'function' || !globalThis.define.amd) {
 		moduleManager = new ModuleManager(env, createScriptLoader(env), DefineFunc, RequireFunc, Utilities.getHighPerformanceTimestamp());
 
 		// The global variable require can configure the loader
-		if (typeof global.require !== 'undefined' && typeof global.require !== 'function') {
-			RequireFunc.config(global.require);
+		if (typeof globalThis.require !== 'undefined' && typeof globalThis.require !== 'function') {
+			RequireFunc.config(globalThis.require as IConfigurationOptions);
 		}
 
 		// This define is for the local closure defined in node in the case that the loader is concatenated

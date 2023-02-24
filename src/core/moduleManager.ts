@@ -149,7 +149,7 @@ namespace AMDLoader {
 		private static _safeInvokeFunction(callback: Function, args: any[]): { returnedValue: any; producedError: any; } {
 			try {
 				return {
-					returnedValue: callback.apply(global, args),
+					returnedValue: callback.apply(globalThis, args),
 					producedError: null
 				};
 			} catch (e) {
@@ -173,7 +173,7 @@ namespace AMDLoader {
 			}
 
 			return {
-				returnedValue: callback.apply(global, dependenciesValues),
+				returnedValue: callback.apply(globalThis, dependenciesValues),
 				producedError: null
 			};
 		}
@@ -775,7 +775,7 @@ namespace AMDLoader {
 			result.config = (params: IConfigurationOptions, shouldOverwrite: boolean = false) => {
 				this.configure(params, shouldOverwrite);
 			};
-			(<any>result).__$__nodeRequire = global.nodeRequire;
+			(<any>result).__$__nodeRequire = globalThis.nodeRequire;
 			return result;
 		}
 
@@ -913,7 +913,7 @@ namespace AMDLoader {
 						}
 
 						// Record dependency for when the plugin gets loaded
-						let inversePluginDeps: PluginDependency[] = this._inversePluginDependencies2.get(dependency.pluginId);
+						let inversePluginDeps: PluginDependency[] | undefined = this._inversePluginDependencies2.get(dependency.pluginId);
 						if (!inversePluginDeps) {
 							inversePluginDeps = [];
 							this._inversePluginDependencies2.set(dependency.pluginId, inversePluginDeps);

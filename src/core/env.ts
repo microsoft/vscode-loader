@@ -3,20 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-/*---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- * Please make sure to make edits in the .ts file at https://github.com/microsoft/vscode-loader/
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *---------------------------------------------------------------------------------------------
- *--------------------------------------------------------------------------------------------*/
-
-const _amdLoaderGlobal = this;
-
 declare var module: {
 	exports: any;
 };
@@ -31,36 +17,21 @@ declare var process: {
 		electron: string;
 	}
 };
-declare var require: {
-	nodeRequire(module: string): any;
-};
-declare var global: object;
-const _commonjsGlobal = typeof global === 'object' ? global : {};
-interface Map<K, V> {
-	clear(): void;
-	delete(key: K): boolean;
-	forEach(callbackfn: (value: V, index: K, map: Map<K, V>) => void, thisArg?: any): void;
-	get(key: K): V;
-	has(key: K): boolean;
-	set(key: K, value?: V): Map<K, V>;
-	size: number;
-	// not supported on IE11:
-	// entries(): IterableIterator<[K, V]>;
-	// keys(): IterableIterator<K>;
-	// values(): IterableIterator<V>;
-	// [Symbol.iterator]():IterableIterator<[K,V]>;
-	// [Symbol.toStringTag]: string;
-}
-interface MapConstructor {
-	new <K, V>(): Map<K, V>;
-	prototype: Map<any, any>;
-	// not supported on IE11:
-	// new <K, V>(iterable: Iterable<[K, V]>): Map<K, V>;
-}
-declare var Map: MapConstructor;
+declare var require: any;
 
+/*---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ * Please make sure to make edits in the .ts file at https://github.com/microsoft/vscode-loader/
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *---------------------------------------------------------------------------------------------
+ *--------------------------------------------------------------------------------------------*/
 namespace AMDLoader {
-	export const global: any = _amdLoaderGlobal
+	export const global: any = globalThis;
 
 	export class Environment {
 
@@ -109,7 +80,7 @@ namespace AMDLoader {
 			this._isWindows = Environment._isWindows();
 			this._isNode = (typeof module !== 'undefined' && !!module.exports);
 			this._isElectronRenderer = (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'renderer');
-			this._isWebWorker = (typeof global.importScripts === 'function');
+			this._isWebWorker = (typeof globalThis.importScripts === 'function');
 			this._isElectronNodeIntegrationWebWorker = this._isWebWorker && (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined' && process.type === 'worker');
 		}
 
