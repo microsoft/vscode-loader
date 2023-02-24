@@ -103,9 +103,9 @@ namespace AMDLoader {
 		public static getHighPerformanceTimestamp(): number {
 			if (!this.PERFORMANCE_NOW_PROBED) {
 				this.PERFORMANCE_NOW_PROBED = true;
-				this.HAS_PERFORMANCE_NOW = (global.performance && typeof global.performance.now === 'function');
+				this.HAS_PERFORMANCE_NOW = (globalThis.performance && typeof globalThis.performance.now === 'function');
 			}
-			return (this.HAS_PERFORMANCE_NOW ? global.performance.now() : Date.now());
+			return (this.HAS_PERFORMANCE_NOW ? globalThis.performance.now() : Date.now());
 		}
 	}
 }

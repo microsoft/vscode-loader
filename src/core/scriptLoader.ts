@@ -127,7 +127,7 @@ namespace AMDLoader {
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 			if (/^node\|/.test(scriptSrc)) {
 				let opts = moduleManager.getConfig().getOptionsLiteral();
-				let nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), (opts.nodeRequire || AMDLoader.global.nodeRequire));
+				let nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), (opts.nodeRequire || globalThis.nodeRequire));
 				let pieces = scriptSrc.split('|');
 
 				let moduleExports = null;
@@ -169,10 +169,10 @@ namespace AMDLoader {
 		try {
 			const func = (
 				trustedTypesPolicy
-					? self.eval(trustedTypesPolicy.createScript('', 'true'))
+					? globalThis.eval(trustedTypesPolicy.createScript('', 'true'))
 					: new Function('true')
 			);
-			func.call(self);
+			func.call(globalThis);
 			return true;
 		} catch (err) {
 			return false;
@@ -195,7 +195,7 @@ namespace AMDLoader {
 			if (/^node\|/.test(scriptSrc)) {
 
 				const opts = moduleManager.getConfig().getOptionsLiteral();
-				const nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), (opts.nodeRequire || AMDLoader.global.nodeRequire));
+				const nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), (opts.nodeRequire || globalThis.nodeRequire));
 				const pieces = scriptSrc.split('|');
 				let moduleExports = null;
 				try {
@@ -212,7 +212,7 @@ namespace AMDLoader {
 
 				const { trustedTypesPolicy } = moduleManager.getConfig().getOptionsLiteral();
 
-				const isCrossOrigin = (/^((http:)|(https:)|(file:))/.test(scriptSrc) && scriptSrc.substring(0, self.origin.length) !== self.origin);
+				const isCrossOrigin = (/^((http:)|(https:)|(file:))/.test(scriptSrc) && scriptSrc.substring(0, globalThis.origin.length) !== globalThis.origin);
 				if (!isCrossOrigin && this._canUseEval(moduleManager)) {
 					// use `fetch` if possible because `importScripts`
 					// is synchronous and can lead to deadlocks on Safari
@@ -225,10 +225,10 @@ namespace AMDLoader {
 						text = `${text}\n//# sourceURL=${scriptSrc}`;
 						const func = (
 							trustedTypesPolicy
-								? self.eval(trustedTypesPolicy.createScript('', text))
+								? globalThis.eval(trustedTypesPolicy.createScript('', text))
 								: new Function(text)
 						);
-						func.call(self);
+						func.call(globalThis);
 						callback();
 					}).then(undefined, errorback);
 					return;
@@ -283,8 +283,6 @@ namespace AMDLoader {
 
 	interface INodeVM {
 		Script: { new(contents: string, options?: INodeVMScriptOptions): INodeVMScript }
-		runInThisContext(contents: string, { filename: string });
-		runInThisContext(contents: string, filename: string);
 	}
 
 	interface INodePath {
@@ -398,7 +396,7 @@ namespace AMDLoader {
 				// run script
 				const dirname = that._path.dirname(filename);
 				const require = makeRequireFunction(this);
-				const args = [this.exports, require, this, filename, dirname, process, _commonjsGlobal, Buffer];
+				const args = [this.exports, require, this, filename, dirname, process, globalThis, Buffer];
 				const result = compileWrapper.apply(this.exports, args);
 
 				// cached data aftermath
@@ -411,7 +409,7 @@ namespace AMDLoader {
 
 		public load(moduleManager: IModuleManager, scriptSrc: string, callback: () => void, errorback: (err: any) => void): void {
 			const opts = moduleManager.getConfig().getOptionsLiteral();
-			const nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), (opts.nodeRequire || global.nodeRequire));
+			const nodeRequire = ensureRecordedNodeRequire(moduleManager.getRecorder(), (opts.nodeRequire || globalThis.nodeRequire));
 			const nodeInstrumenter = (opts.nodeInstrumenter || function (c) { return c; });
 			this._init(nodeRequire);
 			this._initNodeRequire(nodeRequire, moduleManager);
@@ -478,7 +476,7 @@ namespace AMDLoader {
 			};
 			localDefineFunc.amd = globalDefineFunc.amd;
 
-			ret.call(global, moduleManager.getGlobalAMDRequireFunc(), localDefineFunc, options.filename, this._path.dirname(options.filename));
+			ret.call(globalThis, moduleManager.getGlobalAMDRequireFunc(), localDefineFunc, options.filename, this._path.dirname(options.filename));
 
 			recorder.record(LoaderEventType.NodeEndEvaluatingScript, options.filename);
 
