@@ -170,7 +170,7 @@ namespace AMDLoader {
 			const func = (
 				trustedTypesPolicy
 					? self.eval(trustedTypesPolicy.createScript('', 'true'))
-					: new Function('true')
+					: new Function('true') // CodeQL [SM01632] the loader is responsible with loading code, fetch + eval is used on the web worker instead of importScripts if possible because importScripts is synchronous and we observed deadlocks on Safari
 			);
 			func.call(self);
 			return true;
@@ -226,7 +226,7 @@ namespace AMDLoader {
 						const func = (
 							trustedTypesPolicy
 								? self.eval(trustedTypesPolicy.createScript('', text))
-								: new Function(text)
+								: new Function(text) // CodeQL [SM01632] the loader is responsible with loading code, fetch + eval is used on the web worker instead of importScripts if possible because importScripts is synchronous and we observed deadlocks on Safari
 						);
 						func.call(self);
 						callback();
