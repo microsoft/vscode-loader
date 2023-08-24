@@ -386,6 +386,8 @@ namespace AMDLoader {
 			this._buildInfoPath = [];
 			this._buildInfoDefineStack = [];
 			this._buildInfoDependencies = [];
+
+			this._requireFunc.moduleManager = this;
 		}
 
 		public reset(): ModuleManager {
