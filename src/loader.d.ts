@@ -157,6 +157,7 @@ declare namespace AMDLoader {
         define(id: 'string', callback: any): void;
         define(dependencies: string[], callback: any): void;
         define(callback: any): void;
+        moduleManager?: ModuleManager;
     }
     interface IModuleConfiguration {
         [key: string]: any;
