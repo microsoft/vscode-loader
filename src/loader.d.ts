@@ -508,7 +508,7 @@ declare namespace AMDLoader {
         private _buildInfoPath;
         private _buildInfoDefineStack;
         private _buildInfoDependencies;
-        constructor(env: Environment, scriptLoader: IScriptLoader, defineFunc: IDefineFunc, requireFunc: IRequireFunc, loaderAvailableTimestamp?: number);
+        constructor(env: Environment, scriptLoader: IScriptLoader, defineFunc: IDefineFunc, requireFunc: IRequireFunc | null, loaderAvailableTimestamp?: number);
         reset(): ModuleManager;
         getGlobalAMDDefineFunc(): IDefineFunc;
         getGlobalAMDRequireFunc(): IRequireFunc;

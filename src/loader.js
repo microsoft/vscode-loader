@@ -1248,7 +1248,9 @@ var AMDLoader;
             this._buildInfoPath = [];
             this._buildInfoDefineStack = [];
             this._buildInfoDependencies = [];
-            this._requireFunc.moduleManager = this;
+            if (this._requireFunc) {
+                this._requireFunc.moduleManager = this;
+            }
         }
         reset() {
             return new ModuleManager(this._env, this._scriptLoader, this._defineFunc, this._requireFunc, this._loaderAvailableTimestamp);
