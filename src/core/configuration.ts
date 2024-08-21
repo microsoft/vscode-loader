@@ -115,6 +115,10 @@ namespace AMDLoader {
 
 	export interface IConfigurationOptions {
 		/**
+		 * Allow module ids to end with .js
+		 */
+		allowJsExtension?: boolean;
+		/**
 		 * The prefix that will be aplied to all modules when they are resolved to a location
 		 */
 		baseUrl?: string;
@@ -193,6 +197,7 @@ namespace AMDLoader {
 	}
 
 	export interface IValidatedConfigurationOptions extends IConfigurationOptions {
+		allowJsExtension: boolean;
 		baseUrl: string;
 		paths: { [path: string]: any; };
 		config: { [moduleId: string]: IModuleConfiguration };
@@ -232,6 +237,9 @@ namespace AMDLoader {
 			}
 
 			options = options || {};
+			if (typeof options.allowJsExtension !== 'boolean') {
+				options.allowJsExtension = false;
+			}
 			if (typeof options.baseUrl !== 'string') {
 				options.baseUrl = '';
 			}
@@ -428,12 +436,12 @@ namespace AMDLoader {
 		/**
 		 * Transform a module id to a location. Appends .js to module ids
 		 */
-		public moduleIdToPaths(moduleId: string): string[] {
+		public moduleIdToPaths(moduleIdOrPath: string): string[] {
 
 			if (this._env.isNode) {
 				const isNodeModule = (
 					this.options.amdModulesPattern instanceof RegExp
-					&& !this.options.amdModulesPattern.test(moduleId)
+					&& !this.options.amdModulesPattern.test(moduleIdOrPath)
 				);
 
 				if (isNodeModule) {
@@ -443,15 +451,18 @@ namespace AMDLoader {
 						return ['empty:'];
 					} else {
 						// ...and at runtime we create a `shortcut`-path
-						return ['node|' + moduleId];
+						return ['node|' + moduleIdOrPath];
 					}
 				}
 			}
 
-			let result = moduleId;
+			const isAbsolutePath = Utilities.isAbsolutePath(moduleIdOrPath);
+			const isJSFilePath = (this.options.allowJsExtension ? false : Utilities.endsWith(moduleIdOrPath, '.js'));
+			const isModuleId = !(isAbsolutePath || isJSFilePath);
 
+			let result = moduleIdOrPath;
 			let results: string[];
-			if (!Utilities.endsWith(result, '.js') && !Utilities.isAbsolutePath(result)) {
+			if (isModuleId) {
 				results = this._applyPaths(result);
 
 				for (let i = 0, len = results.length; i < len; i++) {
