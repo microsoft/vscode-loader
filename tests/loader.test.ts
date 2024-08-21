@@ -21,6 +21,7 @@ function assertConfigurationIs(actual: loader.IConfigurationOptions, expected: l
 QUnit.test('Default configuration', () => {
 	var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions();
 	assertConfigurationIs(result, {
+		allowJsExtension: false,
 		baseUrl: '',
 		catchError: false,
 		ignoreDuplicateModules: [],
@@ -36,6 +37,7 @@ QUnit.test('Default configuration', () => {
 
 function createSimpleKnownConfigurationOptions(): loader.IConfigurationOptions {
 	return loader.ConfigurationOptionsUtil.mergeConfigurationOptions({
+		allowJsExtension: false,
 		baseUrl: 'myBaseUrl',
 		catchError: true,
 		ignoreDuplicateModules: ['a'],
@@ -52,6 +54,7 @@ function createSimpleKnownConfigurationOptions(): loader.IConfigurationOptions {
 QUnit.test('Simple known configuration options', () => {
 	var result = createSimpleKnownConfigurationOptions();
 	assertConfigurationIs(result, {
+		allowJsExtension: false,
 		baseUrl: 'myBaseUrl/',
 		catchError: true,
 		ignoreDuplicateModules: ['a'],
@@ -71,6 +74,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		baseUrl: ''
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
+		allowJsExtension: false,
 		baseUrl: '',
 		catchError: true,
 		ignoreDuplicateModules: ['a'],
@@ -88,6 +92,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		baseUrl: '/'
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
+		allowJsExtension: false,
 		baseUrl: '/',
 		catchError: true,
 		ignoreDuplicateModules: ['a'],
@@ -105,6 +110,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		catchError: false
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
+		allowJsExtension: false,
 		baseUrl: 'myBaseUrl/',
 		catchError: false,
 		ignoreDuplicateModules: ['a'],
@@ -122,6 +128,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		ignoreDuplicateModules: ['b']
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
+		allowJsExtension: false,
 		baseUrl: 'myBaseUrl/',
 		catchError: true,
 		ignoreDuplicateModules: ['a', 'b'],
@@ -139,6 +146,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		paths: { 'a': 'c' }
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
+		allowJsExtension: false,
 		baseUrl: 'myBaseUrl/',
 		catchError: true,
 		ignoreDuplicateModules: ['a'],
@@ -156,6 +164,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'e': {} }
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
+		allowJsExtension: false,
 		baseUrl: 'myBaseUrl/',
 		catchError: true,
 		ignoreDuplicateModules: ['a'],
@@ -173,6 +182,7 @@ QUnit.test('Overwriting known configuration options', () => {
 		config: { 'd': { 'a': 'a' } }
 	}, createSimpleKnownConfigurationOptions());
 	assertConfigurationIs(result, {
+		allowJsExtension: false,
 		baseUrl: 'myBaseUrl/',
 		catchError: true,
 		ignoreDuplicateModules: ['a'],
@@ -189,6 +199,7 @@ QUnit.test('Overwriting known configuration options', () => {
 QUnit.test('Overwriting unknown configuration options', () => {
 	var result = loader.ConfigurationOptionsUtil.mergeConfigurationOptions();
 	assertConfigurationIs(result, {
+		allowJsExtension: false,
 		baseUrl: '',
 		catchError: false,
 		ignoreDuplicateModules: [],
@@ -206,6 +217,7 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		unknownKey1: 'value1'
 	}, result);
 	assertConfigurationIs(result, <any>{
+		allowJsExtension: false,
 		baseUrl: '',
 		catchError: false,
 		ignoreDuplicateModules: [],
@@ -224,6 +236,7 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		unknownKey2: 'value2'
 	}, result);
 	assertConfigurationIs(result, <any>{
+		allowJsExtension: false,
 		baseUrl: '',
 		catchError: false,
 		ignoreDuplicateModules: [],
@@ -243,6 +256,7 @@ QUnit.test('Overwriting unknown configuration options', () => {
 		unknownKey2: 'new-value2'
 	}, result);
 	assertConfigurationIs(result, <any>{
+		allowJsExtension: false,
 		baseUrl: '',
 		catchError: false,
 		ignoreDuplicateModules: [],
@@ -302,6 +316,62 @@ QUnit.test('moduleIdToPath', () => {
 	QUnit.equal(config.moduleIdToPaths('https://b/c/d'), 'https://b/c/d.js?suffix');
 	QUnit.equal(config.moduleIdToPaths('https://a/b/c/d'), 'https://a/b/c/d.js?suffix');
 	QUnit.equal(config.moduleIdToPaths('https://a'), 'https://a.js?suffix');
+});
+
+QUnit.test('moduleIdToPath with allowJsExtension', () => {
+	var config = new loader.Configuration(new loader.Environment(), {
+		allowJsExtension: true,
+		baseUrl: 'prefix',
+		urlArgs: 'suffix',
+		paths: {
+			'a': 'newa',
+			'knockout': 'http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js',
+			'knockout.js': 'http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js',
+			'editor': '/src/editor'
+		}
+	});
+
+	// baseUrl is applied
+	QUnit.equal(config.moduleIdToPaths('b/c/d'), 'prefix/b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('b/c/d.js'), 'prefix/b/c/d.js?suffix');
+
+	// paths rules are applied
+	QUnit.equal(config.moduleIdToPaths('a'), 'prefix/newa.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('a.js'), 'prefix/newa.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('a/b/c/d'), 'prefix/newa/b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('a/b/c/d.js'), 'prefix/newa/b/c/d.js?suffix');
+
+	// paths rules check if value is an absolute path
+	QUnit.equal(config.moduleIdToPaths('knockout'), 'http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('knockout.js'), 'http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js?suffix');
+
+	// modules redirected to / still get .js appended
+	QUnit.equal(config.moduleIdToPaths('editor/x'), '/src/editor/x.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('editor/x.js'), '/src/editor/x.js?suffix');
+
+	// modules starting with / skip baseUrl + paths rules
+	QUnit.equal(config.moduleIdToPaths('/b/c/d'), '/b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('/b/c/d.js'), '/b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('/a/b/c/d'), '/a/b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('/a/b/c/d.js'), '/a/b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('/a'), '/a.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('/a.js'), '/a.js?suffix');
+
+	// modules starting with http:// or https:// skip baseUrl + paths rules
+	QUnit.equal(config.moduleIdToPaths('file:///c:/a/b/c'), 'file:///c:/a/b/c.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('file:///c:/a/b/c.js'), 'file:///c:/a/b/c.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('http://b/c/d'), 'http://b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('http://b/c/d.js'), 'http://b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('http://a/b/c/d'), 'http://a/b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('http://a/b/c/d.js'), 'http://a/b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('http://a'), 'http://a.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('http://a.js'), 'http://a.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('https://b/c/d'), 'https://b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('https://b/c/d.js'), 'https://b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('https://a/b/c/d'), 'https://a/b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('https://a/b/c/d.js'), 'https://a/b/c/d.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('https://a'), 'https://a.js?suffix');
+	QUnit.equal(config.moduleIdToPaths('https://a.js'), 'https://a.js?suffix');
 });
 
 QUnit.test('requireToUrl', () => {

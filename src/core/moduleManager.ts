@@ -325,7 +325,7 @@ namespace AMDLoader {
 		private readonly _scriptLoader: IScriptLoader;
 		private readonly _loaderAvailableTimestamp: number;
 		private readonly _defineFunc: IDefineFunc;
-		private readonly _requireFunc: IRequireFunc;
+		private readonly _requireFunc: IRequireFunc | null;
 
 		private _moduleIdProvider: ModuleIdProvider;
 		private _config: Configuration;
@@ -367,7 +367,7 @@ namespace AMDLoader {
 		private _buildInfoDefineStack: (string | null)[];
 		private _buildInfoDependencies: string[][];
 
-		constructor(env: Environment, scriptLoader: IScriptLoader, defineFunc: IDefineFunc, requireFunc: IRequireFunc, loaderAvailableTimestamp: number = 0) {
+		constructor(env: Environment, scriptLoader: IScriptLoader, defineFunc: IDefineFunc, requireFunc: IRequireFunc | null, loaderAvailableTimestamp: number = 0) {
 			this._env = env;
 			this._scriptLoader = scriptLoader;
 			this._loaderAvailableTimestamp = loaderAvailableTimestamp;
@@ -387,7 +387,9 @@ namespace AMDLoader {
 			this._buildInfoDefineStack = [];
 			this._buildInfoDependencies = [];
 
-			this._requireFunc.moduleManager = this;
+			if (this._requireFunc) {
+				this._requireFunc.moduleManager = this;
+			}
 		}
 
 		public reset(): ModuleManager {
@@ -399,7 +401,7 @@ namespace AMDLoader {
 		}
 
 		public getGlobalAMDRequireFunc(): IRequireFunc {
-			return this._requireFunc;
+			return this._requireFunc!;
 		}
 
 		private static _findRelevantLocationInStack(needle: string, stack: string): IPosition {

@@ -184,6 +184,10 @@ declare namespace AMDLoader {
     }
     interface IConfigurationOptions {
         /**
+         * Allow module ids to end with .js
+         */
+        allowJsExtension?: boolean;
+        /**
          * The prefix that will be aplied to all modules when they are resolved to a location
          */
         baseUrl?: string;
@@ -267,6 +271,7 @@ declare namespace AMDLoader {
         nodeCachedData?: INodeCachedDataConfiguration;
     }
     interface IValidatedConfigurationOptions extends IConfigurationOptions {
+        allowJsExtension: boolean;
         baseUrl: string;
         paths: {
             [path: string]: any;
@@ -321,7 +326,7 @@ declare namespace AMDLoader {
         /**
          * Transform a module id to a location. Appends .js to module ids
          */
-        moduleIdToPaths(moduleId: string): string[];
+        moduleIdToPaths(moduleIdOrPath: string): string[];
         /**
          * Transform a module id or url to a location.
          */
@@ -508,7 +513,7 @@ declare namespace AMDLoader {
         private _buildInfoPath;
         private _buildInfoDefineStack;
         private _buildInfoDependencies;
-        constructor(env: Environment, scriptLoader: IScriptLoader, defineFunc: IDefineFunc, requireFunc: IRequireFunc, loaderAvailableTimestamp?: number);
+        constructor(env: Environment, scriptLoader: IScriptLoader, defineFunc: IDefineFunc, requireFunc: IRequireFunc | null, loaderAvailableTimestamp?: number);
         reset(): ModuleManager;
         getGlobalAMDDefineFunc(): IDefineFunc;
         getGlobalAMDRequireFunc(): IRequireFunc;
