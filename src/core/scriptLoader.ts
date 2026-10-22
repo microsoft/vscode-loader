@@ -271,6 +271,7 @@ namespace AMDLoader {
 	interface INodeVMScriptOptions {
 		filename: string;
 		cachedData?: Buffer;
+		importModuleDynamically?: (specifier: string) => Promise<any>;
 	}
 
 	interface INodeVMScript {
@@ -452,7 +453,10 @@ namespace AMDLoader {
 					}
 
 					scriptSource = nodeInstrumenter(scriptSource, normalizedScriptSrc);
-					const scriptOpts: INodeVMScriptOptions = { filename: vmScriptPathOrUri, cachedData };
+					const scriptOpts: INodeVMScriptOptions = { filename: vmScriptPathOrUri, cachedData, importModuleDynamically: (specifier) => {
+						// @ts-ignore since dynamic imports require a module type to be set. Setting the AMD module type, however, is incompatible with the test suite
+							return import(specifier);
+					} };
 					const script = this._createAndEvalScript(moduleManager, scriptSource, scriptOpts, callback, errorback);
 
 					this._handleCachedData(script, scriptSource, cachedDataPath!, wantsCachedData && !cachedData, moduleManager);
